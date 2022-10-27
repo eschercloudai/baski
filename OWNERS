@@ -1,0 +1,10 @@
+filters:
+  ".*":
+    reviewers:
+      - drew-viles
+      - spjmurray
+      - yankcrime
+    approvers:
+      - drew-viles
+      - spjmurray
+      - yankcrime

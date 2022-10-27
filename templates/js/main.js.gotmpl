@@ -1,0 +1,153 @@
+//Load all report files and parse into object
+let allReportsFiles = [];
+for (let i in reports) {
+    allReportsFiles.push(new ReportFile(reports[i]));
+}
+
+allReportsFiles.forEach((r) => {
+    r.FetchJsonFromFile();
+});
+
+// Sort the reports into Years -> Months -> Report
+let reportMap = new Map();
+
+allReportsFiles.forEach((r) => {
+    if (!reportMap.has(r.Year())) {
+        reportMap.set(r.Year(), new Map());
+    }
+
+    let monthsMap = reportMap.get(r.Year());
+    if (!monthsMap.has(r.MonthName())) {
+        monthsMap.set(r.MonthName(), []);
+    }
+
+    let filesArray = monthsMap.get(r.MonthName());
+    filesArray.push(r);
+    monthsMap.set(r.MonthName(), filesArray);
+});
+
+//Get all the nav menu links and add event listeners to allow them to load results into the accordion.
+let navLinks = document.getElementsByClassName("report-links");
+for (let i = 0; i < navLinks.length; i++) {
+    navLinks[i].addEventListener("click", (e) => {
+        let year = reportMap.get(e.target.dataset.reportYear);
+        let month = year.get(e.target.dataset.reportMonth);
+        let report_name = e.target.dataset.reportName;
+
+        let report;
+        for (let j = 0; j < month.length; j++) {
+            if (month[j].file_name === report_name) {
+                report = month[j];
+                break;
+            }
+        }
+
+        loadResultsIntoAccordion(report);
+    });
+}
+
+function loadResultsIntoAccordion(report) {
+    let criticalAccordion = document.querySelector("#results-critical");
+    criticalAccordion.innerHTML = "";
+    let mediumAccordion = document.querySelector("#results-medium");
+    mediumAccordion.innerHTML = "";
+    let lowAccordion = document.querySelector("#results-low");
+    lowAccordion.innerHTML = "";
+
+    let critCount = 0;
+    let medCount = 0;
+    let lowCount = 0;
+    //let rowStart = `<div class="row">`;
+    //let rowEnd = `</div>`;
+
+    let cves = new CVEs(report.jsonContent.Results[0]);
+    cves.GetCVEs().forEach((cve) => {
+        switch (cve.severity) {
+            case "CRITICAL":
+                // if (critCount % 3 === 0) {
+                // criticalAccordion.innerHTML += rowStart;
+                // }
+
+                criticalAccordion.innerHTML += `${ButtonGen(cve)}`;
+
+                // if (critCount % 3 === 2) {
+                // criticalAccordion.innerHTML += rowEnd;
+                // }
+                critCount++;
+                break;
+            case "MEDIUM":
+                // if (medCount % 3 === 0) {
+                // mediumAccordion.innerHTML += rowStart;
+                // }
+                mediumAccordion.innerHTML += `${ButtonGen(cve)}`;
+                // if (medCount % 3 === 2) {
+                // mediumAccordion.innerHTML += rowEnd;
+                // }
+                medCount++;
+                break;
+            case "LOW":
+                // if (lowCount % 3 === 0) {
+                // lowAccordion.innerHTML += rowStart;
+                // }
+                lowAccordion.innerHTML += `${ButtonGen(cve)}`;
+                // if (lowCount % 3 === 2) {
+                // lowAccordion.innerHTML += rowEnd;
+                // }
+                lowCount++;
+                break;
+        }
+    });
+}
+
+function ButtonGen(cve) {
+    return `<button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#cveModal" data-cve-cve="${cve.id}" data-cve-pkg="${cve.packages}" data-cve-title="${cve.title}" data-cve-description="${cve.description}" data-cve-link="${cve.link}">${cve.id}</button>`
+}
+
+// This allows the modal to be populated with the data from each of the CVE buttons that are generated.
+// It prevents repeating or regenerating code for the Modal.
+let cveModal = document.getElementById('cveModal')
+cveModal.addEventListener('show.bs.modal', function (event) {
+    let button = event.relatedTarget;
+    let cve = button.getAttribute('data-cve-cve');
+    let title = button.getAttribute('data-cve-title');
+    let pkg = button.getAttribute('data-cve-pkg');
+    let description = button.getAttribute('data-cve-description');
+    let score2 = button.getAttribute('data-cve-score2');
+    let score3 = button.getAttribute('data-cve-score3');
+    let link = button.getAttribute('data-cve-link');
+
+    let modalTitle = cveModal.querySelector('.modal-title');
+    let modalSubtitle = cveModal.querySelector('#cveModalTitle');
+    let modalBodyDescription = cveModal.querySelector('#cveModalDescription');
+    let modalBodyPackage = cveModal.querySelector('#cveModalPackage');
+    let modalBodyScore = cveModal.querySelector('#cveScore');
+    let modalBodyScore2 = cveModal.querySelector('#cveScore2');
+    let modalBodyScore3 = cveModal.querySelector('#cveScore3');
+    let modalBodyLink = cveModal.querySelector('#cveLink');
+
+    modalTitle.textContent = cve;
+    modalSubtitle.textContent = title;
+    modalBodyDescription.textContent = description;
+    modalBodyPackage.textContent = pkg;
+
+    if (score2 === "undefined" && score3 === "undefined") {
+        modalBodyScore.innerHTML = '';
+    } else {
+        if (score2 !== "undefined") {
+            modalBodyScore2.textContent = score2;
+        } else {
+            modalBodyScore2.textContent = "None provided";
+        }
+        if (score3 !== "undefined") {
+            modalBodyScore3.textContent = score3;
+        } else {
+            modalBodyScore3.textContent = "None provided";
+        }
+    }
+
+    modalBodyLink.href = link;
+})
+
+/**OLD**/
+// Builds the nav
+//buildNavigation()

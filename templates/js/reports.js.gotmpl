@@ -1,0 +1,8 @@
+let reports = [
+{{- $n := len . -}}
+{{- $i := 1 -}}
+{{- range $report, $rValue := . -}}
+    "{{ $rValue }}"{{- if not (eq $n $i) -}}, {{- end }}
+{{ $i = inc $i }}
+{{- end -}}
+]
