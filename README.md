@@ -83,7 +83,8 @@ For more flags, run `baskio --help`
 * Change the generated image and results name to be based on a date stamp and UUID for better image management.
 * Have option to set the image as public in Openstack
 * Provide option to choose name of gh-pages branch name
-* Docker-ise this. (Maybe)
+* Maybe use the openstack.json variables file that are used for packed to decide how to deploy the scanning server? 
+IE network ID, flavour etc.
 
 
 # License
