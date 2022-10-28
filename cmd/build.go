@@ -17,8 +17,9 @@ package cmd
 
 import (
 	"bufio"
-	"github.com/drew-viles/baskio/pkg/file"
+	"encoding/json"
 	gitRepo "github.com/drew-viles/baskio/pkg/git"
+	ostack "github.com/drew-viles/baskio/pkg/openstack"
 	systemUtils "github.com/drew-viles/baskio/pkg/system"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
@@ -54,16 +55,34 @@ func fetchBuildRepo(imageRepo string) string {
 	return g
 }
 
+//// copyVariablesFile copies the contents of the provided file into the correct location
+//// so the that build can be performed.
+//func copyVariablesFile(buildGitDir string, buildOS, configPath string) {
+//	log.Printf("copying variables file\n")
+//	outputFileName := strings.Join([]string{"openstack-", buildOS, ".json"}, "")
+//	outputFile := filepath.Join(buildGitDir, "images/capi/packer/openstack", outputFileName)
+//
+//	_, err := file.CopyFile(configPath, outputFile)
+//	if err != nil {
+//		panic(err)
+//	}
+//}
+
 // copyVariablesFile copies the contents of the provided file into the correct location
 // so the that build can be performed.
-func copyVariablesFile(buildGitDir string, buildOS, configPath string) {
-	log.Printf("copying variables file\n")
-	outputFileName := strings.Join([]string{"openstack-", buildOS, ".json"}, "")
+func generateVariablesFile(buildGitDir string, buildConfig *ostack.BuildConfig) {
+	log.Printf("generating variables file\n")
+	outputFileName := strings.Join([]string{"openstack-", buildConfig.BuildName, ".json"}, "")
 	outputFile := filepath.Join(buildGitDir, "images/capi/packer/openstack", outputFileName)
 
-	_, err := file.CopyFile(configPath, outputFile)
+	configContent, err := json.Marshal(buildConfig)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
+	}
+
+	err = os.WriteFile(outputFile, configContent, 0644)
+	if err != nil {
+		log.Fatalln(err)
 	}
 }
 

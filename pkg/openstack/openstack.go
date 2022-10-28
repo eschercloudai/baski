@@ -22,6 +22,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"log"
 	"strings"
@@ -83,9 +84,11 @@ func (c *Client) CreateKeypair() *keypairs.KeyPair {
 }
 
 // CreateServer creates a compute instance in Openstack.
-func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, serverFlavorID, networkID string, enableConfigDrive bool) (*servers.Server, string) {
+func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, flavorName, networkID string, enableConfigDrive bool) (*servers.Server, string) {
 	trivyVersion := "0.31.3"
 	client := createComputeClient(c)
+
+	serverFlavorID := c.GetFlavorIDByName(flavorName)
 
 	serverOpts := servers.CreateOpts{
 		Name:           "Scanner",
@@ -143,6 +146,32 @@ func (c *Client) RemoveKeypair() {
 	if res.Err != nil {
 		log.Println(res.Err)
 	}
+}
+
+// GetFlavorIDByName will take a name of a flavor and attempt to find the ID from Openstack.
+func (c *Client) GetFlavorIDByName(name string) string {
+	client := createComputeClient(c)
+
+	listOpts := flavors.ListOpts{
+		AccessType: flavors.PublicAccess,
+	}
+
+	allPages, err := flavors.ListDetail(client, listOpts).AllPages()
+	if err != nil {
+		panic(err)
+	}
+
+	allFlavors, err := flavors.ExtractFlavors(allPages)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, flavor := range allFlavors {
+		if flavor.Name == name {
+			return flavor.ID
+		}
+	}
+	return ""
 }
 
 // attachFloatingIP will find the first free IP available and attach it to the instance.

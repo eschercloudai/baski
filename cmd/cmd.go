@@ -33,8 +33,8 @@ var (
 	osAuthPluginFlag string
 
 	//Additional Openstack flags
-	networkIDFlag, serverFlavorIDFlag, openstackBuildConfigPathFlag string
-	enableConfigDriveFlag                                           bool
+	networkIDFlag, openstackBuildConfigPathFlag string
+	enableConfigDriveFlag                       bool
 
 	//Build flags
 	repoRoot                   = "https://github.com/eschercloudai/image-builder"
@@ -67,7 +67,6 @@ func init() {
 				IdentityAPIVersion:       osIdentityAPIVersionFlag,
 				AuthPlugin:               osAuthPluginFlag,
 				NetworkID:                networkIDFlag,
-				ServerFlavorID:           serverFlavorIDFlag,
 				OpenstackBuildConfigPath: openstackBuildConfigPathFlag,
 				EnableConfigDrive:        fmt.Sprintf("%t", enableConfigDriveFlag),
 				ImageRepo:                imageRepoFlag,
@@ -87,7 +86,11 @@ func init() {
 
 			//Build image
 			buildGitDir := fetchBuildRepo(envs.ImageRepo)
-			copyVariablesFile(buildGitDir, envs.BuildOS, envs.OpenstackBuildConfigPath)
+			buildConfig := ostack.ParseBuildConfig(envs.OpenstackBuildConfigPath)
+			buildConfig.Networks = envs.NetworkID
+
+			generateVariablesFile(buildGitDir, buildConfig)
+
 			capiPath := filepath.Join(buildGitDir, "images/capi")
 			fetchDependencies(capiPath)
 			err := buildImage(capiPath, envs.BuildOS)
@@ -102,7 +105,7 @@ func init() {
 			//Scan image
 			osClient.OpenstackInit()
 			kp := osClient.CreateKeypair()
-			server, freeIP := osClient.CreateServer(kp, imgID, serverFlavorIDFlag, networkIDFlag, enableConfigDriveFlag)
+			server, freeIP := osClient.CreateServer(kp, imgID, buildConfig.Flavor, buildConfig.Networks, enableConfigDriveFlag)
 
 			resultsFile, err := fetchResultsFromServer(freeIP, kp)
 			if err != nil {
@@ -154,7 +157,6 @@ func init() {
 	rootCmd.Flags().StringVar(&osAuthPluginFlag, "os-auth-plugin", "password", "The Openstack Auth Plugin (Can also set env OS_AUTH_PLUGIN)")
 	rootCmd.Flags().BoolVarP(&enableConfigDriveFlag, "enable-config-drive", "c", false, "Used to enable a config drive on Openstack. This may be required if using an external network. (Can also set env OS_ENABLE_CONFIG_DRIVE)")
 	rootCmd.Flags().StringVarP(&networkIDFlag, "network-id", "n", "", "Network ID to deploy the server onto for scanning. (Can also set env OS_NETWORK_ID)")
-	rootCmd.Flags().StringVarP(&serverFlavorIDFlag, "server-flavor-id", "s", "", "ID of the server flavor to create for the scan. (Can also set env OS_SERVER_FLAVOR_ID)")
 
 	//Configuration items
 	rootCmd.Flags().StringVarP(&openstackBuildConfigPathFlag, "build-config", "b", "", strings.Join([]string{"The openstack variables to use to build the image (see ", repoRoot, "/blob/master/images/capi/packer/openstack/openstack-ubuntu-2004.json) (Can also set env OS_BUILD_CONFIG)"}, ""))

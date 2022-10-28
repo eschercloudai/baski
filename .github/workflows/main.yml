@@ -4,9 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
-#  workflow_dispatch:
-#  schedule:
-#    - cron: '40 19 * * *' # once a day at 19:40 UTC / 11:40 PST
+  workflow_dispatch:
 
 jobs:
   lint:

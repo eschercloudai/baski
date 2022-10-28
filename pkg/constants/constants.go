@@ -146,7 +146,6 @@ type Env struct {
 	IdentityAPIVersion       string
 	AuthPlugin               string
 	NetworkID                string
-	ServerFlavorID           string
 	OpenstackBuildConfigPath string
 	EnableConfigDrive        string
 	ImageRepo                string
@@ -220,9 +219,6 @@ func (e *Env) CheckForEnvVars() {
 		canContinue = false
 	}
 	if !checkEnv(e, "NetworkID", "OS_NETWORK_ID") {
-		canContinue = false
-	}
-	if !checkEnv(e, "ServerFlavorID", "OS_SERVER_FLAVOR_ID") {
 		canContinue = false
 	}
 	if !checkEnv(e, "EnableConfigDrive", "OS_ENABLE_CONFIG_DRIVE") {
