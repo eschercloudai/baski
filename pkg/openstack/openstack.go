@@ -79,10 +79,6 @@ func (c *Client) CreateKeypair() *keypairs.KeyPair {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("----DEBUG----")
-	fmt.Println(kp.PrivateKey)
-	fmt.Println("----DEBUG----")
-
 	return kp
 }
 
