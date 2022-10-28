@@ -17,6 +17,7 @@ package systemUtils
 
 import (
 	"context"
+	"io"
 	"os"
 	"os/exec"
 	"time"
@@ -25,7 +26,7 @@ import (
 // RunMake simply runs the make command on the system with optional arguments and output locations.
 // generally speaking the os.Stdout will be used but the option is there to write to a file
 // in case parsing needs to happen after.
-func RunMake(makeArgs, path string, output *os.File) error {
+func RunMake(makeArgs, path string, output io.Writer) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Minute)
 	defer cancel()
 

@@ -41,7 +41,7 @@ var (
 	imageRepoFlag, buildOSFlag string
 
 	//gitHub flags
-	ghUserFlag, ghProjectFlag, ghTokenFlag string
+	ghUserFlag, ghProjectFlag, ghTokenFlag, ghPagesBranchFlag string
 )
 
 func init() {
@@ -74,6 +74,7 @@ func init() {
 				GhUser:                   ghUserFlag,
 				GhProject:                ghProjectFlag,
 				GhToken:                  ghTokenFlag,
+				GhPagesBranch:            ghPagesBranchFlag,
 			}
 
 			// Now we check to see if any env vars have been passed instead of flags. If so, set the flags to the env vars.
@@ -112,7 +113,7 @@ func init() {
 
 			removeScanningResources(server.ID, osClient)
 
-			pagesGitDir, pagesRepo, err := fetchPagesRepo(envs.GhUser, envs.GhToken, envs.GhProject)
+			pagesGitDir, pagesRepo, err := fetchPagesRepo(envs.GhUser, envs.GhToken, envs.GhProject, envs.GhPagesBranch)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -183,7 +184,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&enableConfigDriveFlag, "enable-config-drive", "c", false, "Used to enable a config drive on Openstack. This may be required if using an external network. (Can also set env OS_ENABLE_CONFIG_DRIVE)")
 
 	rootCmd.Flags().StringVarP(&imageRepoFlag, "imageRepo", "r", strings.Join([]string{repoRoot, "git"}, "."), "The imageRepo from which the image builder should be deployed. (Can also set env IMAGE_REPO)")
-	rootCmd.Flags().StringVarP(&buildOSFlag, "build-os", "o", "ubuntu-2004", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204 (Can also set env BUILD_OS)")
+	rootCmd.Flags().StringVarP(&buildOSFlag, "build-os", "o", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204 (Can also set env BUILD_OS)")
 	//err = rootCmd.MarkFlagRequired("build-os")
 	//if err != nil {
 	//	log.Fatalf("%s\n", err.Error())
@@ -200,6 +201,11 @@ func init() {
 	//	log.Fatalf("%s\n", err.Error())
 	//}
 	rootCmd.Flags().StringVarP(&ghTokenFlag, "github-token", "t", "", "The token for the GitHub project to which the pages will be pushed. (Can also set env GH_TOKEN)")
+	//err = rootCmd.MarkFlagRequired("github-token")
+	//if err != nil {
+	//	log.Fatalf("%s\n", err.Error())
+	//}
+	rootCmd.Flags().StringVarP(&ghPagesBranchFlag, "github-pages-branch", "g", "gh-pages", "The branch name for GitHub project to which the pages will be pushed. (Can also set env GH_PAGES_BRANCH)")
 	//err = rootCmd.MarkFlagRequired("github-token")
 	//if err != nil {
 	//	log.Fatalf("%s\n", err.Error())

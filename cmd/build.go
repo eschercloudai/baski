@@ -22,6 +22,7 @@ import (
 	systemUtils "github.com/drew-viles/baskio/pkg/system"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -77,17 +78,10 @@ func fetchDependencies(repoPath string) {
 	}
 	defer w.Close()
 
-	wb := bufio.NewWriter(w)
-	defer wb.Flush()
+	wr := io.MultiWriter(w, os.Stdout)
 
-	err = systemUtils.RunMake("deps-openstack", repoPath, w)
+	err = systemUtils.RunMake("deps-openstack", repoPath, wr)
 	if err != nil {
-		//Dump out-deps for more info - ignore errors as we're already failing as it is!
-		r, _ := os.ReadFile("/tmp/out-deps.txt")
-		we := bufio.NewWriter(os.Stdout)
-		_, _ = we.Write(r)
-		defer we.Flush()
-
 		log.Fatalln(err)
 	}
 
@@ -110,22 +104,14 @@ func buildImage(capiPath string, buildOS string) error {
 	}
 	defer w.Close()
 
+	wr := io.MultiWriter(w, os.Stdout)
 	// TODO: Maybe fetch from openstack and sort by newest.
 	//  Would require some trickery to get new image ID.
 
-	wb := bufio.NewWriter(w)
-	defer wb.Flush()
-
 	args := strings.Join([]string{"build-openstack", buildOS}, "-")
 
-	err = systemUtils.RunMake(args, capiPath, w)
+	err = systemUtils.RunMake(args, capiPath, wr)
 	if err != nil {
-		//Dump out-build for more info - ignore errors as we're already failing as it is!
-		r, _ := os.ReadFile("/tmp/out-build.txt")
-		we := bufio.NewWriter(os.Stdout)
-		_, _ = we.Write(r)
-		defer we.Flush()
-
 		log.Fatalln(err)
 	}
 

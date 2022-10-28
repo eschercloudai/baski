@@ -22,6 +22,7 @@ import (
 	"github.com/drew-viles/baskio/pkg/file"
 	gitRepo "github.com/drew-viles/baskio/pkg/git"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"html/template"
 	"log"
@@ -33,7 +34,7 @@ import (
 	"time"
 )
 
-func fetchPagesRepo(ghUser, ghToken, ghProject string) (string, *git.Repository, error) {
+func fetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.Repository, error) {
 	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", ghUser, ghToken, ghUser, ghProject)
 	pagesDir := filepath.Join("/tmp", ghProject)
 
@@ -42,7 +43,8 @@ func fetchPagesRepo(ghUser, ghToken, ghProject string) (string, *git.Repository,
 		return "", nil, err
 	}
 
-	g, err := gitRepo.GitClone(pagesRepo, pagesDir, "refs/heads/gh-pages")
+	pagesBranch := plumbing.ReferenceName(filepath.Join("refs/heads", ghBranch))
+	g, err := gitRepo.GitClone(pagesRepo, pagesDir, pagesBranch)
 	if err != nil {
 		return "", nil, fmt.Errorf("git clone error: %s\n", err)
 	}

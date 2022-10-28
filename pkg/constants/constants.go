@@ -147,6 +147,7 @@ type Env struct {
 	GhUser                   string
 	GhProject                string
 	GhToken                  string
+	GhPagesBranch            string
 }
 
 func CheckEnv(envs *Env, field, envVar string) bool {
@@ -228,6 +229,9 @@ func (e *Env) CheckForEnvVars() {
 		canContinue = false
 	}
 	if !CheckEnv(e, "GhToken", "GH_TOKEN") {
+		canContinue = false
+	}
+	if !CheckEnv(e, "GhPagesBranch", "GH_PAGES_BRANCH") {
 		canContinue = false
 	}
 
