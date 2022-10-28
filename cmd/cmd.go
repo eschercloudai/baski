@@ -44,13 +44,14 @@ var (
 	ghUserFlag, ghProjectFlag, ghTokenFlag, ghPagesBranchFlag string
 )
 
+// init prepares the tool with all available flag. It also contains the main program loop which runs the tasks.
 func init() {
 	rootCmd = &cobra.Command{
 		Use:   "baskio",
 		Short: "Baskio is a tools for building and scanning Kubernetes images within Openstack.",
 		Long: `Build And Scan Kubernetes Images on Openstack
-					This tool has been designed to automatically build images for the Openstack potion of the Kubernetes Image Builder.
-					It could be extended out to provide images for a variety of other builders however for now it's main goal is to work with Openstack.`,
+		This tool has been designed to automatically build images for the Openstack potion of the Kubernetes Image Builder.
+		It could be extended out to provide images for a variety of other builders however for now it's main goal is to work with Openstack.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// Dump all the input vars into here.
 			envs := constants.Env{
@@ -100,8 +101,8 @@ func init() {
 
 			//Scan image
 			osClient.OpenstackInit()
-			kp := osClient.CreateNewKeypair()
-			server, freeIP := osClient.CreateServerFromImageForScanning(kp, imgID, serverFlavorIDFlag, networkIDFlag, enableConfigDriveFlag)
+			kp := osClient.CreateKeypair()
+			server, freeIP := osClient.CreateServer(kp, imgID, serverFlavorIDFlag, networkIDFlag, enableConfigDriveFlag)
 
 			resultsFile, err := fetchResultsFromServer(freeIP, kp)
 			if err != nil {
@@ -111,47 +112,35 @@ func init() {
 
 			defer resultsFile.Close()
 
+			//Cleanup the scanning resources
 			removeScanningResources(server.ID, osClient)
 
+			//GitHub pages
 			pagesGitDir, pagesRepo, err := fetchPagesRepo(envs.GhUser, envs.GhToken, envs.GhProject, envs.GhPagesBranch)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
 			err = copyResultsFileIntoPages(pagesGitDir, resultsFile)
-			if err != nil {
-				pagesCleanup(pagesGitDir)
-				log.Fatalln(err)
-			}
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			reports, err := fetchExistingReports(pagesGitDir)
-			if err != nil {
-				pagesCleanup(pagesGitDir)
-				log.Fatalln(err)
-			}
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			results, err := parseReports(reports)
-			if err != nil {
-				pagesCleanup(pagesGitDir)
-				log.Fatalln(err)
-			}
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			err = buildPages(pagesGitDir, results)
-			if err != nil {
-				pagesCleanup(pagesGitDir)
-				log.Fatalln(err)
-			}
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			err = publishPages(pagesRepo, pagesGitDir)
-			if err != nil {
-				pagesCleanup(pagesGitDir)
-				log.Fatalln(err)
-			}
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			pagesCleanup(pagesGitDir)
 		},
 	}
 
+	//Openstack specific
 	rootCmd.Flags().StringVar(&osAuthURLFlag, "os-auth-url", "", "The Openstack Auth URL (Can also set env OS_AUTH_URL)")
 	rootCmd.Flags().StringVar(&osProjectNameFlag, "os-project-name", "", "The Openstack Project Name (Can also set env OS_PROJECT_NAME)")
 	rootCmd.Flags().StringVar(&osProjectIDFlag, "os-project-id", "", "The Openstack Project Name (Can also set env OS_PROJECT_ID)")
@@ -163,57 +152,33 @@ func init() {
 	rootCmd.Flags().StringVar(&osProjectDomainNameFlag, "os-project-domain-name", "default", "The Openstack Project Domain Name (Can also set env OS_PROJECT_DOMAIN_NAME)")
 	rootCmd.Flags().StringVar(&osIdentityAPIVersionFlag, "os-identity-api-version", "3", "The Openstack Identity API Version (Can also set env OS_IDENTITY_API_VERSION)")
 	rootCmd.Flags().StringVar(&osAuthPluginFlag, "os-auth-plugin", "password", "The Openstack Auth Plugin (Can also set env OS_AUTH_PLUGIN)")
-
-	//Commented the required flags out for now as this is going into a Docker container.
-
-	rootCmd.Flags().StringVarP(&networkIDFlag, "network-id", "n", "", "Network ID to deploy the server onto for scanning. (Can also set env OS_NETWORK_ID)")
-	//err := rootCmd.MarkFlagRequired("network-id")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
-	rootCmd.Flags().StringVarP(&serverFlavorIDFlag, "server-flavor-id", "s", "", "ID of the server flavor to create for the scan. (Can also set env OS_SERVER_FLAVOR_ID)")
-	//err = rootCmd.MarkFlagRequired("server-flavor-id")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
-	rootCmd.Flags().StringVarP(&openstackBuildConfigPathFlag, "build-config", "b", "", strings.Join([]string{"The openstack variables to use to build the image (see ", repoRoot, "/blob/master/images/capi/packer/openstack/openstack-ubuntu-2004.json) (Can also set env OS_BUILD_CONFIG)"}, ""))
-	//err = rootCmd.MarkFlagRequired("build-config")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
 	rootCmd.Flags().BoolVarP(&enableConfigDriveFlag, "enable-config-drive", "c", false, "Used to enable a config drive on Openstack. This may be required if using an external network. (Can also set env OS_ENABLE_CONFIG_DRIVE)")
+	rootCmd.Flags().StringVarP(&networkIDFlag, "network-id", "n", "", "Network ID to deploy the server onto for scanning. (Can also set env OS_NETWORK_ID)")
+	rootCmd.Flags().StringVarP(&serverFlavorIDFlag, "server-flavor-id", "s", "", "ID of the server flavor to create for the scan. (Can also set env OS_SERVER_FLAVOR_ID)")
 
+	//Configuration items
+	rootCmd.Flags().StringVarP(&openstackBuildConfigPathFlag, "build-config", "b", "", strings.Join([]string{"The openstack variables to use to build the image (see ", repoRoot, "/blob/master/images/capi/packer/openstack/openstack-ubuntu-2004.json) (Can also set env OS_BUILD_CONFIG)"}, ""))
 	rootCmd.Flags().StringVarP(&imageRepoFlag, "imageRepo", "r", strings.Join([]string{repoRoot, "git"}, "."), "The imageRepo from which the image builder should be deployed. (Can also set env IMAGE_REPO)")
 	rootCmd.Flags().StringVarP(&buildOSFlag, "build-os", "o", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204 (Can also set env BUILD_OS)")
-	//err = rootCmd.MarkFlagRequired("build-os")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
 
+	//GitHub specific
 	rootCmd.Flags().StringVarP(&ghUserFlag, "github-user", "u", "", "The user for the GitHub project to which the pages will be pushed. (Can also set env GH_USER)")
-	//err = rootCmd.MarkFlagRequired("github-user")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
 	rootCmd.Flags().StringVarP(&ghProjectFlag, "github-project", "p", "", "The GitHub project to which the pages will be pushed. (Can also set env GH_PROJECT)")
-	//err = rootCmd.MarkFlagRequired("github-project")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
 	rootCmd.Flags().StringVarP(&ghTokenFlag, "github-token", "t", "", "The token for the GitHub project to which the pages will be pushed. (Can also set env GH_TOKEN)")
-	//err = rootCmd.MarkFlagRequired("github-token")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
 	rootCmd.Flags().StringVarP(&ghPagesBranchFlag, "github-pages-branch", "g", "gh-pages", "The branch name for GitHub project to which the pages will be pushed. (Can also set env GH_PAGES_BRANCH)")
-	//err = rootCmd.MarkFlagRequired("github-token")
-	//if err != nil {
-	//	log.Fatalf("%s\n", err.Error())
-	//}
 
 	rootCmd.AddCommand(versionCmd())
 }
 
+// checkErrorWithCleanup takes an error and if it is not nil, will attempt to run a cleanup to ensure no resources are left lying around.
+func checkErrorPagesWithCleanup(err error, dir string) {
+	if err != nil {
+		pagesCleanup(dir)
+		log.Fatalln(err)
+	}
+}
+
+// Execute runs the execute command for the Cobra library allowing commands & flags to be utilised.
 func Execute() error {
 	return rootCmd.Execute()
 }

@@ -105,7 +105,7 @@ func buildImage(capiPath string, buildOS string) error {
 	defer w.Close()
 
 	wr := io.MultiWriter(w, os.Stdout)
-	// TODO: Maybe fetch from openstack and sort by newest.
+	//TODO: Maybe fetch from openstack and sort by newest.
 	//  Would require some trickery to get new image ID.
 
 	args := strings.Join([]string{"build-openstack", buildOS}, "-")

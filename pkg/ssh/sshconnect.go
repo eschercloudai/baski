@@ -68,10 +68,14 @@ func NewClient(kp *keypairs.KeyPair, ip string) (*ssh.Client, error) {
 	return client, err
 }
 
+// keyString is used to generate key that will be used to validate a remote host.
 func keyString(k ssh.PublicKey) string {
 	return k.Type() + "" + base64.StdEncoding.EncodeToString(k.Marshal())
 }
 
+// trustedHostKeyCallback checks a hosts key to ensure it is valid.
+// If a blank one is passed, it is presumed this is the first time connecting to a server.
+// If it doesn't match, then a warning is returned and the SSH connection will fail as a result.
 func trustedHostKeyCallback(key string) ssh.HostKeyCallback {
 	if key == "" {
 		return func(_ string, _ net.Addr, k ssh.PublicKey) error {
@@ -105,7 +109,8 @@ func RunRemoteCommand(client *ssh.Client, command string) error {
 	return nil
 }
 
-func SftpCopy(client *sftp.Client, srcPath, dstPath, filename string) (*os.File, error) {
+// CopyFromRemoteServer uses sftp to copy a file from a remotes server to a local directory.
+func CopyFromRemoteServer(client *sftp.Client, srcPath, dstPath, filename string) (*os.File, error) {
 	src := filepath.Join(srcPath, filename)
 	dst := filepath.Join(dstPath, filename)
 

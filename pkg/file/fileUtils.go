@@ -16,16 +16,15 @@ limitations under the License.
 package file
 
 import (
-	"bufio"
 	"os"
 )
 
+// CopyFile does what it says, it copies a file from location A to location B.
 func CopyFile(from, to string) (*os.File, error) {
-	f, err := os.Open(from)
+	f, err := os.ReadFile(from)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 
 	w, err := os.Create(to)
 	if err != nil {
@@ -33,15 +32,9 @@ func CopyFile(from, to string) (*os.File, error) {
 	}
 	defer w.Close()
 
-	writer := bufio.NewWriter(w)
-	defer writer.Flush()
-
-	reader := bufio.NewScanner(f)
-	for reader.Scan() {
-		_, err = writer.Write(reader.Bytes())
-		if err != nil {
-			return nil, err
-		}
+	_, err = w.Write(f)
+	if err != nil {
+		return nil, err
 	}
 
 	return w, nil

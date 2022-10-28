@@ -34,6 +34,7 @@ import (
 	"time"
 )
 
+// fetchPagesRepo pulls the GitHub pages repo locally for modification.
 func fetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.Repository, error) {
 	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", ghUser, ghToken, ghUser, ghProject)
 	pagesDir := filepath.Join("/tmp", ghProject)
@@ -52,6 +53,8 @@ func fetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.R
 	return pagesDir, g, nil
 }
 
+// copyResultsFileIntoPages copies the results of the recent scan into the relevant
+// location for the static site to be able to display them.
 func copyResultsFileIntoPages(gitDir string, resultsFile *os.File) error {
 	log.Println("copying results file into pages repo")
 	resultsDir := filepath.Join(gitDir, "docs", "results")
@@ -68,19 +71,10 @@ func copyResultsFileIntoPages(gitDir string, resultsFile *os.File) error {
 		return err
 	}
 
-	//input, err := os.ReadFile(resultsFile.Name())
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//err = os.WriteFile(strings.Join([]string{resultsDir, cveFile}, "/"), input, 0644)
-	//if err != nil {
-	//	return err
-	//}
-
 	return nil
 }
 
+// fetchExistingReports runs to collect all reports from the results directory so that they can be parsed for later usage.
 func fetchExistingReports(gitDir string) ([]string, error) {
 	log.Println("collating existing reports")
 	var reportPaths []string
@@ -101,7 +95,7 @@ func fetchExistingReports(gitDir string) ([]string, error) {
 	return reportPaths, nil
 }
 
-// parseReports turns all json files into structs to be used in templating
+// parseReports turns all json files into structs to be used in templating for the static site.
 func parseReports(reports []string) (map[int]constants.Year, error) {
 	log.Println("parsing reports")
 	allReports := make(map[int]constants.Year)
@@ -327,6 +321,8 @@ func publishPages(repository *git.Repository, gitPagesPath string) error {
 	return nil
 }
 
+// pagesCleanup just removes any leftover files/repo so that when running locally the binary doesn't hit a conflict.
+// This ensures that on multiple runs it always ahas the latest code base for the GitHub pages repo.
 func pagesCleanup(pagesDir string) {
 	err := os.RemoveAll(pagesDir)
 	if err != nil {

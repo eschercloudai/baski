@@ -25,6 +25,7 @@ import (
 	"time"
 )
 
+// fetchResultsFromServer pulls the results.json from the remote scanning server.
 func fetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, error) {
 	client, err := sshconnect.NewClient(kp, freeIP)
 	if err != nil {
@@ -50,10 +51,11 @@ func fetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, erro
 	}
 	defer sftpConnection.Close()
 
-	return sshconnect.SftpCopy(sftpConnection, "/tmp/", "./", "results.json")
+	return sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "./", "results.json")
 }
 
+// removeScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
 func removeScanningResources(serverID string, os *ostack.Client) {
-	os.RemoveScanningServer(serverID)
+	os.RemoveServer(serverID)
 	os.RemoveKeypair()
 }

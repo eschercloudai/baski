@@ -28,12 +28,15 @@ import (
 	"time"
 )
 
+// Client contains the Env vars of the program as well as the Provider and any EndpointOptions.
+// This is used in gophercloud connections.
 type Client struct {
 	Env             constants.Env
 	Provider        *gophercloud.ProviderClient
 	EndpointOptions *gophercloud.EndpointOpts
 }
 
+// OpenstackInit creates the initial client for connecting to Openstack.
 func (c *Client) OpenstackInit() {
 	opts := gophercloud.AuthOptions{
 		IdentityEndpoint: c.Env.AuthURL + "/" + strings.Join([]string{"v", c.Env.IdentityAPIVersion}, ""),
@@ -53,6 +56,7 @@ func (c *Client) OpenstackInit() {
 	c.EndpointOptions = epOpts
 }
 
+// createComputeClient will generate the compute client required for creating Servers and KeyPairs in Openstack.
 func createComputeClient(client *Client) *gophercloud.ServiceClient {
 	c, err := openstack.NewComputeV2(client.Provider, *client.EndpointOptions)
 	if err != nil {
@@ -62,7 +66,8 @@ func createComputeClient(client *Client) *gophercloud.ServiceClient {
 	return c
 }
 
-func (c *Client) CreateNewKeypair() *keypairs.KeyPair {
+// CreateKeypair creates a new KeyPair in Openstack.
+func (c *Client) CreateKeypair() *keypairs.KeyPair {
 	client := createComputeClient(c)
 	client.Microversion = "2.2"
 
@@ -81,7 +86,8 @@ func (c *Client) CreateNewKeypair() *keypairs.KeyPair {
 	return kp
 }
 
-func (c *Client) CreateServerFromImageForScanning(keypair *keypairs.KeyPair, imageID, serverFlavorID, networkID string, enableConfigDrive bool) (*servers.Server, string) {
+// CreateServer creates a compute instance in Openstack.
+func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, serverFlavorID, networkID string, enableConfigDrive bool) (*servers.Server, string) {
 	trivyVersion := "0.31.3"
 	client := createComputeClient(c)
 
@@ -122,7 +128,8 @@ sudo ./trivy rootfs -f json -o /tmp/results.json /
 	return server, freeIP
 }
 
-func (c *Client) RemoveScanningServer(serverID string) {
+// RemoveServer will delete a Server from Openstack
+func (c *Client) RemoveServer(serverID string) {
 	log.Println("removing scanning server.")
 	client := createComputeClient(c)
 	res := servers.Delete(client, serverID)
@@ -132,6 +139,7 @@ func (c *Client) RemoveScanningServer(serverID string) {
 	}
 }
 
+// RemoveKeypair will delete a Keypair from Openstack
 func (c *Client) RemoveKeypair() {
 	log.Println("removing keypair.")
 	client := createComputeClient(c)
@@ -141,7 +149,8 @@ func (c *Client) RemoveKeypair() {
 	}
 }
 
-// attachFloatingIP will find the first free IP available and attach it to the instance. If it cannot find one, it will error.
+// attachFloatingIP will find the first free IP available and attach it to the instance.
+// If it cannot find one, it will error.
 func attachFloatingIP(client *gophercloud.ServiceClient, serverID string) string {
 	// Floating IP assignment
 	allIPsPages, err := floatingips.List(client).AllPages()

@@ -24,6 +24,7 @@ import (
 	"os/signal"
 )
 
+// GitClone will clone a designated repo.
 func GitClone(repo, cloneLocation string, reference plumbing.ReferenceName) (*git.Repository, error) {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
@@ -46,14 +47,4 @@ func GitClone(repo, cloneLocation string, reference plumbing.ReferenceName) (*gi
 	}
 
 	return gitRepo, nil
-}
-
-func GitAdd() {
-
-}
-func GitCommit() {
-
-}
-func GitPush() {
-
 }

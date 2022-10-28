@@ -15,11 +15,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drew-viles/baskio/pkg/constants"
 
 	"github.com/spf13/cobra"
 )
 
-// newVersionCommand returns a version command that prints out application
+// versionCmd returns a version command that prints out application
 // and versioning information.
 func versionCmd() *cobra.Command {
 	return &cobra.Command{
@@ -27,7 +28,7 @@ func versionCmd() *cobra.Command {
 		Short: "Print this command's version.",
 		Long:  "Print this command's version.",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("v0.0.1")
+			fmt.Println(constants.Version)
 		},
 	}
 }
