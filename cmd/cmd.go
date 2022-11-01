@@ -19,7 +19,7 @@ import (
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
 	"github.com/spf13/cobra"
 	"log"
-	"path/filepath"
+	"os"
 	"strings"
 )
 
@@ -80,43 +80,45 @@ func init() {
 			// Now we check to see if any env vars have been passed instead of flags. If so, set the flags to the env vars.
 			envs.CheckForEnvVars()
 
-			osClient := &ostack.Client{
-				Env: envs,
-			}
+			//osClient := &ostack.Client{
+			//	Env: envs,
+			//}
 
 			//Build image
-			buildGitDir := fetchBuildRepo(envs.ImageRepo)
 			buildConfig := ostack.ParseBuildConfig(envs.OpenstackBuildConfigPath)
 			buildConfig.Networks = envs.NetworkID
 
-			generateVariablesFile(buildGitDir, buildConfig)
-
-			capiPath := filepath.Join(buildGitDir, "images/capi")
-			fetchDependencies(capiPath)
-			err := buildImage(capiPath, envs.BuildOS)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			imgID, err := retrieveNewImageID()
-			if err != nil {
-				log.Fatalln(err)
-			}
+			//buildGitDir := fetchBuildRepo(envs.ImageRepo)
+			//generateVariablesFile(buildGitDir, buildConfig)
+			//
+			//capiPath := filepath.Join(buildGitDir, "images/capi")
+			//fetchDependencies(capiPath)
+			//err := buildImage(capiPath, envs.BuildOS)
+			//if err != nil {
+			//	log.Fatalln(err)
+			//}
+			//imgID, err := retrieveNewImageID()
+			//if err != nil {
+			//	log.Fatalln(err)
+			//}
 
 			//Scan image
-			osClient.OpenstackInit()
-			kp := osClient.CreateKeypair()
-			server, freeIP := osClient.CreateServer(kp, imgID, buildConfig.Flavor, buildConfig.Networks, enableConfigDriveFlag)
-
-			resultsFile, err := fetchResultsFromServer(freeIP, kp)
-			if err != nil {
-				removeScanningResources(server.ID, osClient)
-				log.Fatalln(err.Error())
-			}
-
-			defer resultsFile.Close()
+			//osClient.OpenstackInit()
+			//kp := osClient.CreateKeypair()
+			//server, freeIP := osClient.CreateServer(kp, imgID, buildConfig.Flavor, buildConfig.Networks, enableConfigDriveFlag)
+			//
+			//resultsFile, err := fetchResultsFromServer(freeIP, kp)
+			//if err != nil {
+			//	removeScanningResources(server.ID, osClient)
+			//	log.Fatalln(err.Error())
+			//}
+			//
+			//defer resultsFile.Close()
 
 			//Cleanup the scanning resources
-			removeScanningResources(server.ID, osClient)
+			//removeScanningResources(server.ID, osClient)
+
+			resultsFile, _ := os.Open("results.json")
 
 			//GitHub pages
 			pagesGitDir, pagesRepo, err := fetchPagesRepo(envs.GhUser, envs.GhToken, envs.GhProject, envs.GhPagesBranch)
