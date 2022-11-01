@@ -6,7 +6,7 @@ Once the image has been built, the CVE results will be pushed to GitHub Pages. S
 
 # Scope
 
-⚠️Currently in ~~beta~~ alpha at the moment.
+⚠️Currently in beta at the moment.
 
 # Prerequisites
 ### GitHub Pages
@@ -36,23 +36,10 @@ You will also require a source image to reference for the build to succeed.
 When using, this you need to provide the following build config - changing any variables as required.
 ```
 {
-  "build_name": "ubuntu-2204",
-  "distro_name": "ubuntu",
-  "guest_os_type": "ubuntu-64",
-  "os_display_name": "Ubuntu 22.04",
-  "shutdown_command": "shutdown -P now",
-  "ssh_username": "ubuntu",
   "source_image": "SOURCE_IMAGE_ID",
   "networks": "NETWORK_ID",
   "flavor": "INSTANCE_FLAVOR",
-  "attach_config_drive": "false",
-  "use_floating_ip": "true",
   "floating_ip_network": "Internet",
-  "crictl_version": "1.25.0",
-  "kubernetes_semver": "v1.25.3",
-  "kubernetes_rpm_version": "1.25.3-0",
-  "kubernetes_series": "v1.25",
-  "kubernetes_deb_version": "1.25.3-00"
 }
 ```
 
@@ -80,12 +67,10 @@ baski --build-os ubuntu-2204 \
 For more flags, run `baskio --help`
 
 # TODO
-* Change the generated image and results name to be based on a date stamp and UUID for better image management.
 * Have option to set the image as public in Openstack
-* Provide option to choose name of gh-pages branch name
-* Maybe use the openstack.json variables file that are used for packed to decide how to deploy the scanning server? 
-IE network ID, flavour etc.
-
+* Make GitHub Pages optional.
+* Make scanning a separate binary instead of packaging it in here?
+* Make this work for more than just Openstack so that it's more useful to the community around the Kubernetes Image Builder?
 
 # License
 The scripts and documentation in this project are released under the [Apache v2 License](LICENSE).

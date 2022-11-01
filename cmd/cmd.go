@@ -97,6 +97,7 @@ func init() {
 				log.Fatalln(err)
 			}
 			imageName := fmt.Sprintf("%s-kube-%s-%s-%s", buildConfig.BuildName, buildConfig.KubernetesSemver, scanDate, imageUUID.String())
+			buildConfig.ImageName = imageName
 
 			generateVariablesFile(buildGitDir, buildConfig)
 
