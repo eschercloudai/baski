@@ -55,21 +55,7 @@ func fetchBuildRepo(imageRepo string) string {
 	return g
 }
 
-//// copyVariablesFile copies the contents of the provided file into the correct location
-//// so the that build can be performed.
-//func copyVariablesFile(buildGitDir string, buildOS, configPath string) {
-//	log.Printf("copying variables file\n")
-//	outputFileName := strings.Join([]string{"openstack-", buildOS, ".json"}, "")
-//	outputFile := filepath.Join(buildGitDir, "images/capi/packer/openstack", outputFileName)
-//
-//	_, err := file.CopyFile(configPath, outputFile)
-//	if err != nil {
-//		panic(err)
-//	}
-//}
-
-// copyVariablesFile copies the contents of the provided file into the correct location
-// so the that build can be performed.
+// generateVariablesFile builds a variables file from the struct.
 func generateVariablesFile(buildGitDir string, buildConfig *ostack.BuildConfig) {
 	log.Printf("generating variables file\n")
 	outputFileName := strings.Join([]string{"openstack-", buildConfig.BuildName, ".json"}, "")
