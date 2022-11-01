@@ -60,11 +60,10 @@ func fetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.R
 
 // copyResultsFileIntoPages copies the results of the recent scan into the relevant
 // location for the static site to be able to display them.
-func copyResultsFileIntoPages(gitDir string, resultsFile *os.File) error {
+func copyResultsFileIntoPages(gitDir, filename string, resultsFile *os.File) error {
 	log.Println("copying results file into pages repo")
 	resultsDir := filepath.Join(gitDir, "docs", "results")
-	scanDate := fmt.Sprintf("cve-%d-%d-%d--%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
-	cveFile := strings.Join([]string{scanDate, "json"}, ".")
+	cveFile := strings.Join([]string{filename, "json"}, ".")
 
 	err := os.MkdirAll(resultsDir, 0755)
 	if err != nil {

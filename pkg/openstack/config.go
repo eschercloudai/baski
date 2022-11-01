@@ -8,6 +8,7 @@ import (
 
 type BuildConfig struct {
 	BuildName            string `json:"build_name"`
+	ImageName            string `json:"image_name"`
 	DistroName           string `json:"distro_name"`
 	GuestOsType          string `json:"guest_os_type"`
 	OsDisplayName        string `json:"os_display_name"`

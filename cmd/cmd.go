@@ -17,10 +17,12 @@ import (
 	"fmt"
 	"github.com/drew-viles/baskio/pkg/constants"
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var (
@@ -89,11 +91,18 @@ func init() {
 			buildConfig := ostack.ParseBuildConfig(envs.OpenstackBuildConfigPath)
 			buildConfig.Networks = envs.NetworkID
 
+			scanDate := fmt.Sprintf("%d-%d-%d--%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
+			imageUUID, err := uuid.NewUUID()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			imageName := fmt.Sprintf("%s-kube-%s-%s-%s", buildConfig.BuildName, buildConfig.KubernetesSemver, scanDate, imageUUID.String())
+
 			generateVariablesFile(buildGitDir, buildConfig)
 
 			capiPath := filepath.Join(buildGitDir, "images/capi")
 			fetchDependencies(capiPath)
-			err := buildImage(capiPath, envs.BuildOS)
+			err = buildImage(capiPath, envs.BuildOS)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -124,7 +133,7 @@ func init() {
 				log.Fatalln(err)
 			}
 
-			err = copyResultsFileIntoPages(pagesGitDir, resultsFile)
+			err = copyResultsFileIntoPages(pagesGitDir, imageName, resultsFile)
 			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			reports, err := fetchExistingReports(pagesGitDir)
