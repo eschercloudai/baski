@@ -34,8 +34,8 @@ func fetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, erro
 	defer client.Close()
 
 	log.Println("Successfully connected to ssh server.")
-	log.Println("waiting for the results of the scan to become available.")
-	time.Sleep(1 * time.Minute)
+	log.Println("waiting 2 minutes for the results of the scan to become available.")
+	time.Sleep(2 * time.Minute)
 
 	remoteCommand := "while [ ! -f /tmp/results.json ] && [ -s /tmp/results.json ] ; do echo \"results not ready\"; sleep 5; done;"
 	err = sshconnect.RunRemoteCommand(client, remoteCommand)

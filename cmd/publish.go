@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"github.com/drew-viles/baskio/pkg/constants"
@@ -33,6 +34,12 @@ import (
 	tpl "text/template"
 	"time"
 )
+
+//go:embed templates/*.html.gotmpl
+var htmlTmpl embed.FS
+
+//go:embed templates/js/*.js.gotmpl
+var jsTmpl embed.FS
 
 // fetchPagesRepo pulls the GitHub pages repo locally for modification.
 func fetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.Repository, error) {
@@ -170,7 +177,7 @@ func generateHTMLTemplate(baseDir string, allReports map[int]constants.Year) err
 	log.Println("generating index.html")
 	// HTML template
 	htmlTarget := strings.Join([]string{baseDir, "index.html"}, "/")
-	htmlTmpl := "templates/index.html.gotmpl"
+
 	htmlFile, err := os.Create(htmlTarget)
 	if err != nil {
 		return err
@@ -179,7 +186,7 @@ func generateHTMLTemplate(baseDir string, allReports map[int]constants.Year) err
 		"inc": func(x int) int {
 			return x + 1
 		},
-	}).ParseFiles(htmlTmpl))
+	}).ParseFS(htmlTmpl))
 	if err != nil {
 		return err
 	}
@@ -203,7 +210,7 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 	// main.js template
 	log.Println("generating main.js")
 	mainJSTarget := filepath.Join(jsDir, "main.js")
-	mainJSTmpl := "templates/js/main.js.gotmpl"
+	//mainJSTmpl := "templates/js/main.js.gotmpl"
 	mainFile, err := os.Create(mainJSTarget)
 	if err != nil {
 		return err
@@ -213,7 +220,7 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 		"inc": func(x int) int {
 			return x + 1
 		},
-	}).ParseFiles(mainJSTmpl))
+	}).ParseFS(jsTmpl))
 	if err != nil {
 		return err
 	}
@@ -226,7 +233,7 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 	// class.js template
 	log.Println("generating class.js")
 	classJSTarget := filepath.Join(jsDir, "class.js")
-	classJSTmpl := "templates/js/class.js.gotmpl"
+	//classJSTmpl := "templates/js/class.js.gotmpl"
 	classFile, err := os.Create(classJSTarget)
 	if err != nil {
 		return err
@@ -236,7 +243,7 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 		"inc": func(x int) int {
 			return x + 1
 		},
-	}).ParseFiles(classJSTmpl))
+	}).ParseFS(jsTmpl))
 	if err != nil {
 		return err
 	}
@@ -249,7 +256,7 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 	// reports.js template
 	log.Println("generating reports.js")
 	reportJSTarget := filepath.Join(jsDir, "reports.js")
-	reportJSTmpl := "templates/js/reports.js.gotmpl"
+	//reportJSTmpl := "templates/js/reports.js.gotmpl"
 	reportFile, err := os.Create(reportJSTarget)
 	if err != nil {
 		return err
@@ -259,7 +266,7 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 		"inc": func(x int) int {
 			return x + 1
 		},
-	}).ParseFiles(reportJSTmpl))
+	}).ParseFS(jsTmpl))
 	if err != nil {
 		return err
 	}
