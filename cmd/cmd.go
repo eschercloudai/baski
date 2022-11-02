@@ -55,56 +55,54 @@ func init() {
 		This tool has been designed to automatically build images for the Openstack potion of the Kubernetes Image Builder.
 		It could be extended out to provide images for a variety of other builders however for now it's main goal is to work with Openstack.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			// Dump all the input vars into here.
-			envs := constants.Env{
-				AuthURL:                  osAuthURLFlag,
-				ProjectID:                osProjectIDFlag,
-				ProjectName:              osProjectNameFlag,
-				Username:                 osUsernameFlag,
-				Password:                 osPasswordFlag,
-				Region:                   osRegionNameFlag,
-				Interface:                osInterfaceFlag,
-				UserDomainName:           osUserDomainNameFlag,
-				ProjectDomainName:        osProjectDomainNameFlag,
-				IdentityAPIVersion:       osIdentityAPIVersionFlag,
-				AuthPlugin:               osAuthPluginFlag,
-				NetworkID:                networkIDFlag,
-				OpenstackBuildConfigPath: openstackBuildConfigPathFlag,
-				EnableConfigDrive:        fmt.Sprintf("%t", enableConfigDriveFlag),
-				ImageRepo:                imageRepoFlag,
-				BuildOS:                  buildOSFlag,
-				GhUser:                   ghUserFlag,
-				GhProject:                ghProjectFlag,
-				GhToken:                  ghTokenFlag,
-				GhPagesBranch:            ghPagesBranchFlag,
-			}
-
-			// Now we check to see if any env vars have been passed instead of flags. If so, set the flags to the env vars.
-			envs.CheckForEnvVars()
-
-			osClient := &ostack.Client{
-				Env: envs,
-			}
-
-			buildConfig := ostack.ParseBuildConfig(envs.OpenstackBuildConfigPath)
-			buildConfig.Networks = envs.NetworkID
-
-			//Build image
-			buildGitDir := fetchBuildRepo(envs.ImageRepo)
-
 			scanDate := fmt.Sprintf("%d-%d-%d--%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
 			imageUUID, err := uuid.NewUUID()
 			if err != nil {
 				log.Fatalln(err)
 			}
-			imageName := fmt.Sprintf("%s-kube-%s-%s-%s", buildConfig.BuildName, buildConfig.KubernetesSemver, scanDate, imageUUID.String())
+
+			osClient := &ostack.Client{
+				Env: constants.Env{
+					AuthURL:                  osAuthURLFlag,
+					ProjectID:                osProjectIDFlag,
+					ProjectName:              osProjectNameFlag,
+					Username:                 osUsernameFlag,
+					Password:                 osPasswordFlag,
+					Region:                   osRegionNameFlag,
+					Interface:                osInterfaceFlag,
+					UserDomainName:           osUserDomainNameFlag,
+					ProjectDomainName:        osProjectDomainNameFlag,
+					IdentityAPIVersion:       osIdentityAPIVersionFlag,
+					AuthPlugin:               osAuthPluginFlag,
+					NetworkID:                networkIDFlag,
+					OpenstackBuildConfigPath: openstackBuildConfigPathFlag,
+					EnableConfigDrive:        fmt.Sprintf("%t", enableConfigDriveFlag),
+					ImageRepo:                imageRepoFlag,
+					BuildOS:                  buildOSFlag,
+					GhUser:                   ghUserFlag,
+					GhProject:                ghProjectFlag,
+					GhToken:                  ghTokenFlag,
+					GhPagesBranch:            ghPagesBranchFlag,
+				},
+			}
+			// Now we check to see if any env vars have been passed instead of flags. If so, set the flags to the env vars.
+			osClient.Env.CheckForEnvVars()
+
+			buildConfig := ostack.ParseBuildConfig(osClient.Env.OpenstackBuildConfigPath)
+			buildConfig.Networks = osClient.Env.NetworkID
+
+			imageName := fmt.Sprintf("%s-kube-%s-%s-%s", osClient.Env.BuildOS, buildConfig.KubernetesSemver, scanDate, imageUUID.String())
+			osClient.Env.ImageNameUUID = imageUUID.String()
 			buildConfig.ImageName = imageName
+
+			//Build image
+			buildGitDir := fetchBuildRepo(osClient.Env.ImageRepo)
 
 			generateVariablesFile(buildGitDir, buildConfig)
 
 			capiPath := filepath.Join(buildGitDir, "images/capi")
 			fetchDependencies(capiPath)
-			err = buildImage(capiPath, envs.BuildOS)
+			err = buildImage(capiPath, osClient.Env.BuildOS)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -130,7 +128,7 @@ func init() {
 			removeScanningResources(server.ID, osClient)
 
 			//GitHub pages
-			pagesGitDir, pagesRepo, err := fetchPagesRepo(envs.GhUser, envs.GhToken, envs.GhProject, envs.GhPagesBranch)
+			pagesGitDir, pagesRepo, err := fetchPagesRepo(osClient.Env.GhUser, osClient.Env.GhToken, osClient.Env.GhProject, osClient.Env.GhPagesBranch)
 			if err != nil {
 				log.Fatalln(err)
 			}

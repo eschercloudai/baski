@@ -150,6 +150,7 @@ type Env struct {
 	OpenstackBuildConfigPath string
 	EnableConfigDrive        string
 	ImageRepo                string
+	ImageNameUUID            string
 	BuildOS                  string
 	GhUser                   string
 	GhProject                string

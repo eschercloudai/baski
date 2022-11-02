@@ -7,13 +7,7 @@ import (
 )
 
 type BuildConfig struct {
-	BuildName            string `json:"build_name"`
 	ImageName            string `json:"image_name"`
-	DistroName           string `json:"distro_name"`
-	GuestOsType          string `json:"guest_os_type"`
-	OsDisplayName        string `json:"os_display_name"`
-	ShutdownCommand      string `json:"shutdown_command"`
-	SshUsername          string `json:"ssh_username"`
 	SourceImage          string `json:"source_image"`
 	Networks             string `json:"networks"`
 	Flavor               string `json:"flavor"`

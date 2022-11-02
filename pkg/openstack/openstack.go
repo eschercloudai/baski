@@ -73,7 +73,7 @@ func (c *Client) CreateKeypair() *keypairs.KeyPair {
 	client.Microversion = "2.2"
 
 	kp, err := keypairs.Create(client, keypairs.CreateOpts{
-		Name: "go-key",
+		Name: c.Env.ImageNameUUID + "-go-key",
 		Type: "ssh",
 	}).Extract()
 	if err != nil {
@@ -91,7 +91,7 @@ func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, flavorName, ne
 	serverFlavorID := c.GetFlavorIDByName(flavorName)
 
 	serverOpts := servers.CreateOpts{
-		Name:           "Scanner",
+		Name:           c.Env.ImageNameUUID + "-scanner",
 		FlavorRef:      serverFlavorID,
 		ImageRef:       imageID,
 		SecurityGroups: []string{"default"},
@@ -142,7 +142,7 @@ func (c *Client) RemoveServer(serverID string) {
 func (c *Client) RemoveKeypair() {
 	log.Println("removing keypair.")
 	client := createComputeClient(c)
-	res := keypairs.Delete(client, "go-key", keypairs.DeleteOpts{})
+	res := keypairs.Delete(client, c.Env.ImageNameUUID+"-go-key", keypairs.DeleteOpts{})
 	if res.Err != nil {
 		log.Println(res.Err)
 	}

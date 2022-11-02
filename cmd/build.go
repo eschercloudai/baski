@@ -58,8 +58,8 @@ func fetchBuildRepo(imageRepo string) string {
 // generateVariablesFile builds a variables file from the struct.
 func generateVariablesFile(buildGitDir string, buildConfig *ostack.BuildConfig) {
 	log.Printf("generating variables file\n")
-	outputFileName := strings.Join([]string{"openstack-", buildConfig.BuildName, ".json"}, "")
-	outputFile := filepath.Join(buildGitDir, "images/capi/packer/openstack", outputFileName)
+	outputFileName := strings.Join([]string{"tmp", ".json"}, "")
+	outputFile := filepath.Join(buildGitDir, "images/capi/", outputFileName)
 
 	configContent, err := json.Marshal(buildConfig)
 	if err != nil {
@@ -85,7 +85,7 @@ func fetchDependencies(repoPath string) {
 
 	wr := io.MultiWriter(w, os.Stdout)
 
-	err = systemUtils.RunMake("deps-openstack", repoPath, wr)
+	err = systemUtils.RunMake("deps-openstack", repoPath, nil, wr)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -115,7 +115,9 @@ func buildImage(capiPath string, buildOS string) error {
 
 	args := strings.Join([]string{"build-openstack", buildOS}, "-")
 
-	err = systemUtils.RunMake(args, capiPath, wr)
+	env := []string{"PACKER_VAR_FILES=tmp.json"}
+	env = append(env, os.Environ()...)
+	err = systemUtils.RunMake(args, capiPath, env, wr)
 	if err != nil {
 		log.Fatalln(err)
 	}

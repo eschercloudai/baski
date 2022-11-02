@@ -26,12 +26,13 @@ import (
 // RunMake simply runs the make command on the system with optional arguments and output locations.
 // generally speaking the os.Stdout will be used but the option is there to write to a file
 // in case parsing needs to happen after.
-func RunMake(makeArgs, path string, output io.Writer) error {
+func RunMake(makeArgs, path string, env []string, output io.Writer) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Minute)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "make", makeArgs)
 	cmd.Dir = path
+	cmd.Env = env
 	cmd.Stdout = output
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
