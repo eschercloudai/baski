@@ -38,6 +38,7 @@ type Month struct {
 // It is used for parsing and generating the static sites.
 type ReportData struct {
 	Name          string `json:"name"`
+	ShortName     string `json:"short_name"`
 	SchemaVersion int    `json:"schema_version"`
 	ArtifactName  string `json:"artifact_name"`
 	ArtifactType  string `json:"artifact_type"`
