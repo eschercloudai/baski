@@ -17,10 +17,12 @@ import (
 	"fmt"
 	"github.com/drew-viles/baskio/pkg/constants"
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	"log"
-	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 var (
@@ -80,55 +82,53 @@ func init() {
 			// Now we check to see if any env vars have been passed instead of flags. If so, set the flags to the env vars.
 			envs.CheckForEnvVars()
 
-			//osClient := &ostack.Client{
-			//	Env: envs,
-			//}
+			osClient := &ostack.Client{
+				Env: envs,
+			}
 
 			buildConfig := ostack.ParseBuildConfig(envs.OpenstackBuildConfigPath)
 			buildConfig.Networks = envs.NetworkID
 
-			////Build image
-			//buildGitDir := fetchBuildRepo(envs.ImageRepo)
+			//Build image
+			buildGitDir := fetchBuildRepo(envs.ImageRepo)
 
-			//scanDate := fmt.Sprintf("%d-%d-%d--%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
-			//imageUUID, err := uuid.NewUUID()
-			//if err != nil {
-			//	log.Fatalln(err)
-			//}
-			//imageName := fmt.Sprintf("%s-kube-%s-%s-%s", buildConfig.BuildName, buildConfig.KubernetesSemver, scanDate, imageUUID.String())
-			//buildConfig.ImageName = imageName
-			//
-			//generateVariablesFile(buildGitDir, buildConfig)
-			//
-			//capiPath := filepath.Join(buildGitDir, "images/capi")
-			//fetchDependencies(capiPath)
-			//err = buildImage(capiPath, envs.BuildOS)
-			//if err != nil {
-			//	log.Fatalln(err)
-			//}
-			//imgID, err := retrieveNewImageID()
-			//if err != nil {
-			//	log.Fatalln(err)
-			//}
-			//
-			////Scan image
-			//osClient.OpenstackInit()
-			//kp := osClient.CreateKeypair()
-			//server, freeIP := osClient.CreateServer(kp, imgID, buildConfig.Flavor, buildConfig.Networks, enableConfigDriveFlag)
-			//
-			//resultsFile, err := fetchResultsFromServer(freeIP, kp)
-			//if err != nil {
-			//	removeScanningResources(server.ID, osClient)
-			//	log.Fatalln(err.Error())
-			//}
-			//
-			//defer resultsFile.Close()
-			//
-			////Cleanup the scanning resources
-			//removeScanningResources(server.ID, osClient)
+			scanDate := fmt.Sprintf("%d-%d-%d--%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second())
+			imageUUID, err := uuid.NewUUID()
+			if err != nil {
+				log.Fatalln(err)
+			}
+			imageName := fmt.Sprintf("%s-kube-%s-%s-%s", buildConfig.BuildName, buildConfig.KubernetesSemver, scanDate, imageUUID.String())
+			buildConfig.ImageName = imageName
 
-			imageName := "ubuntu-2204-kube-v1.25.3-2022-11-1--13-6-56-0fd58811-59e6-11ed-ac32-9e91db58e64a"
-			resultsFile, _ := os.Open("results.json")
+			generateVariablesFile(buildGitDir, buildConfig)
+
+			capiPath := filepath.Join(buildGitDir, "images/capi")
+			fetchDependencies(capiPath)
+			err = buildImage(capiPath, envs.BuildOS)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			imgID, err := retrieveNewImageID()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			//Scan image
+			osClient.OpenstackInit()
+			kp := osClient.CreateKeypair()
+			server, freeIP := osClient.CreateServer(kp, imgID, buildConfig.Flavor, buildConfig.Networks, enableConfigDriveFlag)
+
+			resultsFile, err := fetchResultsFromServer(freeIP, kp)
+			if err != nil {
+				removeScanningResources(server.ID, osClient)
+				log.Fatalln(err.Error())
+			}
+
+			defer resultsFile.Close()
+
+			//Cleanup the scanning resources
+			removeScanningResources(server.ID, osClient)
+
 			//GitHub pages
 			pagesGitDir, pagesRepo, err := fetchPagesRepo(envs.GhUser, envs.GhToken, envs.GhProject, envs.GhPagesBranch)
 			if err != nil {
