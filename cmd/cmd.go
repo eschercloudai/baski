@@ -142,7 +142,7 @@ func init() {
 			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			results, err := parseReports(reports)
-			//checkErrorPagesWithCleanup(err, pagesGitDir)
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			err = buildPages(pagesGitDir, results)
 			checkErrorPagesWithCleanup(err, pagesGitDir)
