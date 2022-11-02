@@ -57,50 +57,86 @@ function loadResultsIntoAccordion(report) {
     let critCount = 0;
     let medCount = 0;
     let lowCount = 0;
-    //let rowStart = `<div class="row">`;
-    //let rowEnd = `</div>`;
+    let cols = 4;
+    let rowStart = '<div class="row">';
+    let rowEnd = '</div>';
+
+    let lowAccord = "";
+    let medAccord = "";
+    let critAccord = "";
 
     let cves = new CVEs(report.jsonContent.Results[0]);
     cves.GetCVEs().forEach((cve) => {
+        let val = "";
         switch (cve.severity) {
             case "CRITICAL":
-                // if (critCount % 3 === 0) {
-                // criticalAccordion.innerHTML += rowStart;
-                // }
+                if (critCount % cols === 0) {
+                    val += rowStart;
+                }
 
-                criticalAccordion.innerHTML += `${ButtonGen(cve)}`;
+                val += `${CardGen(cve)}`;
 
-                // if (critCount % 3 === 2) {
-                // criticalAccordion.innerHTML += rowEnd;
-                // }
+                if (critCount % cols === (cols-1)) {
+                    val += rowEnd;
+                }
+                critAccord += val;
                 critCount++;
                 break;
             case "MEDIUM":
-                // if (medCount % 3 === 0) {
-                // mediumAccordion.innerHTML += rowStart;
-                // }
-                mediumAccordion.innerHTML += `${ButtonGen(cve)}`;
-                // if (medCount % 3 === 2) {
-                // mediumAccordion.innerHTML += rowEnd;
-                // }
+                if (medCount % cols === 0) {
+                    val += rowStart;
+                }
+
+                val += `${CardGen(cve)}`;
+
+                if (medCount % cols === (cols-1)) {
+                    val += rowEnd;
+                }
+                medAccord += val;
                 medCount++;
                 break;
             case "LOW":
-                // if (lowCount % 3 === 0) {
-                // lowAccordion.innerHTML += rowStart;
-                // }
-                lowAccordion.innerHTML += `${ButtonGen(cve)}`;
-                // if (lowCount % 3 === 2) {
-                // lowAccordion.innerHTML += rowEnd;
-                // }
+                console.log("raw:" + lowCount);
+                if (lowCount % cols === 0) {
+                    val += rowStart;
+                }
+
+                val += `${CardGen(cve)}`;
+
+                if (lowCount % cols === (cols-1)) {
+                    val += rowEnd;
+                }
+                lowAccord += val;
+
                 lowCount++;
                 break;
         }
     });
+
+
+    criticalAccordion.innerHTML = critAccord;
+    mediumAccordion.innerHTML = medAccord;
+    lowAccordion.innerHTML = lowAccord;
+
 }
 
-function ButtonGen(cve) {
-    return `<button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#cveModal" data-cve-cve="${cve.id}" data-cve-pkg="${cve.packages}" data-cve-title="${cve.title}" data-cve-description="${cve.description}" data-cve-link="${cve.link}">${cve.id}</button>`
+function CardGen(cve) {
+    return `<div class="col">
+    <div class="card" style="width: 18rem;">
+      <div class="card-body">
+        <h5 class="card-title">${cve.title.substring(0, 16) + "\u2026"}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">${cve.id} - <span class="card-subtitle mb-2 text-muted">${cve.score}</span></h6>
+        <p class="card-text">${cve.description.substring(0, 50) + "\u2026"}</p>
+
+        <ul class="list-group list-group-flush">
+            ${cve.packages.map(package => `<li class="list-group-item">${package}</li>`).join("")}
+        </ul>
+
+        <a href="#" class="card-link" data-bs-toggle="modal" data-bs-target="#cveModal" data-cve-cve="${cve.id}" data-cve-pkg="${cve.packages}" data-cve-title="${cve.title}" data-cve-description='${cve.description}' data-cve-uri="${cve.uri}">More info</a>
+      </div>
+    </div>
+
+</div>`
 }
 
 // This allows the modal to be populated with the data from each of the CVE buttons that are generated.

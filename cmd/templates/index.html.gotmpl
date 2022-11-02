@@ -36,7 +36,7 @@
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     {{- range $report, $rValue := $mValue.Reports}}
-                        <li><a class="dropdown-item report-links" href="#" data-report-year="{{$year}}" data-report-month="{{$month}}" data-report-name="{{$report}}">{{$report}}</a></li>
+                        <li><a class="dropdown-item report-links" href="#" data-report-year="{{$year}}" data-report-month="{{$month}}" data-report-name="{{$report}}">{{$rValue.ShortName}}</a></li>
                     {{- end}}
                 </ul>
             </div>

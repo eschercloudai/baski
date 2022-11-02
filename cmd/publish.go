@@ -116,14 +116,15 @@ func parseReports(reports []string) (map[int]constants.Year, error) {
 		}
 
 		stripDirPrefix := strings.Split(v, "/")
+
 		reportName := stripDirPrefix[len(stripDirPrefix)-1:][0]
 		fileName := strings.Split(reportName, "-")
 
-		year, err := strconv.Atoi(fileName[1])
+		year, err := strconv.Atoi(fileName[4])
 		if err != nil {
 			return nil, err
 		}
-		month, err := strconv.Atoi(fileName[2])
+		month, err := strconv.Atoi(fileName[5])
 		if err != nil {
 			return nil, err
 		}
@@ -143,6 +144,9 @@ func parseReports(reports []string) (map[int]constants.Year, error) {
 		if allReports[year].Months[monthName].Reports == nil {
 			m := allReports[year].Months[monthName]
 			m.Reports = make(map[string]constants.ReportData)
+			shortSplit := strings.Split(reportName, "-")
+			shortName := shortSplit[len(shortSplit)-5:]
+			r.ShortName = strings.Join(shortName, "-")
 			m.Reports[reportName] = r
 			allReports[year].Months[monthName] = m
 		} else {

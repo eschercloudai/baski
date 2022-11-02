@@ -7,13 +7,13 @@ class ReportFile {
 
     //Year takes the year from the document title.
     Year() {
-        return this.file_name.split("-")[1];
+        return this.file_name.split("-")[4];
     }
 
     //MonthName converts the month number into a month name.
     MonthName() {
         const date = new Date();
-        date.setMonth(this.file_name.split("-")[2] - 1);
+        date.setMonth(this.file_name.split("-")[5]-1);
 
         return date.toLocaleString('en-gb', {
             month: 'long',
@@ -28,10 +28,6 @@ class ReportFile {
                 this.jsonContent = json
             });
     }
-}
-
-function loadIntoResults(report) {
-    console.log(report);
 }
 
 class CVE {
