@@ -25,8 +25,10 @@ import (
 var (
 	repoRoot                   = "https://github.com/eschercloudai/image-builder"
 	imageRepoFlag, buildOSFlag string
-	addGPUSupportFlag          bool
-	gpuVersionFlag             = "510.73.08" // we'll flag this up later once the image builder supports it.
+	addNvidiaSupportFlag       bool
+	nvidiaVersionFlag          = "510.73.08" // we'll flag this up later once the image builder supports it.
+	nvidiaInstallerURLFlag     = "http://garkbit.dischord.org/NVIDIA-Linux-x86_64-510.73.08-grid.run"
+	gridLicenseServerFlag      = "192.168.199.246"
 
 	networkIDFlag, openstackBuildConfigPathFlag string
 	enableConfigDriveFlag                       bool
@@ -53,13 +55,18 @@ To use baskio to build an image, an Openstack cluster is required.`,
 
 			constants.Envs.SetOpenstackEnvs()
 
-			buildConfig := ostack.ParseBuildConfig(openstackBuildConfigPathFlag)
-			buildConfig.ImageName = generateImageName(buildOSFlag, buildConfig.KubernetesSemver, addGPUSupportFlag, gpuVersionFlag)
+			buildConfig := ostack.ExtractBuildConfig(openstackBuildConfigPathFlag)
+
+			if addNvidiaSupportFlag {
+				buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_installer_url=%s,grid_license_server=%s", nvidiaInstallerURLFlag, gridLicenseServerFlag)
+			}
+
+			buildConfig.ImageName = generateImageName(buildOSFlag, buildConfig.KubernetesSemver, addNvidiaSupportFlag, nvidiaVersionFlag)
 			buildConfig.Networks = networkIDFlag
 
-			buildGitDir := fetchBuildRepo(imageRepoFlag, addGPUSupportFlag)
+			buildGitDir := fetchBuildRepo(imageRepoFlag, addNvidiaSupportFlag)
 
-			generateVariablesFile(buildGitDir, buildConfig)
+			ostack.GenerateVariablesFile(buildGitDir, buildConfig)
 
 			capiPath := filepath.Join(buildGitDir, "images/capi")
 			fetchDependencies(capiPath)
@@ -77,12 +84,15 @@ To use baskio to build an image, an Openstack cluster is required.`,
 		},
 	}
 
-	cmd.Flags().StringVarP(&openstackBuildConfigPathFlag, "build-config", "c", "", strings.Join([]string{"The openstack packer variables file to use to build the image"}, ""))
 	cmd.Flags().StringVarP(&buildOSFlag, "build-os", "o", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204")
 	cmd.Flags().BoolVarP(&enableConfigDriveFlag, "enable-config-drive", "d", false, "Used to enable a config drive on Openstack. This may be required if using an external network.")
-	cmd.Flags().BoolVarP(&addGPUSupportFlag, "enable-gpu-support", "g", false, "This will configure GPU support in the image")
 	cmd.Flags().StringVarP(&imageRepoFlag, "imageRepo", "r", strings.Join([]string{repoRoot, "git"}, "."), "The imageRepo from which the image builder should be deployed.")
 	cmd.Flags().StringVarP(&networkIDFlag, "network-id", "n", "", "Network ID to deploy the server onto for scanning.")
+	cmd.Flags().StringVarP(&openstackBuildConfigPathFlag, "build-config", "c", "", strings.Join([]string{"The openstack packer variables file to use to build the image"}, ""))
+
+	cmd.Flags().BoolVar(&addNvidiaSupportFlag, "enable-nvidia-support", false, "This will configure Nvidia support in the image")
+	cmd.Flags().StringVar(&gridLicenseServerFlag, "grid-license-server", "", "The url or address of the licensing server to pull the gridd.conf from.")
+	cmd.Flags().StringVar(&nvidiaInstallerURLFlag, "nvidia-installer-url", "", "The Nvidia installer location - this must be acquired from Nvidia.")
 
 	requireFlag(cmd, "build-config")
 	requireFlag(cmd, "network-id")

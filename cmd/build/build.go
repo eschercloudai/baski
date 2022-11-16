@@ -17,9 +17,7 @@ package build
 
 import (
 	"bufio"
-	"encoding/json"
 	gitRepo "github.com/drew-viles/baskio/pkg/git"
-	ostack "github.com/drew-viles/baskio/pkg/openstack"
 	systemUtils "github.com/drew-viles/baskio/pkg/system"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
@@ -83,23 +81,6 @@ func fetchBuildRepo(imageRepo string, gpuSupport bool) string {
 		panic(err)
 	}
 	return g
-}
-
-// generateVariablesFile builds a variables file from the struct.
-func generateVariablesFile(buildGitDir string, buildConfig *ostack.BuildConfig) {
-	log.Printf("generating variables file\n")
-	outputFileName := strings.Join([]string{"tmp", ".json"}, "")
-	outputFile := filepath.Join(buildGitDir, "images/capi/", outputFileName)
-
-	configContent, err := json.Marshal(buildConfig)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = os.WriteFile(outputFile, configContent, 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
 }
 
 // fetchDependencies will run make dep-openstack so that any requirements such as packer, ansible
