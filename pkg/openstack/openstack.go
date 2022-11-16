@@ -32,7 +32,7 @@ import (
 // Client contains the Env vars of the program as well as the Provider and any EndpointOptions.
 // This is used in gophercloud connections.
 type Client struct {
-	Env             constants.Env
+	Env             *constants.OpenstackEnvs
 	Provider        *gophercloud.ProviderClient
 	EndpointOptions *gophercloud.EndpointOpts
 }
@@ -68,12 +68,12 @@ func createComputeClient(client *Client) *gophercloud.ServiceClient {
 }
 
 // CreateKeypair creates a new KeyPair in Openstack.
-func (c *Client) CreateKeypair() *keypairs.KeyPair {
+func (c *Client) CreateKeypair(KeyNamePrefix string) *keypairs.KeyPair {
 	client := createComputeClient(c)
 	client.Microversion = "2.2"
 
 	kp, err := keypairs.Create(client, keypairs.CreateOpts{
-		Name: c.Env.ImageNameUUID + "-go-key",
+		Name: KeyNamePrefix + "-baskio-key",
 		Type: "ssh",
 	}).Extract()
 	if err != nil {
@@ -91,7 +91,7 @@ func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, flavorName, ne
 	serverFlavorID := c.GetFlavorIDByName(flavorName)
 
 	serverOpts := servers.CreateOpts{
-		Name:           c.Env.ImageNameUUID + "-scanner",
+		Name:           imageID + "-scanner",
 		FlavorRef:      serverFlavorID,
 		ImageRef:       imageID,
 		SecurityGroups: []string{"default"},
@@ -118,7 +118,7 @@ sudo ./trivy rootfs -f json -o /tmp/results.json /
 
 	server, err := servers.Create(client, createOpts).Extract()
 	if err != nil {
-		c.RemoveKeypair()
+		c.RemoveKeypair(keypair.Name)
 		panic(err)
 	}
 
@@ -139,10 +139,10 @@ func (c *Client) RemoveServer(serverID string) {
 }
 
 // RemoveKeypair will delete a Keypair from Openstack
-func (c *Client) RemoveKeypair() {
+func (c *Client) RemoveKeypair(keyName string) {
 	log.Println("removing keypair.")
 	client := createComputeClient(c)
-	res := keypairs.Delete(client, c.Env.ImageNameUUID+"-go-key", keypairs.DeleteOpts{})
+	res := keypairs.Delete(client, keyName, keypairs.DeleteOpts{})
 	if res.Err != nil {
 		log.Println(res.Err)
 	}

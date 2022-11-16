@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package build
 
 import (
 	"bufio"
@@ -31,8 +31,31 @@ import (
 	"strings"
 )
 
+// generateImageName creates a name for the image that will be built.
+func generateImageName(buildOS, semVer string, gpuSupport bool, gpuVersion string) string {
+	//scanDate := fmt.Sprintf("%d-%d-%dT%d-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), time.Now().Nanosecond())
+	imageUUID, err := uuid.NewUUID()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	osPrefix := buildOS[:3]
+	versIndex := strings.Index(buildOS, "-")
+	osVers := osPrefix + buildOS[versIndex+1:]
+	uuidIndex := strings.Index(imageUUID.String(), "-")
+	uuidPrefix := imageUUID.String()[:uuidIndex]
+
+	imageName := osVers + "-" + semVer
+	//imageName = fmt.Sprintf("%s-%s-%s", osClient.Env.BuildOS, buildConfig.KubernetesSemver, scanDate)
+	if gpuSupport {
+		imageName = imageName + "-" + "gpu" + "-" + gpuVersion
+	}
+
+	return imageName + "-" + uuidPrefix
+}
+
 // fetchBuildRepo simply pulls the contents of the imageRepo to a tmp location on disk.
-func fetchBuildRepo(imageRepo string) string {
+func fetchBuildRepo(imageRepo string, gpuSupport bool) string {
 	var tmpDir string
 	uuidDir, err := uuid.NewUUID()
 	if err != nil {
@@ -48,7 +71,14 @@ func fetchBuildRepo(imageRepo string) string {
 		panic(err)
 	}
 
-	_, err = gitRepo.GitClone(imageRepo, g, plumbing.Master)
+	var branch plumbing.ReferenceName
+	branch = plumbing.Master
+
+	if gpuSupport {
+		branch = "refs/heads/openstack_gpu_driver"
+	}
+
+	_, err = gitRepo.GitClone(imageRepo, g, branch)
 	if err != nil {
 		panic(err)
 	}

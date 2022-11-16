@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package scan
 
 import (
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
@@ -55,7 +55,7 @@ func fetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, erro
 }
 
 // removeScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
-func removeScanningResources(serverID string, os *ostack.Client) {
+func removeScanningResources(serverID, keyName string, os *ostack.Client) {
 	os.RemoveServer(serverID)
-	os.RemoveKeypair()
+	os.RemoveKeypair(keyName)
 }

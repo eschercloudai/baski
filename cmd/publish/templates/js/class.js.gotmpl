@@ -1,23 +1,20 @@
 class ReportFile {
     jsonContent;
 
-    constructor(file_name) {
+    constructor(file_name, year, month) {
         this.file_name = file_name;
+        this.year = year;
+        this.month = month;
     }
 
     //Year takes the year from the document title.
     Year() {
-        return this.file_name.split("-")[4];
+        return this.year;
     }
 
     //MonthName converts the month number into a month name.
     MonthName() {
-        const date = new Date();
-        date.setMonth(this.file_name.split("-")[5]-1);
-
-        return date.toLocaleString('en-gb', {
-            month: 'long',
-        });
+        return this.month;
     }
 
     //ParseCVEs grabs all the CVE reports form the document.

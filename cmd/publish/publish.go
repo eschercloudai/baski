@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cmd
+package publish
 
 import (
 	"embed"
@@ -22,9 +22,12 @@ import (
 	"github.com/drew-viles/baskio/pkg/constants"
 	"github.com/drew-viles/baskio/pkg/file"
 	gitRepo "github.com/drew-viles/baskio/pkg/git"
+	ostack "github.com/drew-viles/baskio/pkg/openstack"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/gophercloud/gophercloud/openstack"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/images"
 	"html/template"
 	"log"
 	"os"
@@ -99,8 +102,32 @@ func fetchExistingReports(gitDir string) ([]string, error) {
 	return reportPaths, nil
 }
 
+// Image represents an Image returned by the Compute API.
+type Image struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	MinDisk   int    `json:"min_disk"`
+	MinRAM    int    `json:"min_ram"`
+	Name      string `json:"name"`
+	Status    string `json:"status"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+// getImageData pulls data on the image for naming the report.
+func getImageData(client *ostack.Client) *Image {
+	c, err := openstack.NewImageServiceV2(client.Provider, *client.EndpointOptions)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	im := &Image{}
+	img := images.Get(c, imageIDFlag)
+	err = img.Result.ExtractInto(im)
+	return im
+}
+
 // parseReports turns all json files into structs to be used in templating for the static site.
-func parseReports(reports []string) (map[int]constants.Year, error) {
+func parseReports(reports []string, img *Image) (map[int]constants.Year, error) {
 	log.Println("parsing reports")
 	allReports := make(map[int]constants.Year)
 
@@ -117,14 +144,18 @@ func parseReports(reports []string) (map[int]constants.Year, error) {
 
 		stripDirPrefix := strings.Split(v, "/")
 
-		reportName := stripDirPrefix[len(stripDirPrefix)-1:][0]
-		fileName := strings.Split(reportName, "-")
+		//ubu2204-v1.25.3-690b436f
+		//2022-11-15T16:24:00Z
 
-		year, err := strconv.Atoi(fileName[4])
+		reportName := stripDirPrefix[len(stripDirPrefix)-1:][0]
+
+		fileName := strings.Split(img.CreatedAt, "-")
+
+		year, err := strconv.Atoi(fileName[0])
 		if err != nil {
 			return nil, err
 		}
-		month, err := strconv.Atoi(fileName[5])
+		month, err := strconv.Atoi(fileName[1])
 		if err != nil {
 			return nil, err
 		}
@@ -144,8 +175,8 @@ func parseReports(reports []string) (map[int]constants.Year, error) {
 		if allReports[year].Months[monthName].Reports == nil {
 			m := allReports[year].Months[monthName]
 			m.Reports = make(map[string]constants.ReportData)
-			shortSplit := strings.Split(reportName, "-")
-			shortName := shortSplit[len(shortSplit)-5:]
+			nameSplit := strings.Split(reportName, "-")
+			shortName := nameSplit[:len(nameSplit)-1]
 			r.ShortName = strings.Join(shortName, "-")
 			m.Reports[reportName] = r
 			allReports[year].Months[monthName] = m
@@ -250,37 +281,6 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 	}
 
 	err = c.ExecuteTemplate(classFile, "class.js.gotmpl", allReports)
-	if err != nil {
-		return err
-	}
-
-	// reports.js template
-	log.Println("generating reports.js")
-	reportJSTarget := filepath.Join(jsDir, "reports.js")
-	reportJSTmpl := "templates/js/reports.js.gotmpl"
-	reportFile, err := os.Create(reportJSTarget)
-	if err != nil {
-		return err
-	}
-
-	r := tpl.Must(tpl.New("reports.js.gotmpl").Funcs(tpl.FuncMap{
-		"inc": func(x int) int {
-			return x + 1
-		},
-	}).ParseFS(content, reportJSTmpl))
-	if err != nil {
-		return err
-	}
-
-	reportNames := []string{}
-	for _, re := range allReports {
-		for _, mo := range re.Months {
-			for k := range mo.Reports {
-				reportNames = append(reportNames, k)
-			}
-		}
-	}
-	err = r.ExecuteTemplate(reportFile, "reports.js.gotmpl", reportNames)
 	if err != nil {
 		return err
 	}
