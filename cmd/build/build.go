@@ -30,30 +30,29 @@ import (
 )
 
 // generateImageName creates a name for the image that will be built.
-func generateImageName(buildOS, semVer string, gpuSupport bool, gpuVersion string) string {
-	//scanDate := fmt.Sprintf("%d-%d-%dT%d-%d-%d-%d", time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), time.Now().Nanosecond())
-	imageUUID, err := uuid.NewUUID()
-	if err != nil {
-		log.Fatalln(err)
-	}
+//func generateImageName(buildOS, semVer string, gpuSupport bool, gpuVersion string) string {
+//	imageUUID, err := uuid.NewUUID()
+//	if err != nil {
+//		log.Fatalln(err)
+//	}
+//
+//	osPrefix := buildOS[:3]
+//	versIndex := strings.Index(buildOS, "-")
+//	osVers := osPrefix + buildOS[versIndex+1:]
+//	uuidIndex := strings.Index(imageUUID.String(), "-")
+//	uuidPrefix := imageUUID.String()[:uuidIndex]
+//
+//	imageName := osVers + "-" + semVer
+//	//imageName = fmt.Sprintf("%s-%s-%s", osClient.Env.BuildOS, buildConfig.KubernetesSemver, scanDate)
+//	if gpuSupport {
+//		imageName = imageName + "-" + "gpu" + "-" + gpuVersion
+//	}
+//
+//	return imageName + "-" + uuidPrefix
+//}
 
-	osPrefix := buildOS[:3]
-	versIndex := strings.Index(buildOS, "-")
-	osVers := osPrefix + buildOS[versIndex+1:]
-	uuidIndex := strings.Index(imageUUID.String(), "-")
-	uuidPrefix := imageUUID.String()[:uuidIndex]
-
-	imageName := osVers + "-" + semVer
-	//imageName = fmt.Sprintf("%s-%s-%s", osClient.Env.BuildOS, buildConfig.KubernetesSemver, scanDate)
-	if gpuSupport {
-		imageName = imageName + "-" + "gpu" + "-" + gpuVersion
-	}
-
-	return imageName + "-" + uuidPrefix
-}
-
-// fetchBuildRepo simply pulls the contents of the imageRepo to a tmp location on disk.
-func fetchBuildRepo(imageRepo string, gpuSupport bool) string {
+// CreateRepoDirectory create the random directory where the Image repo will be cloned into.
+func CreateRepoDirectory() string {
 	var tmpDir string
 	uuidDir, err := uuid.NewUUID()
 	if err != nil {
@@ -62,30 +61,32 @@ func fetchBuildRepo(imageRepo string, gpuSupport bool) string {
 		tmpDir = uuidDir.String()
 	}
 
-	g := filepath.Join("/tmp", tmpDir)
-
-	err = os.MkdirAll(g, 0750)
+	dir := filepath.Join("/tmp", tmpDir)
+	err = os.MkdirAll(dir, 0750)
 	if err != nil {
 		panic(err)
 	}
+	return dir
+}
 
+// FetchBuildRepo simply pulls the contents of the imageRepo to the specified path
+func FetchBuildRepo(path, imageRepo string, gpuSupport bool) {
 	var branch plumbing.ReferenceName
 	branch = plumbing.Master
 
 	if gpuSupport {
-		branch = "refs/heads/openstack_gpu_driver"
+		branch = "refs/heads/nvidia-driver-support"
 	}
 
-	_, err = gitRepo.GitClone(imageRepo, g, branch)
+	_, err := gitRepo.GitClone(imageRepo, path, branch)
 	if err != nil {
 		panic(err)
 	}
-	return g
 }
 
-// fetchDependencies will run make dep-openstack so that any requirements such as packer, ansible
+// InstallDependencies will run make dep-openstack so that any requirements such as packer, ansible
 // and goss will be installed.
-func fetchDependencies(repoPath string) {
+func InstallDependencies(repoPath string) {
 	log.Printf("fetching dependencies\n")
 
 	w, err := os.Create("/tmp/out-deps.txt")
@@ -109,9 +110,9 @@ func fetchDependencies(repoPath string) {
 	}
 }
 
-// buildImage will run make build-openstack-buildOSFlag which will launch an instance in Openstack,
+// BuildImage will run make build-openstack-buildOSFlag which will launch an instance in Openstack,
 // add any requirements as defined in the image-builder imageRepo and then create an image from that build.
-func buildImage(capiPath string, buildOS string) error {
+func BuildImage(capiPath string, buildOS string) error {
 	log.Printf("building image\n")
 
 	w, err := os.Create("/tmp/out-build.txt")
@@ -136,9 +137,9 @@ func buildImage(capiPath string, buildOS string) error {
 	return nil
 }
 
-// retrieveNewImageID fetches the newly create image's ID from the out.txt file
+// RetrieveNewImageID fetches the newly create image's ID from the out.txt file
 // that is generated during the buildImage() run.
-func retrieveNewImageID() (string, error) {
+func RetrieveNewImageID() (string, error) {
 	var i string
 
 	//TODO: If the output goes to stdOUT in buildImage,

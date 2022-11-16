@@ -17,7 +17,6 @@ package ostack
 
 import (
 	"fmt"
-	"github.com/drew-viles/baskio/pkg/constants"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
@@ -25,6 +24,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,7 +32,7 @@ import (
 // Client contains the Env vars of the program as well as the Provider and any EndpointOptions.
 // This is used in gophercloud connections.
 type Client struct {
-	Env             *constants.OpenstackEnvs
+	Cloud           OpenstackCloud
 	Provider        *gophercloud.ProviderClient
 	EndpointOptions *gophercloud.EndpointOpts
 }
@@ -40,18 +40,18 @@ type Client struct {
 // OpenstackInit creates the initial client for connecting to Openstack.
 func (c *Client) OpenstackInit() {
 	opts := gophercloud.AuthOptions{
-		IdentityEndpoint: c.Env.AuthURL + "/" + strings.Join([]string{"v", c.Env.IdentityAPIVersion}, ""),
-		Username:         c.Env.Username,
-		Password:         c.Env.Password,
-		DomainName:       c.Env.UserDomainName,
-		TenantName:       c.Env.ProjectName,
+		IdentityEndpoint: c.Cloud.Auth.AuthURL + "/" + strings.Join([]string{"v", strconv.Itoa(c.Cloud.IdentityApiVersion)}, ""),
+		Username:         c.Cloud.Auth.Username,
+		Password:         c.Cloud.Auth.Password,
+		DomainName:       c.Cloud.Auth.UserDomainName,
+		TenantName:       c.Cloud.Auth.ProjectName,
 	}
 	provider, err := openstack.AuthenticatedClient(opts)
 	if err != nil {
 		panic(err)
 	}
 	epOpts := &gophercloud.EndpointOpts{
-		Region: c.Env.Region,
+		Region: c.Cloud.RegionName,
 	}
 	c.Provider = provider
 	c.EndpointOptions = epOpts

@@ -16,9 +16,6 @@ limitations under the License.
 package constants
 
 import (
-	"log"
-	"os"
-	"reflect"
 	"time"
 )
 
@@ -28,20 +25,20 @@ var (
 		"ubuntu-2004",
 		"ubuntu-2204",
 	}
-	requiredVars = map[string]string{
-		"AuthURL":            "OS_AUTH_URL",
-		"ProjectName":        "OS_PROJECT_NAME",
-		"ProjectID":          "OS_PROJECT_ID",
-		"Username":           "OS_USERNAME",
-		"Password":           "OS_PASSWORD",
-		"Region":             "OS_REGION_NAME",
-		"Interface":          "OS_INTERFACE",
-		"UserDomainName":     "OS_USER_DOMAIN_NAME",
-		"ProjectDomainName":  "OS_PROJECT_DOMAIN_NAME",
-		"IdentityAPIVersion": "OS_IDENTITY_API_VERSION",
-		"AuthPlugin":         "OS_AUTH_PLUGIN",
-	}
-	Envs = &OpenstackEnvs{}
+	//requiredVars = map[string]string{
+	//	"AuthURL":            "OS_AUTH_URL",
+	//	"ProjectName":        "OS_PROJECT_NAME",
+	//	"ProjectID":          "OS_PROJECT_ID",
+	//	"Username":           "OS_USERNAME",
+	//	"Password":           "OS_PASSWORD",
+	//	"Region":             "OS_REGION_NAME",
+	//	"Interface":          "OS_INTERFACE",
+	//	"UserDomainName":     "OS_USER_DOMAIN_NAME",
+	//	"ProjectDomainName":  "OS_PROJECT_DOMAIN_NAME",
+	//	"IdentityAPIVersion": "OS_IDENTITY_API_VERSION",
+	//	"AuthPlugin":         "OS_AUTH_PLUGIN",
+	//}
+	//Envs = &OpenstackEnvs{}
 )
 
 // Year is used in reports parsing. It is the top level and contains multiple Month(s).
@@ -153,36 +150,39 @@ type ReportData struct {
 	} `json:"Results"`
 }
 
-// OpenstackEnvs is used to store all variables passed to the program.
-type OpenstackEnvs struct {
-	AuthURL            string
-	ProjectName        string
-	ProjectID          string
-	Username           string
-	Password           string
-	Region             string
-	Interface          string
-	UserDomainName     string
-	ProjectDomainName  string
-	IdentityAPIVersion string
-	AuthPlugin         string
-}
-
-// SetOpenstackEnvs sets the Openstack environment variable for the system to use.
-// This is required because the make command won't take the flags. Later we'll try to generate a clouds.yaml file.
-func (e *OpenstackEnvs) SetOpenstackEnvs() {
-	for k, v := range requiredVars {
-		setEnv(v, reflect.ValueOf(e).Elem().FieldByName(k).String())
-	}
-}
-
-// setEnv sets an environment variable
-func setEnv(key string, value string) {
-	err := os.Setenv(key, value)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
+//
+//// OpenstackEnvs is used to store all variables passed to the program.
+//type OpenstackEnvs struct {
+//	Clouds    string
+//	CloudName string
+//	//AuthURL            string
+//	//ProjectName        string
+//	//ProjectID          string
+//	//Username           string
+//	//Password           string
+//	//Region             string
+//	//Interface          string
+//	//UserDomainName     string
+//	//ProjectDomainName  string
+//	//IdentityAPIVersion string
+//	//AuthPlugin         string
+//}
+//
+//// SetOpenstackEnvs sets the Openstack environment variable for the system to use.
+//// This is required because the make command won't take the flags. Later we'll try to generate a clouds.yaml file.
+//func (e *OpenstackEnvs) SetOpenstackEnvs() {
+//	for k, v := range requiredVars {
+//		setEnv(v, reflect.ValueOf(e).Elem().FieldByName(k).String())
+//	}
+//}
+//
+//// setEnv sets an environment variable
+//func setEnv(key string, value string) {
+//	err := os.Setenv(key, value)
+//	if err != nil {
+//		log.Fatalln(err)
+//	}
+//}
 
 // CheckForEnvVars runs through all the possible Environment vars defined in the OpenstackEnvs struct and determines if an
 // EnvVar has been set via a flag being passed into the application.

@@ -53,7 +53,8 @@ When using, this you need to provide the following build config - changing any v
 
 # Usage
 Simply run the binary with the following flags (minimum required). See the example below.
-This will also work with environment variables too - see the help for more info.
+You must supply a clouds.yaml file for Openstack connectivity, 
+alternatively the standard Openstack environment variables will work too. 
 
 ```shell
 # Build an image
@@ -61,22 +62,22 @@ baskio build \
 --build-os ubuntu-2204 \
 --build-config openstack.json \
 --network-id NETWORK_ID \
---os-auth-url OS_AUTH_URL \
---os-username OS_USERNAME \
---os-password OS_PASSWORD \
---os-project-id PROJECT_ID \
---os-project-name PROJECT_NAME
+#--os-auth-url OS_AUTH_URL \
+#--os-username OS_USERNAME \
+#--os-password OS_PASSWORD \
+#--os-project-id PROJECT_ID \
+#--os-project-name PROJECT_NAME
 
 # Scan an image
 baskio scan \
 --instance-flavor c.small \
 --network-id NETWORK_ID \
 --network-id IMAGE_ID \
---os-auth-url OS_AUTH_URL \
---os-username OS_USERNAME \
---os-password OS_PASSWORD \
---os-project-id PROJECT_ID \
---os-project-name PROJECT_NAME
+#--os-auth-url OS_AUTH_URL \
+#--os-username OS_USERNAME \
+#--os-password OS_PASSWORD \
+#--os-project-id PROJECT_ID \
+#--os-project-name PROJECT_NAME
 
 # Publish the CVE results of the scan to GitHub Pages
 baskio publish \
@@ -84,11 +85,11 @@ baskio publish \
 --github-user GH_USER \
 --github-token GH_TOKEN \
 --github-user IMAGE_ID \
---os-auth-url OS_AUTH_URL \
---os-username OS_USERNAME \
---os-password OS_PASSWORD \
---os-project-id PROJECT_ID \
---os-project-name PROJECT_NAME
+#--os-auth-url OS_AUTH_URL \
+#--os-username OS_USERNAME \
+#--os-password OS_PASSWORD \
+#--os-project-id PROJECT_ID \
+#--os-project-name PROJECT_NAME
 ```
 
 ### More info

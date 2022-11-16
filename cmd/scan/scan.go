@@ -25,8 +25,8 @@ import (
 	"time"
 )
 
-// fetchResultsFromServer pulls the results.json from the remote scanning server.
-func fetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, error) {
+// FetchResultsFromServer pulls the results.json from the remote scanning server.
+func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, error) {
 	client, err := sshconnect.NewClient(kp, freeIP)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func fetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, erro
 	return sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "./", "results.json")
 }
 
-// removeScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
-func removeScanningResources(serverID, keyName string, os *ostack.Client) {
+// RemoveScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
+func RemoveScanningResources(serverID, keyName string, os *ostack.Client) {
 	os.RemoveServer(serverID)
 	os.RemoveKeypair(keyName)
 }

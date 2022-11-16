@@ -10,19 +10,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package scan
+package cmd
 
 import (
-	"github.com/drew-viles/baskio/pkg/constants"
+	"github.com/drew-viles/baskio/cmd/scan"
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
-)
-
-var (
-	imageIDFlag               string
-	networkIDFlag, flavorFlag string
-	enableConfigDriveFlag     bool
 )
 
 // NewScanCommand creates a command that allows the scanning of an image.
@@ -42,46 +37,45 @@ Once complete, it generates a report file that you can read,
 OR!
 Use the publish command to create a "pretty" interface in GitHub Pages through which you can browse the results.`,
 		Run: func(cmd *cobra.Command, args []string) {
-			constants.Envs.SetOpenstackEnvs()
+			cloudsConfig := ostack.InitOpenstack()
+			cloudsConfig.SetOpenstackEnvs()
 
 			osClient := &ostack.Client{
-				Env: constants.Envs,
+				Cloud: cloudsConfig.Clouds[viper.GetString("cloud-name")],
 			}
-
 			osClient.OpenstackInit()
 
-			kp := osClient.CreateKeypair(imageIDFlag)
-			server, freeIP := osClient.CreateServer(kp, imageIDFlag, flavorFlag, networkIDFlag, enableConfigDriveFlag)
+			kp := osClient.CreateKeypair(viper.GetString("scan.image-id"))
+			server, freeIP := osClient.CreateServer(kp, viper.GetString("scan.image-id"), viper.GetString("scan.flavor-name"), viper.GetString("scan.network-id"), viper.GetBool("scan.attach-config-drive"))
 
-			resultsFile, err := fetchResultsFromServer(freeIP, kp)
+			resultsFile, err := scan.FetchResultsFromServer(freeIP, kp)
 			if err != nil {
-				removeScanningResources(server.ID, kp.Name, osClient)
+				scan.RemoveScanningResources(server.ID, kp.Name, osClient)
 				log.Fatalln(err.Error())
 			}
 
 			defer resultsFile.Close()
 
 			//Cleanup the scanning resources
-			removeScanningResources(server.ID, kp.Name, osClient)
+			scan.RemoveScanningResources(server.ID, kp.Name, osClient)
 		},
 	}
 
-	cmd.Flags().StringVarP(&flavorFlag, "instance-flavor", "f", "", "The flavor of instance to build for scanning the image.")
-	cmd.Flags().StringVarP(&imageIDFlag, "image-id", "i", "", "The ID of the image to scan.")
-	cmd.Flags().StringVarP(&networkIDFlag, "network-id", "n", "", "Network ID to deploy the server onto for scanning.")
-	cmd.Flags().BoolVarP(&enableConfigDriveFlag, "enable-config-drive", "d", false, "Used to enable a config drive on Openstack. This may be required if using an external network.")
+	cmd.Flags().StringVar(&flavorNameFlag, "flavor-name", "", "The flavor of instance to build for scanning the image")
+	cmd.Flags().StringVar(&imageIDFlag, "image-id", "", "The ID of the image to scan")
+	cmd.Flags().StringVar(&networkIDFlag, "network-id", "", "Network ID to deploy the server onto for scanning")
+	cmd.Flags().BoolVar(&attachConfigDriveFlag, "attach-config-drive", false, "Used to enable a config drive on Openstack - this may be required if using an external network")
 
-	requireFlag(cmd, "image-id")
-	requireFlag(cmd, "instance-flavor")
-	requireFlag(cmd, "network-id")
+	//requireFlag(cmd, "image-id")
+	//requireFlag(cmd, "flavor-name")
+	//requireFlag(cmd, "network-id")
+
+	//cmd.MarkFlagsRequiredTogether("image-id", "instance-flavor", "network-id")
+
+	bindViper(cmd, "scan.flavor-name", "flavor-name")
+	bindViper(cmd, "scan.image-id", "image-id")
+	bindViper(cmd, "scan.network-id", "network-id")
+	bindViper(cmd, "scan.attach-config-drive", "attach-config-drive")
 
 	return cmd
-}
-
-// requireFlag sets flags as required.
-func requireFlag(cmd *cobra.Command, flag string) {
-	err := cmd.MarkFlagRequired(flag)
-	if err != nil {
-		log.Fatalln(err)
-	}
 }

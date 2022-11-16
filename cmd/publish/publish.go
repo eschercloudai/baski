@@ -42,8 +42,8 @@ import (
 //go:embed templates/js/*.js.gotmpl
 var content embed.FS
 
-// fetchPagesRepo pulls the GitHub pages repo locally for modification.
-func fetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.Repository, error) {
+// FetchPagesRepo pulls the GitHub pages repo locally for modification.
+func FetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.Repository, error) {
 	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", ghUser, ghToken, ghUser, ghProject)
 	pagesDir := filepath.Join("/tmp", ghProject)
 
@@ -61,9 +61,9 @@ func fetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.R
 	return pagesDir, g, nil
 }
 
-// copyResultsFileIntoPages copies the results of the recent scan into the relevant
+// CopyResultsFileIntoPages copies the results of the recent scan into the relevant
 // location for the static site to be able to display them.
-func copyResultsFileIntoPages(gitDir, filename string, resultsFile *os.File) error {
+func CopyResultsFileIntoPages(gitDir, filename string, resultsFile *os.File) error {
 	log.Println("copying results file into pages repo")
 	resultsDir := filepath.Join(gitDir, "docs", "results")
 	cveFile := strings.Join([]string{filename, "json"}, ".")
@@ -81,8 +81,8 @@ func copyResultsFileIntoPages(gitDir, filename string, resultsFile *os.File) err
 	return nil
 }
 
-// fetchExistingReports runs to collect all reports from the results directory so that they can be parsed for later usage.
-func fetchExistingReports(gitDir string) ([]string, error) {
+// FetchExistingReports runs to collect all reports from the results directory so that they can be parsed for later usage.
+func FetchExistingReports(gitDir string) ([]string, error) {
 	log.Println("collating existing reports")
 	var reportPaths []string
 
@@ -113,21 +113,21 @@ type Image struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-// getImageData pulls data on the image for naming the report.
-func getImageData(client *ostack.Client) *Image {
+// GetImageData pulls data on the image for naming the report.
+func GetImageData(client *ostack.Client, imgID string) *Image {
 	c, err := openstack.NewImageServiceV2(client.Provider, *client.EndpointOptions)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	im := &Image{}
-	img := images.Get(c, imageIDFlag)
+	img := images.Get(c, imgID)
 	err = img.Result.ExtractInto(im)
 	return im
 }
 
-// parseReports turns all json files into structs to be used in templating for the static site.
-func parseReports(reports []string, img *Image) (map[int]constants.Year, error) {
+// ParseReports turns all json files into structs to be used in templating for the static site.
+func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) {
 	log.Println("parsing reports")
 	allReports := make(map[int]constants.Year)
 
@@ -187,16 +187,16 @@ func parseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 	return allReports, nil
 }
 
-// buildPages will generate all the pages required for GitHub Pages.
-func buildPages(projectDir string, allReports map[int]constants.Year) error {
+// BuildPages will generate all the pages required for GitHub Pages.
+func BuildPages(projectDir string, allReports map[int]constants.Year) error {
 	log.Println("building pages")
 	baseDir := strings.Join([]string{projectDir, "docs"}, "/")
-	err := generateHTMLTemplate(baseDir, allReports)
+	err := GenerateHTMLTemplate(baseDir, allReports)
 	if err != nil {
 		return err
 	}
 
-	err = generateJSTemplates(baseDir, allReports)
+	err = GenerateJSTemplates(baseDir, allReports)
 	if err != nil {
 		return err
 	}
@@ -204,8 +204,8 @@ func buildPages(projectDir string, allReports map[int]constants.Year) error {
 	return nil
 }
 
-// generateHTMLTemplate creates the index.html page for the frontend website which displays the CVE data.
-func generateHTMLTemplate(baseDir string, allReports map[int]constants.Year) error {
+// GenerateHTMLTemplate creates the index.html page for the frontend website which displays the CVE data.
+func GenerateHTMLTemplate(baseDir string, allReports map[int]constants.Year) error {
 	log.Println("generating index.html")
 	// HTML template
 	htmlTarget := strings.Join([]string{baseDir, "index.html"}, "/")
@@ -230,8 +230,8 @@ func generateHTMLTemplate(baseDir string, allReports map[int]constants.Year) err
 	return nil
 }
 
-// generateJSTemplates creates all the Javscript files for the frontend website.
-func generateJSTemplates(baseDir string, allReports map[int]constants.Year) error {
+// GenerateJSTemplates creates all the Javscript files for the frontend website.
+func GenerateJSTemplates(baseDir string, allReports map[int]constants.Year) error {
 	jsDir := filepath.Join(baseDir, "js")
 
 	err := os.MkdirAll(jsDir, 0755)
@@ -288,8 +288,8 @@ func generateJSTemplates(baseDir string, allReports map[int]constants.Year) erro
 	return nil
 }
 
-// publishPages pushes the generated javascript, html and results file to GitHub pages.
-func publishPages(repository *git.Repository, gitPagesPath string) error {
+// PublishPages pushes the generated javascript, html and results file to GitHub pages.
+func PublishPages(repository *git.Repository, gitPagesPath string) error {
 	log.Println("publishing to GitHub pages")
 
 	w, err := repository.Worktree()
@@ -329,9 +329,9 @@ func publishPages(repository *git.Repository, gitPagesPath string) error {
 	return nil
 }
 
-// pagesCleanup just removes any leftover files/repo so that when running locally the binary doesn't hit a conflict.
+// PagesCleanup just removes any leftover files/repo so that when running locally the binary doesn't hit a conflict.
 // This ensures that on multiple runs it always ahas the latest code base for the GitHub pages repo.
-func pagesCleanup(pagesDir string) {
+func PagesCleanup(pagesDir string) {
 	err := os.RemoveAll(pagesDir)
 	if err != nil {
 		log.Fatalln(err)
