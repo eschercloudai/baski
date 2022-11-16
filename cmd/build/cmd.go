@@ -58,7 +58,7 @@ To use baskio to build an image, an Openstack cluster is required.`,
 			buildConfig := ostack.ExtractBuildConfig(openstackBuildConfigPathFlag)
 
 			if addNvidiaSupportFlag {
-				buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_installer_url=%s,grid_license_server=%s", nvidiaInstallerURLFlag, gridLicenseServerFlag)
+				buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_installer_url=%s grid_license_server=%s", nvidiaInstallerURLFlag, gridLicenseServerFlag)
 			}
 
 			buildConfig.ImageName = generateImageName(buildOSFlag, buildConfig.KubernetesSemver, addNvidiaSupportFlag, nvidiaVersionFlag)
