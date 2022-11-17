@@ -37,60 +37,59 @@ openstack security group rule create "${OS_SG}" --egress --ethertype IPv4 --prot
 openstack security group rule create "${OS_SG}" --egress --ethertype IPv4 --protocol UDP --dst-port -1 --remote-ip 0.0.0.0/0 --description "Allows UDP Egress"
 ```
 
-### Openstack-build variables file
-
-You will also require a source image to reference for the build to succeed.
-When using, this you need to provide the following build config - changing any variables as required.
-
-```
-{
-  "source_image": "SOURCE_IMAGE_ID",
-  "networks": "NETWORK_ID",
-  "flavor": "INSTANCE_FLAVOR",
-  "floating_ip_network": "Internet",
-}
-```
-
 # Usage
 Simply run the binary with the following flags (minimum required). See the example below.
-You must supply a clouds.yaml file for Openstack connectivity, 
-alternatively the standard Openstack environment variables will work too. 
+You will also require a source image to reference for the build to succeed.
+You must supply a clouds.yaml file for Openstack connectivity.
 
+```yaml
+clouds-file: "~/.config/openstack/clouds.yaml"
+cloud-name: "image-builder"
+build:
+  build-os: "ubuntu-2204"
+  attach-config-drive: false
+  #image-repo: ""
+  network-id: "network-id"
+  source-image: "source-image"
+  flavor-name: "spicy-meatball"
+  use-floating-ip: true
+  floating-ip-network-name: "Internet"
+  image-visibility: "private"
+  crictl-version: "1.25.0"
+  kubernetes_version: "1.25.3"
+  enable-nvidia-support: false
+  nvidia-installer-url: "nvidia-install-download-url"
+  nvidia-driver-version: "used-for-image-name"
+  grid-license-server: "grid-server-ip"
+scan:
+  image-id: ""
+  flavor-name: "spicy-meatball"
+  network-id: "network-id"
+  attach-config-drive: false
+publish: 
+  image-id: ""
+  github:
+    user: "some-user"
+    project: "some-project"
+    token: "123456789"
+    pages-branch: ""
+  results-file: ""
+
+```
+
+Now supply this to baskio.
 ```shell
 # Build an image
-baskio build \
---build-os ubuntu-2204 \
---build-config openstack.json \
---network-id NETWORK_ID \
-#--os-auth-url OS_AUTH_URL \
-#--os-username OS_USERNAME \
-#--os-password OS_PASSWORD \
-#--os-project-id PROJECT_ID \
-#--os-project-name PROJECT_NAME
+baskio build --baskio-config path-to-config.yaml
 
 # Scan an image
-baskio scan \
---instance-flavor c.small \
---network-id NETWORK_ID \
---network-id IMAGE_ID \
-#--os-auth-url OS_AUTH_URL \
-#--os-username OS_USERNAME \
-#--os-password OS_PASSWORD \
-#--os-project-id PROJECT_ID \
-#--os-project-name PROJECT_NAME
+baskio scan --baskio-config path-to-config.yaml
 
-# Publish the CVE results of the scan to GitHub Pages
-baskio publish \
---github-project GH_PROJECT \
---github-user GH_USER \
---github-token GH_TOKEN \
---github-user IMAGE_ID \
-#--os-auth-url OS_AUTH_URL \
-#--os-username OS_USERNAME \
-#--os-password OS_PASSWORD \
-#--os-project-id PROJECT_ID \
-#--os-project-name PROJECT_NAME
+# Publish the CVEs
+baskio publsh --baskio-config path-to-config.yaml
 ```
+
+See `--help` for more information.
 
 ### More info
 
