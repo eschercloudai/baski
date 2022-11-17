@@ -1,24 +1,23 @@
 # Baskio - Build And Scan Kubernetes Images Openstack
 
-A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo.
-Once the image has been built, the CVE results will be pushed to GitHub Pages. Simply provide the required GitHub flags/env vars, and it will do the rest for you.
-
+A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using
+the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo.
+Once the image has been built, the CVE results will be pushed to GitHub Pages. Simply provide the required GitHub
+flags/config file, and it will do the rest for you.
 
 # Scope
 
 ⚠️Currently in beta at the moment.
 
 # Prerequisites
-### GitHub Pages
-You will need to set up your target repo for the GiHub Pages in advanced.
-It only requires a `gh-pages` branch for this to work.
-GitHub Pages should be configured to point to a `docs` directory as this is where the resulting static site will be placed.
 
 ### Openstack
+
 It is expected that you have a network and sufficient security groups in place to run this.<br>
 It will not create the network or security groups for you.
 
 For example:
+
 ```
 openstack network create image-builder
 openstack subnet create image-builder --network image-builder --dhcp --dns-nameserver 1.1.1.1 --subnet-range 10.10.10.0/24 --allocation-pool start=10.10.10.10,end=10.10.10.200
@@ -31,45 +30,74 @@ openstack security group rule create "${OS_SG}" --egress --ethertype IPv4 --prot
 openstack security group rule create "${OS_SG}" --egress --ethertype IPv4 --protocol UDP --dst-port -1 --remote-ip 0.0.0.0/0 --description "Allows UDP Egress"
 ```
 
-### Openstack-build variables file
-You will also require a source image to reference for the build to succeed.
-When using, this you need to provide the following build config - changing any variables as required.
-```
-{
-  "source_image": "SOURCE_IMAGE_ID",
-  "networks": "NETWORK_ID",
-  "flavor": "INSTANCE_FLAVOR",
-  "floating_ip_network": "Internet",
-}
-```
-
 # Usage
-
 Simply run the binary with the following flags (minimum required). See the example below.
-This will also work with environment variables too - see the help for more info.
-```shell
-baski --build-os ubuntu-2204 \
---build-config openstack.json \
---github-user GH_USER \
---github-project GH_PROJECT \
---github-token GH_TOKEN \
---network-id NETWORK_ID \
---os-auth-url OS_AUTH_URL \
---os-project-name PROJECT_NAME \
---os-project-id PROJECT_ID \
---os-username OS_USERNAME \
---os-password OS_PASSWORD
+You will also require a source image to reference for the build to succeed.
+You must supply a clouds.yaml file for Openstack connectivity.
 
+```yaml
+clouds-file: "~/.config/openstack/clouds.yaml"
+cloud-name: "image-builder"
+build:
+  build-os: "ubuntu-2204"
+  attach-config-drive: false
+  #image-repo: ""
+  network-id: "network-id"
+  source-image: "source-image"
+  flavor-name: "spicy-meatball"
+  use-floating-ip: true
+  floating-ip-network-name: "Internet"
+  image-visibility: "private"
+  crictl-version: "1.25.0"
+  kubernetes_version: "1.25.3"
+  enable-nvidia-support: false
+  nvidia-installer-url: "nvidia-install-download-url"
+  nvidia-driver-version: "used-for-image-name"
+  grid-license-server: "grid-server-ip"
+scan:
+  image-id: ""
+  flavor-name: "spicy-meatball"
+  network-id: "network-id"
+  attach-config-drive: false
+publish: 
+  image-id: ""
+  github:
+    user: "some-user"
+    project: "some-project"
+    token: "123456789"
+    pages-branch: ""
+  results-file: ""
+
+```
+
+Now supply this to baskio.
+```shell
+# Build an image
+baskio build --baskio-config path-to-config.yaml
+
+# Scan an image
+baskio scan --baskio-config path-to-config.yaml
+
+# Publish the CVEs
+baskio publsh --baskio-config path-to-config.yaml
 ```
 
 ### More info
-For more flags, run `baskio --help`
+
+For more flags and more info, run `baskio --help`
+
+### GitHub Pages
+
+You will need to set up your target repo for the GiHub Pages in advanced.
+It only requires a `gh-pages` branch for this to work.
+GitHub Pages should be configured to point to a `docs` directory as this is where the resulting static site will be
+placed.
 
 # TODO
-* Have option to set the image as public in Openstack
-* Make GitHub Pages optional.
-* Make scanning a separate binary instead of packaging it in here?
+* Create all option to allow whole process
+* Make scanning a separate binary instead of packaging it in here - started process here by separating out building, scanning & publishing
 * Make this work for more than just Openstack so that it's more useful to the community around the Kubernetes Image Builder?
 
 # License
+
 The scripts and documentation in this project are released under the [Apache v2 License](LICENSE).

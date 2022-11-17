@@ -16,13 +16,16 @@ limitations under the License.
 package constants
 
 import (
-	"log"
-	"os"
-	"reflect"
 	"time"
 )
 
-var Version = "v0.0.2-beta1"
+var (
+	Version     = "v0.0.3-beta1"
+	SupportedOS = []string{
+		"ubuntu-2004",
+		"ubuntu-2204",
+	}
+)
 
 // Year is used in reports parsing. It is the top level and contains multiple Month(s).
 type Year struct {
@@ -131,124 +134,4 @@ type ReportData struct {
 			} `json:"Layer"`
 		} `json:"Secrets,omitempty"`
 	} `json:"Results"`
-}
-
-// Env is used to store all variables passed to the program.
-type Env struct {
-	AuthURL                  string
-	ProjectName              string
-	ProjectID                string
-	Username                 string
-	Password                 string
-	Region                   string
-	Interface                string
-	UserDomainName           string
-	ProjectDomainName        string
-	IdentityAPIVersion       string
-	AuthPlugin               string
-	NetworkID                string
-	OpenstackBuildConfigPath string
-	EnableConfigDrive        string
-	ImageRepo                string
-	ImageNameUUID            string
-	BuildOS                  string
-	GhUser                   string
-	GhProject                string
-	GhToken                  string
-	GhPagesBranch            string
-}
-
-// checkEnv will determine if a flag or environment variable is passed into the program.
-// If a flag is passed in, it will ensure the corresponding Environment variable exists.
-// If a flag hasn't been passed, it will attempt to discover the value from an Environment variable,
-// should it not find one - and a default isn't available, the program will fail.
-func checkEnv(envs *Env, field, envVar string) bool {
-	value := reflect.ValueOf(envs).Elem().FieldByName(field)
-	if value.String() == "" {
-		if key, ok := os.LookupEnv(envVar); ok {
-			reflect.ValueOf(envs).Elem().FieldByName(field).SetString(key)
-		} else {
-			return false
-		}
-	} else {
-		err := os.Setenv(envVar, value.String())
-		if err != nil {
-			log.Printf("couldn't set env var %s.\n", envVar)
-			return false
-		}
-	}
-	return true
-}
-
-// CheckForEnvVars runs through all the possible Environment vars defined in the Env struct and determines if a
-// flag of Env var has been passed into the program.
-// If it has, it will register it in the Env.
-func (e *Env) CheckForEnvVars() {
-	canContinue := true
-
-	//TODO: this is horrid, there must be a better reflective way I haven't considered by which I can loop over.
-	if !checkEnv(e, "AuthURL", "OS_AUTH_URL") {
-		canContinue = false
-	}
-	if !checkEnv(e, "ProjectName", "OS_PROJECT_NAME") {
-		canContinue = false
-	}
-	if !checkEnv(e, "ProjectID", "OS_PROJECT_ID") {
-		canContinue = false
-	}
-	if !checkEnv(e, "Username", "OS_USERNAME") {
-		canContinue = false
-	}
-	if !checkEnv(e, "Password", "OS_PASSWORD") {
-		canContinue = false
-	}
-	if !checkEnv(e, "Region", "OS_REGION_NAME") {
-		canContinue = false
-	}
-	if !checkEnv(e, "Interface", "OS_INTERFACE") {
-		canContinue = false
-	}
-	if !checkEnv(e, "UserDomainName", "OS_USER_DOMAIN_NAME") {
-		canContinue = false
-	}
-	if !checkEnv(e, "ProjectDomainName", "OS_PROJECT_DOMAIN_NAME") {
-		canContinue = false
-	}
-	if !checkEnv(e, "IdentityAPIVersion", "OS_IDENTITY_API_VERSION") {
-		canContinue = false
-	}
-	if !checkEnv(e, "AuthPlugin", "OS_AUTH_PLUGIN") {
-		canContinue = false
-	}
-	if !checkEnv(e, "NetworkID", "OS_NETWORK_ID") {
-		canContinue = false
-	}
-	if !checkEnv(e, "EnableConfigDrive", "OS_ENABLE_CONFIG_DRIVE") {
-		canContinue = false
-	}
-	if !checkEnv(e, "OpenstackBuildConfigPath", "OS_BUILD_CONFIG") {
-		canContinue = false
-	}
-	if !checkEnv(e, "ImageRepo", "IMAGE_REPO") {
-		canContinue = false
-	}
-	if !checkEnv(e, "BuildOS", "BUILD_OS") {
-		canContinue = false
-	}
-	if !checkEnv(e, "GhUser", "GH_USER") {
-		canContinue = false
-	}
-	if !checkEnv(e, "GhProject", "GH_PROJECT") {
-		canContinue = false
-	}
-	if !checkEnv(e, "GhToken", "GH_TOKEN") {
-		canContinue = false
-	}
-	if !checkEnv(e, "GhPagesBranch", "GH_PAGES_BRANCH") {
-		canContinue = false
-	}
-
-	if !canContinue {
-		panic("some required variables are missing - cannot continue")
-	}
 }

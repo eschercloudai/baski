@@ -1,7 +1,12 @@
+let navLinks = document.getElementsByClassName("report-links");
+
 //Load all report files and parse into object
 let allReportsFiles = [];
-for (let i in reports) {
-    allReportsFiles.push(new ReportFile(reports[i]));
+for (let i = 0; i < navLinks.length; i++) {
+    let year = navLinks[i].dataset.reportYear;
+    let month = navLinks[i].dataset.reportMonth;
+    let report_name = navLinks[i].dataset.reportName;
+    allReportsFiles.push(new ReportFile(report_name, year, month));
 }
 
 allReportsFiles.forEach((r) => {
@@ -10,7 +15,6 @@ allReportsFiles.forEach((r) => {
 
 // Sort the reports into Years -> Months -> Report
 let reportMap = new Map();
-
 allReportsFiles.forEach((r) => {
     if (!reportMap.has(r.Year())) {
         reportMap.set(r.Year(), new Map());
@@ -27,7 +31,6 @@ allReportsFiles.forEach((r) => {
 });
 
 //Get all the nav menu links and add event listeners to allow them to load results into the accordion.
-let navLinks = document.getElementsByClassName("report-links");
 for (let i = 0; i < navLinks.length; i++) {
     navLinks[i].addEventListener("click", (e) => {
         let year = reportMap.get(e.target.dataset.reportYear);
@@ -76,7 +79,7 @@ function loadResultsIntoAccordion(report) {
 
                 val += `${CardGen(cve)}`;
 
-                if (critCount % cols === (cols-1)) {
+                if (critCount % cols === (cols - 1)) {
                     val += rowEnd;
                 }
                 critAccord += val;
@@ -89,7 +92,7 @@ function loadResultsIntoAccordion(report) {
 
                 val += `${CardGen(cve)}`;
 
-                if (medCount % cols === (cols-1)) {
+                if (medCount % cols === (cols - 1)) {
                     val += rowEnd;
                 }
                 medAccord += val;
@@ -103,7 +106,7 @@ function loadResultsIntoAccordion(report) {
 
                 val += `${CardGen(cve)}`;
 
-                if (lowCount % cols === (cols-1)) {
+                if (lowCount % cols === (cols - 1)) {
                     val += rowEnd;
                 }
                 lowAccord += val;
@@ -183,7 +186,3 @@ cveModal.addEventListener('show.bs.modal', function (event) {
 
     modalBodyLink.href = link;
 })
-
-/**OLD**/
-// Builds the nav
-//buildNavigation()

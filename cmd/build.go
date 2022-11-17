@@ -2,10 +2,7 @@
 Copyright 2022 EscherCloud.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,138 +13,112 @@ limitations under the License.
 package cmd
 
 import (
-	"bufio"
-	"encoding/json"
-	gitRepo "github.com/drew-viles/baskio/pkg/git"
+	"fmt"
+	"github.com/drew-viles/baskio/cmd/build"
+	"github.com/drew-viles/baskio/pkg/constants"
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
-	systemUtils "github.com/drew-viles/baskio/pkg/system"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/google/uuid"
-	"io"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
-	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
-// fetchBuildRepo simply pulls the contents of the imageRepo to a tmp location on disk.
-func fetchBuildRepo(imageRepo string) string {
-	var tmpDir string
-	uuidDir, err := uuid.NewUUID()
-	if err != nil {
-		tmpDir = "aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb"
-	} else {
-		tmpDir = uuidDir.String()
+var (
+	repoRoot = "https://github.com/eschercloudai/image-builder"
+)
+
+// NewBuildCommand creates a command that allows the building of an image.
+func NewBuildCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "build",
+		Short: "Build image",
+		Long: `Build image.
+
+Building images requires a set of commands to be run on the terminal however this is tedious and time consuming.
+By using this, the time is reduced and automation can be enabled.
+
+Overtime this will become more dynamic to allow for build customised 
+images such as ones with GPU/HPC drivers/tools.
+
+To use baskio to build an image, an Openstack cluster is required.`,
+		TraverseChildren: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			cloudsConfig := ostack.InitOpenstack()
+			packerBuildConfig := ostack.InitPackerConfig()
+			if !checkValidOSSelected() {
+				log.Fatalf("an unsupported OS has been entered. Please select a valid OS: %s\n", constants.SupportedOS)
+			}
+
+			buildGitDir := build.CreateRepoDirectory()
+			build.FetchBuildRepo(buildGitDir, imageRepoFlag, viper.GetBool("build.enable-nvidia-support"))
+
+			capiPath := filepath.Join(buildGitDir, "images", "capi")
+			packerBuildConfig.GenerateVariablesFile(capiPath)
+
+			build.InstallDependencies(capiPath)
+
+			cloudsConfig.SetOpenstackEnvs()
+
+			err := build.BuildImage(capiPath, viper.GetString("build.build-os"))
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			imgID, err := build.RetrieveNewImageID()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			fmt.Println(imgID)
+		},
 	}
 
-	g := filepath.Join("/tmp", tmpDir)
+	cmd.Flags().StringVar(&buildOSFlag, "build-os", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204")
+	cmd.Flags().BoolVar(&attachConfigDriveFlag, "attach-config-drive", false, "Used to enable a config drive on Openstack. This may be required if directly attaching an external network to the instance")
+	cmd.Flags().StringVar(&imageRepoFlag, "image-repo", strings.Join([]string{repoRoot, "git"}, "."), "The imageRepo from which the image builder should be deployed")
+	cmd.Flags().StringVar(&sourceImageIDFlag, "source-image-id", "ubuntu-2204", "The ID of the image that will be used as a base for the newly built image")
+	cmd.Flags().StringVar(&networkIDFlag, "network-id", "", "Network ID to deploy the server onto for scanning")
+	cmd.Flags().StringVar(&flavorNameFlag, "flavor-name", "", "The Name of the instance flavor to use for the build")
+	cmd.Flags().BoolVar(&userFloatingIPFlag, "use-floating-ip", true, "Whether to use a floating IP for the instance")
+	cmd.Flags().StringVar(&floatingIPNetworkNameFlag, "floating-ip-network-name", "Internet", "The Name of the network in which to create the floating ip")
+	cmd.Flags().StringVar(&imageVisibilityFlag, "image-visibility", "private", "Change the image visibility in Openstack - you need to ensure the use you're authenticating with has permissions to do so or this will fail")
+	cmd.Flags().StringVar(&crictlVersionFlag, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
+	cmd.Flags().StringVar(&kubeVersionFlag, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
+	cmd.Flags().BoolVar(&addNvidiaSupportFlag, "enable-nvidia-support", false, "This will configure Nvidia support in the image")
+	cmd.Flags().StringVar(&nvidiaInstallerURLFlag, "nvidia-installer-url", "", "The Nvidia installer location - this must be acquired from Nvidia")
+	cmd.Flags().StringVar(&nvidiaVersionFlag, "nvidia-driver-version", "510.73.08", "The Nvidia driver version")
+	cmd.Flags().StringVar(&gridLicenseServerFlag, "grid-license-server", "", "The url or address of the licensing server to pull the gridd.conf from")
 
-	err = os.MkdirAll(g, 0750)
-	if err != nil {
-		panic(err)
-	}
+	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "grid-license-server", "nvidia-installer-url")
+	cmd.MarkFlagsRequiredTogether("use-floating-ip", "floating-ip-network-name")
+	cmd.MarkFlagsRequiredTogether("crictl-version", "kubernetes-version")
 
-	_, err = gitRepo.GitClone(imageRepo, g, plumbing.Master)
-	if err != nil {
-		panic(err)
-	}
-	return g
+	bindViper(cmd, "build.build-os", "build-os")
+	bindViper(cmd, "build.attach-config-drive", "attach-config-drive")
+	bindViper(cmd, "build.image-repo", "image-repo")
+	bindViper(cmd, "build.source-image-id", "source-image-id")
+	bindViper(cmd, "build.network-id", "network-id")
+	bindViper(cmd, "build.flavor-name", "flavor-name")
+	bindViper(cmd, "build.use-floating-ip", "use-floating-ip")
+	bindViper(cmd, "build.floating-ip-network-name", "floating-ip-network-name")
+	bindViper(cmd, "build.image-visibility", "image-visibility")
+	bindViper(cmd, "build.crictl-version", "crictl-version")
+	bindViper(cmd, "build.kubernetes-version", "kubernetes-version")
+	bindViper(cmd, "build.enable-nvidia-support", "enable-nvidia-support")
+	bindViper(cmd, "build.grid-license-server", "grid-license-server")
+	bindViper(cmd, "build.nvidia-installer-url", "nvidia-installer-url")
+	bindViper(cmd, "build.nvidia-driver-version", "nvidia-driver-version")
+
+	return cmd
 }
 
-// generateVariablesFile builds a variables file from the struct.
-func generateVariablesFile(buildGitDir string, buildConfig *ostack.BuildConfig) {
-	log.Printf("generating variables file\n")
-	outputFileName := strings.Join([]string{"tmp", ".json"}, "")
-	outputFile := filepath.Join(buildGitDir, "images/capi/", outputFileName)
-
-	configContent, err := json.Marshal(buildConfig)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = os.WriteFile(outputFile, configContent, 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
-// fetchDependencies will run make dep-openstack so that any requirements such as packer, ansible
-// and goss will be installed.
-func fetchDependencies(repoPath string) {
-	log.Printf("fetching dependencies\n")
-
-	w, err := os.Create("/tmp/out-deps.txt")
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer w.Close()
-
-	wr := io.MultiWriter(w, os.Stdout)
-
-	err = systemUtils.RunMake("deps-openstack", repoPath, nil, wr)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	newPath := filepath.Join(repoPath, ".local/bin")
-	path := strings.Join([]string{os.Getenv("PATH"), newPath}, ":")
-	err = os.Setenv("PATH", path)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
-// buildImage will run make build-openstack-buildOSFlag which will launch an instance in Openstack,
-// add any requirements as defined in the image-builder imageRepo and then create an image from that build.
-func buildImage(capiPath string, buildOS string) error {
-	log.Printf("building image\n")
-
-	w, err := os.Create("/tmp/out-build.txt")
-	if err != nil {
-		return err
-	}
-	defer w.Close()
-
-	wr := io.MultiWriter(w, os.Stdout)
-	//TODO: Maybe fetch from openstack and sort by newest.
-	//  Would require some trickery to get new image ID.
-
-	args := strings.Join([]string{"build-openstack", buildOS}, "-")
-
-	env := []string{"PACKER_VAR_FILES=tmp.json"}
-	env = append(env, os.Environ()...)
-	err = systemUtils.RunMake(args, capiPath, env, wr)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return nil
-}
-
-// retrieveNewImageID fetches the newly create image's ID from the out.txt file
-// that is generated during the buildImage() run.
-func retrieveNewImageID() (string, error) {
-	var i string
-
-	//TODO: If the output goes to stdOUT in buildImage,
-	// we need to figure out if we can pull this from the openstack instance instead.
-	f, err := os.Open("/tmp/out-build.txt")
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-
-	r := bufio.NewScanner(f)
-	re := regexp.MustCompile("An image was created: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-	for r.Scan() {
-		m := re.MatchString(string(r.Bytes()))
-		if m {
-			//There is likely two outputs here due to how packer outputs, so we need to break on the first find.
-			i = strings.Split(r.Text(), ": ")[2]
-			break
+// checkValidOSSelected checks that the build os provided is a valid one.
+func checkValidOSSelected() bool {
+	for _, v := range constants.SupportedOS {
+		if buildOSFlag == v {
+			return true
 		}
 	}
-
-	return i, nil
+	return false
 }
