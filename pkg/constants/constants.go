@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	Version     = "v0.0.2-beta1"
+	Version     = "v0.0.3-beta1"
 	SupportedOS = []string{
 		"ubuntu-2004",
 		"ubuntu-2204",
