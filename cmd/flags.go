@@ -23,8 +23,7 @@ var (
 	nvidiaVersionFlag      string
 	nvidiaInstallerURLFlag string
 	gridLicenseServerFlag  string
-	//openstackBuildConfigPathFlag string
-	imageIDFlag string
+	imageIDFlag            string
 
 	// Publish
 	ghUserFlag        string

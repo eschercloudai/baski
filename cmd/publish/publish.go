@@ -144,9 +144,6 @@ func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 
 		stripDirPrefix := strings.Split(v, "/")
 
-		//ubu2204-v1.25.3-690b436f
-		//2022-11-15T16:24:00Z
-
 		reportName := stripDirPrefix[len(stripDirPrefix)-1:][0]
 
 		fileName := strings.Split(img.CreatedAt, "-")

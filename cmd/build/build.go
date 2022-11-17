@@ -29,28 +29,6 @@ import (
 	"strings"
 )
 
-// generateImageName creates a name for the image that will be built.
-//func generateImageName(buildOS, semVer string, gpuSupport bool, gpuVersion string) string {
-//	imageUUID, err := uuid.NewUUID()
-//	if err != nil {
-//		log.Fatalln(err)
-//	}
-//
-//	osPrefix := buildOS[:3]
-//	versIndex := strings.Index(buildOS, "-")
-//	osVers := osPrefix + buildOS[versIndex+1:]
-//	uuidIndex := strings.Index(imageUUID.String(), "-")
-//	uuidPrefix := imageUUID.String()[:uuidIndex]
-//
-//	imageName := osVers + "-" + semVer
-//	//imageName = fmt.Sprintf("%s-%s-%s", osClient.Env.BuildOS, buildConfig.KubernetesSemver, scanDate)
-//	if gpuSupport {
-//		imageName = imageName + "-" + "gpu" + "-" + gpuVersion
-//	}
-//
-//	return imageName + "-" + uuidPrefix
-//}
-
 // CreateRepoDirectory create the random directory where the Image repo will be cloned into.
 func CreateRepoDirectory() string {
 	var tmpDir string

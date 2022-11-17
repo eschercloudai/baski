@@ -84,12 +84,7 @@ The website it generates isn't the prettiest right now but it will be improved o
 	cmd.Flags().StringVar(&imageIDFlag, "image-id", "", "The ID of the image to scan")
 	cmd.Flags().StringVar(&resultsFileFlag, "results-file", "results.json", "The results file outputted by the scan")
 
-	//requireFlag(cmd, "image-id")
-	//requireFlag(cmd, "github-user")
-	//requireFlag(cmd, "github-project")
-	//requireFlag(cmd, "github-token")
-
-	//cmd.MarkFlagsRequiredTogether("image-id", "github-user", "github-project", "github-token")
+	cmd.MarkFlagsRequiredTogether("github-user", "github-project", "github-token")
 
 	bindViper(cmd, "publish.image-id", "image-id")
 	bindViper(cmd, "publish.github.user", "github-user")

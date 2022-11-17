@@ -25,20 +25,6 @@ var (
 		"ubuntu-2004",
 		"ubuntu-2204",
 	}
-	//requiredVars = map[string]string{
-	//	"AuthURL":            "OS_AUTH_URL",
-	//	"ProjectName":        "OS_PROJECT_NAME",
-	//	"ProjectID":          "OS_PROJECT_ID",
-	//	"Username":           "OS_USERNAME",
-	//	"Password":           "OS_PASSWORD",
-	//	"Region":             "OS_REGION_NAME",
-	//	"Interface":          "OS_INTERFACE",
-	//	"UserDomainName":     "OS_USER_DOMAIN_NAME",
-	//	"ProjectDomainName":  "OS_PROJECT_DOMAIN_NAME",
-	//	"IdentityAPIVersion": "OS_IDENTITY_API_VERSION",
-	//	"AuthPlugin":         "OS_AUTH_PLUGIN",
-	//}
-	//Envs = &OpenstackEnvs{}
 )
 
 // Year is used in reports parsing. It is the top level and contains multiple Month(s).
@@ -149,64 +135,3 @@ type ReportData struct {
 		} `json:"Secrets,omitempty"`
 	} `json:"Results"`
 }
-
-//
-//// OpenstackEnvs is used to store all variables passed to the program.
-//type OpenstackEnvs struct {
-//	Clouds    string
-//	CloudName string
-//	//AuthURL            string
-//	//ProjectName        string
-//	//ProjectID          string
-//	//Username           string
-//	//Password           string
-//	//Region             string
-//	//Interface          string
-//	//UserDomainName     string
-//	//ProjectDomainName  string
-//	//IdentityAPIVersion string
-//	//AuthPlugin         string
-//}
-//
-//// SetOpenstackEnvs sets the Openstack environment variable for the system to use.
-//// This is required because the make command won't take the flags. Later we'll try to generate a clouds.yaml file.
-//func (e *OpenstackEnvs) SetOpenstackEnvs() {
-//	for k, v := range requiredVars {
-//		setEnv(v, reflect.ValueOf(e).Elem().FieldByName(k).String())
-//	}
-//}
-//
-//// setEnv sets an environment variable
-//func setEnv(key string, value string) {
-//	err := os.Setenv(key, value)
-//	if err != nil {
-//		log.Fatalln(err)
-//	}
-//}
-
-// CheckForEnvVars runs through all the possible Environment vars defined in the OpenstackEnvs struct and determines if an
-// EnvVar has been set via a flag being passed into the application.
-// If it has, it will register it in OpenstackEnvs.
-//func (e *OpenstackEnvs) CheckForEnvVars() {
-//	for k, v := range requiredVars {
-//		if !checkEnv(e, k, v) {
-//			log.Fatalf("%s is missing - cannot continue. Please ensure the flag is passed.", v)
-//		}
-//	}
-//}
-
-// checkEnv will determine if a flag or environment variable is passed into the program.
-// If a flag is passed in, it will ensure the corresponding Environment variable exists.
-// If a flag hasn't been passed, it will attempt to discover the value from an Environment variable,
-// should it not find one - and a default isn't available, the program will fail.
-//func checkEnv(envs *OpenstackEnvs, field, envVar string) bool {
-//	if v, ok := os.LookupEnv(envVar); ok {
-//		reflect.ValueOf(envs).Elem().FieldByName(field).SetString(v)
-//	} else {
-//		err := os.Setenv(field, reflect.ValueOf(envs).Elem().FieldByName(field).String())
-//		if err != nil {
-//			return false
-//		}
-//	}
-//	return true
-//}

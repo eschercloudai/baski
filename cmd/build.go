@@ -90,10 +90,6 @@ To use baskio to build an image, an Openstack cluster is required.`,
 	cmd.Flags().StringVar(&nvidiaVersionFlag, "nvidia-driver-version", "510.73.08", "The Nvidia driver version")
 	cmd.Flags().StringVar(&gridLicenseServerFlag, "grid-license-server", "", "The url or address of the licensing server to pull the gridd.conf from")
 
-	//requireFlag(cmd, "build-config")
-	//requireFlag(cmd, "network-id")
-
-	//cmd.MarkFlagsRequiredTogether("build-config", "network-id")
 	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "grid-license-server", "nvidia-installer-url")
 	cmd.MarkFlagsRequiredTogether("use-floating-ip", "floating-ip-network-name")
 	cmd.MarkFlagsRequiredTogether("crictl-version", "kubernetes-version")

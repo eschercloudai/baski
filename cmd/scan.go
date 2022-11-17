@@ -66,12 +66,6 @@ Use the publish command to create a "pretty" interface in GitHub Pages through w
 	cmd.Flags().StringVar(&networkIDFlag, "network-id", "", "Network ID to deploy the server onto for scanning")
 	cmd.Flags().BoolVar(&attachConfigDriveFlag, "attach-config-drive", false, "Used to enable a config drive on Openstack - this may be required if using an external network")
 
-	//requireFlag(cmd, "image-id")
-	//requireFlag(cmd, "flavor-name")
-	//requireFlag(cmd, "network-id")
-
-	//cmd.MarkFlagsRequiredTogether("image-id", "instance-flavor", "network-id")
-
 	bindViper(cmd, "scan.flavor-name", "flavor-name")
 	bindViper(cmd, "scan.image-id", "image-id")
 	bindViper(cmd, "scan.network-id", "network-id")

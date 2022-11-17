@@ -28,10 +28,12 @@ import (
 	"strings"
 )
 
+// OpenstackClouds exists to contain the contents of the clouds.yaml file for Openstack
 type OpenstackClouds struct {
 	Clouds map[string]OpenstackCloud `yaml:"clouds"`
 }
 
+// OpenstackCloud is a singular cloud definition in the clouds.yaml file for Openstack.
 type OpenstackCloud struct {
 	Auth               OpenstackAuth `yaml:"auth"`
 	RegionName         string        `yaml:"region_name,omitempty"`
@@ -40,6 +42,7 @@ type OpenstackCloud struct {
 	AuthType           string        `yaml:"auth_type"`
 }
 
+// OpenstackAuth is the auth section of a singular cloud in the clouds.yaml file for Openstack.
 type OpenstackAuth struct {
 	AuthURL                     string `yaml:"auth_url"`
 	Username                    string `yaml:"username,omitempty"`
@@ -51,6 +54,7 @@ type OpenstackAuth struct {
 	UserDomainName              string `yaml:"user_domain_name"`
 }
 
+// PackerBuildConfig exists to allow variables to be parsed into a packer json file which can then be used for a build.
 type PackerBuildConfig struct {
 	ImageName            string `json:"image_name,omitempty"`
 	SourceImage          string `json:"source_image,omitempty"`
