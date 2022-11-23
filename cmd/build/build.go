@@ -141,3 +141,15 @@ func RetrieveNewImageID() (string, error) {
 
 	return i, nil
 }
+
+// SaveImageIDToFile exports the image ID to a file so that it can be read later by the scan system - this will generally be used by the gitHub action.
+func SaveImageIDToFile(imgID string) error {
+	f, err := os.Create("/tmp/imgid.out")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	f.Write([]byte(imgID))
+
+	return nil
+}
