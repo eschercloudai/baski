@@ -149,7 +149,10 @@ func SaveImageIDToFile(imgID string) error {
 		return err
 	}
 	defer f.Close()
-	f.Write([]byte(imgID))
+	_, err = f.Write([]byte(imgID))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
