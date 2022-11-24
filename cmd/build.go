@@ -70,7 +70,12 @@ To use baskio to build an image, an Openstack cluster is required.`,
 				log.Fatalln(err)
 			}
 
+			build.SaveImageIDToFile(imgID)
+			if err != nil {
+				log.Fatalln(err)
+			}
 			fmt.Println(imgID)
+
 		},
 	}
 

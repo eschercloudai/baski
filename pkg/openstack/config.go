@@ -188,7 +188,6 @@ func (p *PackerBuildConfig) GenerateVariablesFile(buildGitDir string) {
 		log.Fatalln(err)
 	}
 
-	fmt.Println(string(configContent))
 	err = os.WriteFile(outputFile, configContent, 0644)
 	if err != nil {
 		log.Fatalln(err)
