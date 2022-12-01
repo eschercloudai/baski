@@ -43,7 +43,7 @@ The website it generates isn't the prettiest right now but it will be improved o
 			}
 			osClient.OpenstackInit()
 
-			pagesGitDir, pagesRepo, err := publish.FetchPagesRepo(viper.GetString("publish.github.user"), viper.GetString("publish.github.token"), viper.GetString("publish.github.project"), viper.GetString("publish.github.branch"))
+			pagesGitDir, pagesRepo, err := publish.FetchPagesRepo(viper.GetString("publish.github.user"), viper.GetString("publish.github.token"), viper.GetString("publish.github.project"), viper.GetString("publish.github.pages-branch"))
 			if err != nil {
 				log.Fatalln(err)
 			}
