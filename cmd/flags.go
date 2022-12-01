@@ -31,5 +31,4 @@ var (
 	ghProjectFlag     string
 	ghTokenFlag       string
 	ghPagesBranchFlag string
-	resultsFileFlag   string
 )

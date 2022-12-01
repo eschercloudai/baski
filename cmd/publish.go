@@ -48,7 +48,7 @@ The website it generates isn't the prettiest right now but it will be improved o
 				log.Fatalln(err)
 			}
 
-			resultsFile, err := os.Open(viper.GetString("publish.results-file"))
+			resultsFile, err := os.Open("results.json")
 			if err != nil {
 				log.Fatalln(err.Error())
 			}
@@ -82,7 +82,6 @@ The website it generates isn't the prettiest right now but it will be improved o
 	cmd.Flags().StringVar(&ghTokenFlag, "github-token", "", "The token for the GitHub project to which the pages will be pushed")
 	cmd.Flags().StringVar(&ghPagesBranchFlag, "github-pages-branch", "gh-pages", "The branch name for GitHub project to which the pages will be pushed")
 	cmd.Flags().StringVar(&imageIDFlag, "image-id", "", "The ID of the image to scan")
-	cmd.Flags().StringVar(&resultsFileFlag, "results-file", "results.json", "The results file outputted by the scan")
 
 	cmd.MarkFlagsRequiredTogether("github-user", "github-project", "github-token")
 
@@ -91,7 +90,6 @@ The website it generates isn't the prettiest right now but it will be improved o
 	bindViper(cmd, "publish.github.project", "github-project")
 	bindViper(cmd, "publish.github.token", "github-token")
 	bindViper(cmd, "publish.github.pages-branch", "github-pages-branch")
-	bindViper(cmd, "publish.results-file", "results-file")
 
 	return cmd
 
