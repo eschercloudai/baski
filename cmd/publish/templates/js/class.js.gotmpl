@@ -30,13 +30,30 @@ class ReportFile {
 class CVE {
     packages = [];
 
-    constructor(id, title, packages, description, uri, severity) {
+    constructor(id, title, packages, description, uri, severity, cvss) {
         this.id = id;
         this.title = title;
         this.packages.push(packages);
         this.description = description;
         this.uri = uri;
         this.severity = severity;
+        this.score = "";
+
+        if (cvss) {
+            if (cvss.nvd) {
+                if (cvss.nvd.V2Score) {
+                    this.score = cvss.nvd.V2Score;
+                }
+                if (cvss.nvd.V3Score) {
+                    this.score = cvss.nvd.V3Score;
+                }
+            }
+            if (cvss.redhat) {
+                if (cvss.redhat.V3Score) {
+                    this.score = cvss.redhat.V3Score;
+                }
+            }
+        }
     }
 
     AddPackage(pkg) {
@@ -53,7 +70,7 @@ class CVEs {
                 let cveReport = this.cves.get(res.VulnerabilityID);
                 cveReport.AddPackage(res.PkgName);
             } else {
-                let cve = new CVE(res.VulnerabilityID, res.Title, res.PkgName, res.Description, res.PrimaryURL, res.Severity);
+                let cve = new CVE(res.VulnerabilityID, res.Title, res.PkgName, res.Description, res.PrimaryURL, res.Severity, res.CVSS);
                 this.cves.set(res.VulnerabilityID, cve);
             }
         });

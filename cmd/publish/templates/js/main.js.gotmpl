@@ -99,7 +99,6 @@ function loadResultsIntoAccordion(report) {
                 medCount++;
                 break;
             case "LOW":
-                console.log("raw:" + lowCount);
                 if (lowCount % cols === 0) {
                     val += rowStart;
                 }
@@ -116,29 +115,26 @@ function loadResultsIntoAccordion(report) {
         }
     });
 
-
     criticalAccordion.innerHTML = critAccord;
     mediumAccordion.innerHTML = medAccord;
     lowAccordion.innerHTML = lowAccord;
-
 }
 
 function CardGen(cve) {
     return `<div class="col">
     <div class="card" style="width: 18rem;">
       <div class="card-body">
-        <h5 class="card-title">${cve.title.substring(0, 16) + "\u2026"}</h5>
-        <h6 class="card-subtitle mb-2 text-muted">${cve.id} - <span class="card-subtitle mb-2 text-muted">${cve.score}</span></h6>
+        <h5 class="card-title">${(cve.title) ? cve.title.substring(0, 16) + "\u2026" : "No title"}</h5>
+        <h6 class="card-subtitle mb-2 text-muted"> <span class="card-subtitle mb-2 text-muted">Score: ${cve.score}</span></h6>
         <p class="card-text">${cve.description.substring(0, 50) + "\u2026"}</p>
 
         <ul class="list-group list-group-flush">
             ${cve.packages.map(package => `<li class="list-group-item">${package}</li>`).join("")}
         </ul>
 
-        <a href="#" class="card-link" data-bs-toggle="modal" data-bs-target="#cveModal" data-cve-cve="${cve.id}" data-cve-pkg="${cve.packages}" data-cve-title="${cve.title}" data-cve-description='${cve.description}' data-cve-uri="${cve.uri}">More info</a>
+        <a href="#" class="card-link" data-bs-toggle="modal" data-bs-target="#cveModal" data-cve-cve="${cve.id}" data-cve-pkg="${cve.packages}" data-cve-title="${cve.title}" data-cve-description='${cve.description}' data-cve-uri="${cve.uri}" data-cve-score="${cve.score}">More info</a>
       </div>
     </div>
-
 </div>`
 }
 
@@ -151,17 +147,14 @@ cveModal.addEventListener('show.bs.modal', function (event) {
     let title = button.getAttribute('data-cve-title');
     let pkg = button.getAttribute('data-cve-pkg');
     let description = button.getAttribute('data-cve-description');
-    let score2 = button.getAttribute('data-cve-score2');
-    let score3 = button.getAttribute('data-cve-score3');
-    let link = button.getAttribute('data-cve-link');
+    let score = button.getAttribute('data-cve-score');
+    let link = button.getAttribute('data-cve-uri');
 
     let modalTitle = cveModal.querySelector('.modal-title');
     let modalSubtitle = cveModal.querySelector('#cveModalTitle');
     let modalBodyDescription = cveModal.querySelector('#cveModalDescription');
     let modalBodyPackage = cveModal.querySelector('#cveModalPackage');
     let modalBodyScore = cveModal.querySelector('#cveScore');
-    let modalBodyScore2 = cveModal.querySelector('#cveScore2');
-    let modalBodyScore3 = cveModal.querySelector('#cveScore3');
     let modalBodyLink = cveModal.querySelector('#cveLink');
 
     modalTitle.textContent = cve;
@@ -169,20 +162,7 @@ cveModal.addEventListener('show.bs.modal', function (event) {
     modalBodyDescription.textContent = description;
     modalBodyPackage.textContent = pkg;
 
-    if (score2 === "undefined" && score3 === "undefined") {
-        modalBodyScore.innerHTML = '';
-    } else {
-        if (score2 !== "undefined") {
-            modalBodyScore2.textContent = score2;
-        } else {
-            modalBodyScore2.textContent = "None provided";
-        }
-        if (score3 !== "undefined") {
-            modalBodyScore3.textContent = score3;
-        } else {
-            modalBodyScore3.textContent = "None provided";
-        }
-    }
+    modalBodyScore.innerHTML = score;
 
     modalBodyLink.href = link;
 })

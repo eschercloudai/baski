@@ -13,7 +13,6 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"github.com/drew-viles/baskio/cmd/build"
 	"github.com/drew-viles/baskio/pkg/constants"
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
@@ -74,8 +73,6 @@ To use baskio to build an image, an Openstack cluster is required.`,
 			if err != nil {
 				log.Fatalln(err)
 			}
-			fmt.Println(imgID)
-
 		},
 	}
 
@@ -94,11 +91,13 @@ To use baskio to build an image, an Openstack cluster is required.`,
 	cmd.Flags().StringVar(&nvidiaInstallerURLFlag, "nvidia-installer-url", "", "The Nvidia installer location - this must be acquired from Nvidia")
 	cmd.Flags().StringVar(&nvidiaVersionFlag, "nvidia-driver-version", "510.73.08", "The Nvidia driver version")
 	cmd.Flags().StringVar(&gridLicenseServerFlag, "grid-license-server", "", "The url or address of the licensing server to pull the gridd.conf from")
+	cmd.Flags().BoolVar(&verboseFlag, "verbose", false, "Enable verbose output to see the information from packer. Not turning this on will mean the process appears to hang while the image build happens.")
 
 	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "grid-license-server", "nvidia-installer-url")
 	cmd.MarkFlagsRequiredTogether("use-floating-ip", "floating-ip-network-name")
 	cmd.MarkFlagsRequiredTogether("crictl-version", "kubernetes-version")
 
+	bindViper(cmd, "build.verbose", "verbose")
 	bindViper(cmd, "build.build-os", "build-os")
 	bindViper(cmd, "build.attach-config-drive", "attach-config-drive")
 	bindViper(cmd, "build.image-repo", "image-repo")

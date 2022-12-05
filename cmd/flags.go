@@ -5,6 +5,7 @@ var (
 	baskioConfigFlag string
 	cloudsPathFlag   string
 	cloudNameFlag    string
+	verboseFlag      bool
 
 	//Build & Scan
 	imageRepoFlag             string
@@ -30,5 +31,4 @@ var (
 	ghProjectFlag     string
 	ghTokenFlag       string
 	ghPagesBranchFlag string
-	resultsFileFlag   string
 )

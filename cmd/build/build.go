@@ -21,6 +21,7 @@ import (
 	systemUtils "github.com/drew-viles/baskio/pkg/system"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 	"io"
 	"log"
 	"os"
@@ -73,7 +74,12 @@ func InstallDependencies(repoPath string) {
 	}
 	defer w.Close()
 
-	wr := io.MultiWriter(w, os.Stdout)
+	var wr io.Writer
+	if viper.GetBool("build.verbose") {
+		wr = io.MultiWriter(w, os.Stdout)
+	} else {
+		wr = w
+	}
 
 	err = systemUtils.RunMake("deps-openstack", repoPath, nil, wr)
 	if err != nil {
@@ -99,9 +105,12 @@ func BuildImage(capiPath string, buildOS string) error {
 	}
 	defer w.Close()
 
-	wr := io.MultiWriter(w, os.Stdout)
-	//TODO: Maybe fetch from openstack and sort by newest.
-	//  Would require some trickery to get new image ID.
+	var wr io.Writer
+	if viper.GetBool("build.verbose") {
+		wr = io.MultiWriter(w, os.Stdout)
+	} else {
+		wr = w
+	}
 
 	args := strings.Join([]string{"build-openstack", buildOS}, "-")
 
