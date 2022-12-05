@@ -110,29 +110,9 @@ func parseCloudsConfig(cloudsPath string) *OpenstackClouds {
 
 // SetOpenstackEnvs sets the environment variables for the build command to be able to connect to Openstack.
 func (c *OpenstackClouds) SetOpenstackEnvs() {
-	cloud := c.Clouds[viper.GetString("cloud-name")]
-	if cloud.AuthType == "" {
-		cloud.AuthType = "password"
-	}
-	requiredVars := map[string]string{
-		"OS_AUTH_URL":             cloud.Auth.AuthURL,
-		"OS_PROJECT_NAME":         cloud.Auth.ProjectName,
-		"OS_PROJECT_ID":           cloud.Auth.ProjectID,
-		"OS_USERNAME":             cloud.Auth.Username,
-		"OS_PASSWORD":             cloud.Auth.Password,
-		"OS_REGION_NAME":          cloud.RegionName,
-		"OS_INTERFACE":            cloud.Interface,
-		"OS_USER_DOMAIN_NAME":     cloud.Auth.UserDomainName,
-		"OS_PROJECT_DOMAIN_NAME":  "Default",
-		"OS_IDENTITY_API_VERSION": strconv.Itoa(cloud.IdentityApiVersion),
-		"OS_AUTH_PLUGIN":          cloud.AuthType,
-	}
-
-	for k, v := range requiredVars {
-		err := os.Setenv(k, v)
-		if err != nil {
-			log.Fatalln(err)
-		}
+	err := os.Setenv("OS_CLOUD", viper.GetString("cloud-name"))
+	if err != nil {
+		log.Fatalln(err)
 	}
 }
 
