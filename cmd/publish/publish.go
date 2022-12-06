@@ -43,8 +43,8 @@ import (
 var content embed.FS
 
 // FetchPagesRepo pulls the GitHub pages repo locally for modification.
-func FetchPagesRepo(ghUser, ghToken, ghProject, ghBranch string) (string, *git.Repository, error) {
-	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", ghUser, ghToken, ghUser, ghProject)
+func FetchPagesRepo(ghUser, ghToken, ghAccount, ghProject, ghBranch string) (string, *git.Repository, error) {
+	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", ghUser, ghToken, ghAccount, ghProject)
 	pagesDir := filepath.Join("/tmp", ghProject)
 
 	err := os.MkdirAll(pagesDir, 0755)
@@ -146,9 +146,6 @@ func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 		}
 
 		stripDirPrefix := strings.Split(v, "/")
-
-		reportName := stripDirPrefix[len(stripDirPrefix)-1:][0]
-
 		fileName := strings.Split(img.CreatedAt, "-")
 
 		year, err := strconv.Atoi(fileName[0])
@@ -172,12 +169,14 @@ func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 			allReports[year] = y
 		}
 
+		reportName := stripDirPrefix[len(stripDirPrefix)-1:][0]
+		nameSplit := strings.Split(reportName, "-")
+		shortName := nameSplit[:len(nameSplit)-1]
+		r.ShortName = strings.Join(shortName, "-")
+
 		if allReports[year].Months[monthName].Reports == nil {
 			m := allReports[year].Months[monthName]
 			m.Reports = make(map[string]constants.ReportData)
-			nameSplit := strings.Split(reportName, "-")
-			shortName := nameSplit[:len(nameSplit)-1]
-			r.ShortName = strings.Join(shortName, "-")
 			m.Reports[reportName] = r
 			allReports[year].Months[monthName] = m
 		} else {

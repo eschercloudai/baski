@@ -29,6 +29,7 @@ var (
 	// Publish
 	ghUserFlag        string
 	ghProjectFlag     string
+	ghAccountFlag     string
 	ghTokenFlag       string
 	ghPagesBranchFlag string
 )
