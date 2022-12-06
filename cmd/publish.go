@@ -35,6 +35,11 @@ GitHub Pages and view the report there instead in a slightly nicer format.
 The website it generates isn't the prettiest right now but it will be improved on over time.`,
 
 		Run: func(cmd *cobra.Command, args []string) {
+			// just setting defaults for account if it's not provided. Presume it's the same as the username.
+			if viper.GetString("publish.github.account") == "" {
+				viper.Set("publish.github.account", viper.GetString("publish.github.user"))
+			}
+
 			cloudsConfig := ostack.InitOpenstack()
 			cloudsConfig.SetOpenstackEnvs()
 
@@ -43,7 +48,7 @@ The website it generates isn't the prettiest right now but it will be improved o
 			}
 			osClient.OpenstackInit()
 
-			pagesGitDir, pagesRepo, err := publish.FetchPagesRepo(viper.GetString("publish.github.user"), viper.GetString("publish.github.token"), viper.GetString("publish.github.project"), viper.GetString("publish.github.pages-branch"))
+			pagesGitDir, pagesRepo, err := publish.FetchPagesRepo(viper.GetString("publish.github.user"), viper.GetString("publish.github.token"), viper.GetString("publish.github.account"), viper.GetString("publish.github.project"), viper.GetString("publish.github.pages-branch"))
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -79,6 +84,7 @@ The website it generates isn't the prettiest right now but it will be improved o
 
 	cmd.Flags().StringVar(&ghUserFlag, "github-user", "", "The user for the GitHub project to which the pages will be pushed")
 	cmd.Flags().StringVar(&ghProjectFlag, "github-project", "", "The GitHub project to which the pages will be pushed")
+	cmd.Flags().StringVar(&ghAccountFlag, "github-account", "", "The account in which the project is stored. This will default to the user")
 	cmd.Flags().StringVar(&ghTokenFlag, "github-token", "", "The token for the GitHub project to which the pages will be pushed")
 	cmd.Flags().StringVar(&ghPagesBranchFlag, "github-pages-branch", "gh-pages", "The branch name for GitHub project to which the pages will be pushed")
 	cmd.Flags().StringVar(&imageIDFlag, "image-id", "", "The ID of the image to scan")
@@ -88,11 +94,11 @@ The website it generates isn't the prettiest right now but it will be improved o
 	bindViper(cmd, "publish.image-id", "image-id")
 	bindViper(cmd, "publish.github.user", "github-user")
 	bindViper(cmd, "publish.github.project", "github-project")
+	bindViper(cmd, "publish.github.account", "github-account")
 	bindViper(cmd, "publish.github.token", "github-token")
 	bindViper(cmd, "publish.github.pages-branch", "github-pages-branch")
 
 	return cmd
-
 }
 
 // checkErrorPagesWithCleanup takes an error and if it is not nil, will attempt to run a cleanup to ensure no resources are left lying around.
