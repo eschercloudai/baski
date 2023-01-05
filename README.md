@@ -49,7 +49,8 @@ build:
   floating-ip-network-name: "Internet"
   image-visibility: "private"
   crictl-version: "1.25.0"
-  kubernetes_version: "1.25.3"
+  kubernetes-version: "1.25.3"
+  extra-debs: "nfs-common"
   enable-nvidia-support: false
   nvidia-installer-url: "nvidia-install-download-url"
   nvidia-driver-version: "used-for-image-name"
@@ -79,7 +80,7 @@ baskio build --baskio-config path-to-config.yaml
 baskio scan --baskio-config path-to-config.yaml
 
 # Publish the CVEs
-baskio publsh --baskio-config path-to-config.yaml
+baskio publish --baskio-config path-to-config.yaml
 ```
 
 ### More info
@@ -88,7 +89,7 @@ For more flags and more info, run `baskio --help`
 
 ### GitHub Pages
 
-You will need to set up your target repo for the GiHub Pages in advanced.
+You will need to set up your target repo for the GitHub Pages in advanced.
 It only requires a `gh-pages` branch for this to work.
 GitHub Pages should be configured to point to a `docs` directory as this is where the resulting static site will be
 placed.
