@@ -88,7 +88,7 @@ To use baskio to build an image, an Openstack cluster is required.`,
 	cmd.Flags().StringVar(&imageVisibilityFlag, "image-visibility", "private", "Change the image visibility in Openstack - you need to ensure the use you're authenticating with has permissions to do so or this will fail")
 	cmd.Flags().StringVar(&crictlVersionFlag, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
 	cmd.Flags().StringVar(&kubeVersionFlag, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
-	cmd.Flags().StringVar(&extraDebsFlag, "extra-debs", "", "A comma-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
+	cmd.Flags().StringVar(&extraDebsFlag, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
 	cmd.Flags().BoolVar(&addNvidiaSupportFlag, "enable-nvidia-support", false, "This will configure Nvidia support in the image")
 	cmd.Flags().StringVar(&nvidiaInstallerURLFlag, "nvidia-installer-url", "", "The Nvidia installer location - this must be acquired from Nvidia")
 	cmd.Flags().StringVar(&nvidiaVersionFlag, "nvidia-driver-version", "510.73.08", "The Nvidia driver version")
