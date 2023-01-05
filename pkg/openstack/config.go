@@ -18,14 +18,15 @@ package ostack
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
 )
 
 // OpenstackClouds exists to contain the contents of the clouds.yaml file for Openstack
@@ -71,6 +72,7 @@ type PackerBuildConfig struct {
 	KubernetesDebVersion string `json:"kubernetes_deb_version,omitempty"`
 	NodeCustomRolesPost  string `json:"node_custom_roles_post,omitempty"`
 	AnsibleUserVars      string `json:"ansible_user_vars,omitempty"`
+	ExtraDebs            string `json:"extra_debs,omitempty"`
 }
 
 // InitOpenstack translates the clouds.yaml file into a struct to be used in app.
@@ -131,6 +133,7 @@ func buildConfigFromInputs() *PackerBuildConfig {
 		KubernetesSeries:     "v" + viper.GetString("build.kubernetes-version"),
 		KubernetesRpmVersion: viper.GetString("build.kubernetes-version") + "-0",
 		KubernetesDebVersion: viper.GetString("build.kubernetes-version") + "-00",
+		ExtraDebs:            viper.GetString("build.extra-debs"),
 	}
 	if viper.GetBool("build.enable-nvidia-support") {
 		buildConfig.NodeCustomRolesPost = "nvidia"

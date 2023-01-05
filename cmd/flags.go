@@ -19,6 +19,7 @@ var (
 	imageVisibilityFlag       string
 	crictlVersionFlag         string
 	kubeVersionFlag           string
+	extraDebsFlag             string
 
 	addNvidiaSupportFlag   bool
 	nvidiaVersionFlag      string
