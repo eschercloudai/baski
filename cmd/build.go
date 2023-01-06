@@ -13,14 +13,15 @@ limitations under the License.
 package cmd
 
 import (
+	"log"
+	"path/filepath"
+	"strings"
+
 	"github.com/drew-viles/baskio/cmd/build"
 	"github.com/drew-viles/baskio/pkg/constants"
 	ostack "github.com/drew-viles/baskio/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"path/filepath"
-	"strings"
 )
 
 var (
@@ -87,6 +88,7 @@ To use baskio to build an image, an Openstack cluster is required.`,
 	cmd.Flags().StringVar(&imageVisibilityFlag, "image-visibility", "private", "Change the image visibility in Openstack - you need to ensure the use you're authenticating with has permissions to do so or this will fail")
 	cmd.Flags().StringVar(&crictlVersionFlag, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
 	cmd.Flags().StringVar(&kubeVersionFlag, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
+	cmd.Flags().StringVar(&extraDebsFlag, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
 	cmd.Flags().BoolVar(&addNvidiaSupportFlag, "enable-nvidia-support", false, "This will configure Nvidia support in the image")
 	cmd.Flags().StringVar(&nvidiaInstallerURLFlag, "nvidia-installer-url", "", "The Nvidia installer location - this must be acquired from Nvidia")
 	cmd.Flags().StringVar(&nvidiaVersionFlag, "nvidia-driver-version", "510.73.08", "The Nvidia driver version")
@@ -109,6 +111,7 @@ To use baskio to build an image, an Openstack cluster is required.`,
 	bindViper(cmd, "build.image-visibility", "image-visibility")
 	bindViper(cmd, "build.crictl-version", "crictl-version")
 	bindViper(cmd, "build.kubernetes-version", "kubernetes-version")
+	bindViper(cmd, "build.extra-debs", "extra-debs")
 	bindViper(cmd, "build.enable-nvidia-support", "enable-nvidia-support")
 	bindViper(cmd, "build.grid-license-server", "grid-license-server")
 	bindViper(cmd, "build.nvidia-installer-url", "nvidia-installer-url")
