@@ -16,15 +16,16 @@ limitations under the License.
 package main
 
 import (
-	"github.com/drew-viles/baskio/cmd"
 	"log"
 	"os"
 	"runtime"
+
+	"github.com/drew-viles/baskio/cmd"
 )
 
 func main() {
-	if runtime.GOOS != "linux" {
-		log.Fatalln("can only run on linux")
+	if runtime.GOOS == "windows" {
+		log.Fatalln("Windows is not currently supported")
 	}
 
 	if err := cmd.Execute(); err != nil {
