@@ -18,11 +18,13 @@ package ostack
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/spf13/viper"
@@ -159,6 +161,74 @@ func generateImageName(semVer string) string {
 	}
 
 	return imageName + "-" + imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
+}
+
+// GenerateBuilderMetadata generates some glance metadata for the image.
+func GenerateBuilderMetadata() map[string]string {
+	gpu := viper.GetString("build.nvidia-driver-version")
+	if len(gpu) == 0 {
+		gpu = "no_gpu"
+	}
+	return map[string]string{
+		"os":   viper.GetString("build.build-os"),
+		"k8s":  viper.GetString("build.kubernetes_version"),
+		"gpu":  gpu,
+		"date": time.RFC3339,
+	}
+}
+
+// UpdatePackerBuildersJson pre-populates the metadata field in the packer.json file as objects cannot be passed as variables in packer.
+func UpdatePackerBuildersJson(dir string, metadata map[string]string) {
+	file, err := os.OpenFile(filepath.Join(dir, "images", "capi", "packer", "openstack", "packer.json"), os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	res := addMetadataToBuilders(metadata, data)
+
+	err = file.Truncate(0)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	_, err = file.Write(res)
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+// addMetadataToBuilders inserts the metadata into the packer's builder section.
+func addMetadataToBuilders(metadata map[string]string, data []byte) []byte {
+	jsonStruct := struct {
+		Builders       []map[string]interface{} `json:"builders"`
+		PostProcessors []map[string]interface{} `json:"post-processors"`
+		Provisioners   []map[string]interface{} `json:"provisioners"`
+		Variables      map[string]interface{}   `json:"variables"`
+	}{}
+
+	err := json.Unmarshal(data, &jsonStruct)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	jsonStruct.Builders[0]["metadata"] = metadata
+
+	res, err := json.Marshal(jsonStruct)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return res
 }
 
 // GenerateVariablesFile converts the PackerBuildConfig into a build configuration file that packer can use.
