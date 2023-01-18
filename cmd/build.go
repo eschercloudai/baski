@@ -52,6 +52,9 @@ To use baskio to build an image, an Openstack cluster is required.`,
 
 			buildGitDir := build.CreateRepoDirectory()
 			build.FetchBuildRepo(buildGitDir, imageRepoFlag, viper.GetBool("build.enable-nvidia-support"))
+			
+			metadata := ostack.GenerateBuilderMetadata()
+			ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
 
 			capiPath := filepath.Join(buildGitDir, "images", "capi")
 			packerBuildConfig.GenerateVariablesFile(capiPath)
