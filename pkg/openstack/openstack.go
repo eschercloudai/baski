@@ -17,7 +17,7 @@ package ostack
 
 import (
 	"fmt"
-	"github.com/drew-viles/baskio/pkg/constants"
+	"github.com/eschercloudai/baskio/pkg/constants"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"

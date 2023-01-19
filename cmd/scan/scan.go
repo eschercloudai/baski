@@ -16,8 +16,8 @@ limitations under the License.
 package scan
 
 import (
-	ostack "github.com/drew-viles/baskio/pkg/openstack"
-	sshconnect "github.com/drew-viles/baskio/pkg/ssh"
+	ostack "github.com/eschercloudai/baskio/pkg/openstack"
+	sshconnect "github.com/eschercloudai/baskio/pkg/ssh"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/pkg/sftp"
 	"log"

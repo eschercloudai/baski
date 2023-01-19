@@ -13,8 +13,8 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/drew-viles/baskio/cmd/publish"
-	ostack "github.com/drew-viles/baskio/pkg/openstack"
+	"github.com/eschercloudai/baskio/cmd/publish"
+	ostack "github.com/eschercloudai/baskio/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"

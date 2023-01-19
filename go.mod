@@ -1,4 +1,4 @@
-module github.com/drew-viles/baskio
+module github.com/eschercloudai/baskio
 
 go 1.19
 

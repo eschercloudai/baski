@@ -14,7 +14,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drew-viles/baskio/pkg/constants"
+	"github.com/eschercloudai/baskio/pkg/constants"
 
 	"github.com/spf13/cobra"
 )

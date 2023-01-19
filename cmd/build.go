@@ -17,9 +17,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/drew-viles/baskio/cmd/build"
-	"github.com/drew-viles/baskio/pkg/constants"
-	ostack "github.com/drew-viles/baskio/pkg/openstack"
+	"github.com/eschercloudai/baskio/cmd/build"
+	"github.com/eschercloudai/baskio/pkg/constants"
+	ostack "github.com/eschercloudai/baskio/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -52,7 +52,7 @@ To use baskio to build an image, an Openstack cluster is required.`,
 
 			buildGitDir := build.CreateRepoDirectory()
 			build.FetchBuildRepo(buildGitDir, imageRepoFlag, viper.GetBool("build.enable-nvidia-support"))
-			
+
 			metadata := ostack.GenerateBuilderMetadata()
 			ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
 
