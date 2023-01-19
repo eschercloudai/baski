@@ -17,8 +17,8 @@ package build
 
 import (
 	"bufio"
-	gitRepo "github.com/drew-viles/baskio/pkg/git"
-	systemUtils "github.com/drew-viles/baskio/pkg/system"
+	gitRepo "github.com/eschercloudai/baskio/pkg/git"
+	systemUtils "github.com/eschercloudai/baskio/pkg/system"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"

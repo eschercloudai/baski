@@ -20,7 +20,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/drew-viles/baskio/cmd"
+	"github.com/eschercloudai/baskio/cmd"
 )
 
 func main() {

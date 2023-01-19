@@ -17,9 +17,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/drew-viles/baskio/cmd/build"
-	"github.com/drew-viles/baskio/pkg/constants"
-	ostack "github.com/drew-viles/baskio/pkg/openstack"
+	"github.com/eschercloudai/baskio/cmd/build"
+	"github.com/eschercloudai/baskio/pkg/constants"
+	ostack "github.com/eschercloudai/baskio/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
