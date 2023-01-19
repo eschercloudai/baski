@@ -25,6 +25,7 @@ var (
 		"ubuntu-2004",
 		"ubuntu-2204",
 	}
+	TrivyVersion = "0.36.1"
 )
 
 // Year is used in reports parsing. It is the top level and contains multiple Month(s).

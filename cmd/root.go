@@ -35,8 +35,6 @@ This tool has been designed to automatically build images for the Openstack poti
 It could be extended out to provide images for a variety of other builders however for now it's main goal is to work with Openstack.`,
 	}
 
-	buildCmd := NewBuildCommand()
-	scanCmd := NewScanCommand()
 	rootCmd.PersistentFlags().StringVar(&cloudsPathFlag, "clouds-file", "~/.config/openstack/clouds.yaml", "The location of the openstack clouds.yaml file to use")
 	rootCmd.PersistentFlags().StringVar(&cloudNameFlag, "cloud-name", "", "The name of the cloud profile to use from the clouds.yaml file")
 	rootCmd.PersistentFlags().StringVar(&baskioConfigFlag, "baskio-config", "baskio.yaml", "The location of a baskio config file")
@@ -50,8 +48,8 @@ It could be extended out to provide images for a variety of other builders howev
 
 	commands := []*cobra.Command{
 		versionCmd(),
-		buildCmd,
-		scanCmd,
+		NewBuildCommand(),
+		NewScanCommand(),
 		NewPublishCommand(),
 	}
 	rootCmd.AddCommand(commands...)
@@ -60,7 +58,6 @@ It could be extended out to provide images for a variety of other builders howev
 
 // initConfig will initialise viper and the configuration file.
 func initConfig() {
-	viper.SetEnvPrefix("baskio")
 	if baskioConfigFlag != "" {
 		viper.SetConfigFile(baskioConfigFlag)
 	} else {
@@ -73,8 +70,6 @@ func initConfig() {
 			panic(fmt.Errorf("fatal error config file: %w", err))
 		}
 	}
-
-	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
