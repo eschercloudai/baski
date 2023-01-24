@@ -1,4 +1,4 @@
-# Baskio - Build And Scan Kubernetes Images Openstack
+# Baskio - Build And Scan Kubernetes Images OpenStack
 
 A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using
 the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo.
@@ -33,7 +33,7 @@ openstack security group rule create "${OS_SG}" --egress --ethertype IPv4 --prot
 # Usage
 Simply run the binary with the following flags (minimum required). See the example below.
 You will also require a source image to reference for the build to succeed.
-You must supply a clouds.yaml file for Openstack connectivity.
+You must supply a clouds.yaml file for OpenStack connectivity.
 
 ```yaml
 clouds-file: "~/.config/openstack/clouds.yaml"
@@ -49,6 +49,7 @@ build:
   floating-ip-network-name: "Internet"
   image-visibility: "private"
   crictl-version: "1.25.0"
+  cni-version: "1.1.1"
   kubernetes-version: "1.25.3"
   extra-debs: "nfs-common"
   enable-nvidia-support: false

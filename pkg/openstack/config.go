@@ -66,6 +66,8 @@ type PackerBuildConfig struct {
 	AttachConfigDrive    string `json:"attach_config_drive,omitempty"`
 	UseFloatingIp        string `json:"use_floating_ip,omitempty"`
 	FloatingIpNetwork    string `json:"floating_ip_network,omitempty"`
+	CniVersion           string `json:"kubernetes_cni_semver,omitempty"`
+	CniDebVersion        string `json:"kubernetes_cni_deb_version,omitempty"`
 	CrictlVersion        string `json:"crictl_version,omitempty"`
 	ImageVisibility      string `json:"image_visibility,omitempty"`
 	KubernetesSemver     string `json:"kubernetes_semver,omitempty"`
@@ -129,6 +131,8 @@ func buildConfigFromInputs() *PackerBuildConfig {
 		AttachConfigDrive:    strconv.FormatBool(viper.GetBool("build.attach-config-drive")),
 		UseFloatingIp:        strconv.FormatBool(viper.GetBool("build.use-floating-ip")),
 		FloatingIpNetwork:    viper.GetString("build.floating-ip-network-name"),
+		CniVersion:           "v" + viper.GetString("build.cni-version"),
+		CniDebVersion:        viper.GetString("build.cni-version") + "-00",
 		CrictlVersion:        viper.GetString("build.crictl-version"),
 		ImageVisibility:      viper.GetString("build.image-visibility"),
 		KubernetesSemver:     "v" + viper.GetString("build.kubernetes-version"),

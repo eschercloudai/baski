@@ -17,6 +17,7 @@ var (
 	floatingIPNetworkNameFlag string
 	attachConfigDriveFlag     bool
 	imageVisibilityFlag       string
+	cniVersionFlag            string
 	crictlVersionFlag         string
 	kubeVersionFlag           string
 	extraDebsFlag             string
