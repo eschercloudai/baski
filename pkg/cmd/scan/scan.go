@@ -1,5 +1,6 @@
 /*
-Copyright 2022 EscherCloud.
+Copyright 2023 EscherCloud.
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,6 +17,7 @@ limitations under the License.
 package scan
 
 import (
+	"fmt"
 	ostack "github.com/eschercloudai/baskio/pkg/openstack"
 	sshconnect "github.com/eschercloudai/baskio/pkg/ssh"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
@@ -37,11 +39,11 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, erro
 	log.Println("waiting 2 minutes for the results of the scan to become available.")
 	time.Sleep(2 * time.Minute)
 
-	remoteCommand := "while [ ! -f /tmp/results.json ] && [ -s /tmp/results.json ] ; do echo \"results not ready\"; sleep 5; done;"
-	err = sshconnect.RunRemoteCommand(client, remoteCommand)
-	if err != nil {
-		return nil, err
-	}
+	//remoteCommand := "while [ ! -f /tmp/results.json ] && [ -s /tmp/results.json ] ; do echo \"results not ready\"; sleep 5; done;"
+	//err = sshconnect.RunRemoteCommand(client, remoteCommand)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	// open an SFTP session over an existing ssh connection.
 	log.Println("pulling results.")
@@ -51,7 +53,29 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, erro
 	}
 	defer sftpConnection.Close()
 
-	return sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "./", "results.json")
+	resultsFile, err := sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	//Check there is data in the file
+	fi, err := os.Stat(resultsFile.Name())
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	for fi.Size() == 0 {
+		fmt.Println(fi.Size())
+		resultsFile, err = sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
+
+		fi, err = resultsFile.Stat()
+		if err != nil {
+			log.Println(err.Error())
+		}
+		time.Sleep(10 * time.Second)
+	}
+
+	return resultsFile, err
 }
 
 // RemoveScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
