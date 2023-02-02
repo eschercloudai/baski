@@ -17,13 +17,13 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/eschercloudai/baskio/pkg/cmd/build"
+	"github.com/eschercloudai/baski/pkg/cmd/build"
 	"log"
 	"path/filepath"
 	"strings"
 
-	"github.com/eschercloudai/baskio/pkg/constants"
-	ostack "github.com/eschercloudai/baskio/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/constants"
+	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -45,7 +45,7 @@ By using this, the time is reduced and automation can be enabled.
 Overtime this will become more dynamic to allow for build customised 
 images such as ones with GPU/HPC drivers/tools.
 
-To use baskio to build an image, an Openstack cluster is required.`,
+To use baski to build an image, an Openstack cluster is required.`,
 		TraverseChildren: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			cloudsConfig := ostack.InitOpenstack()

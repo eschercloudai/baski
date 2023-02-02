@@ -17,8 +17,8 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/eschercloudai/baskio/pkg/cmd/publish"
-	ostack "github.com/eschercloudai/baskio/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/cmd/publish"
+	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"
