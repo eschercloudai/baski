@@ -52,7 +52,25 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, erro
 	}
 	defer sftpConnection.Close()
 
-	return sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "./", "results.json")
+	resultsFile, err := sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
+
+	//Check there is data in the file in case it was pulled early.
+	fi, err := resultsFile.Stat()
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	for fi.Size() == 0 {
+		resultsFile, err = sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
+
+		//Check there is data in the file in case it was pulled early.
+		fi, err = resultsFile.Stat()
+		if err != nil {
+			log.Println(err.Error())
+		}
+	}
+
+	return resultsFile, err
 }
 
 // RemoveScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.

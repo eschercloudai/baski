@@ -124,6 +124,7 @@ sudo ./trivy rootfs -f json -o /tmp/results.json /
 		panic(err)
 	}
 
+	//TODO: If no IP is available, allocate one and attach. If none available to allocate, fail.
 	freeIP := attachFloatingIP(client, server.ID)
 
 	return server, freeIP
