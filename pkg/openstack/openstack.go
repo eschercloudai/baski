@@ -1,5 +1,6 @@
 /*
-Copyright 2022 EscherCloud.
+Copyright 2023 EscherCloud.
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -123,6 +124,7 @@ sudo ./trivy rootfs -f json -o /tmp/results.json /
 		panic(err)
 	}
 
+	//TODO: If no IP is available, allocate one and attach. If none available to allocate, fail.
 	freeIP := attachFloatingIP(client, server.ID)
 
 	return server, freeIP

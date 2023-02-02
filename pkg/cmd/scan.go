@@ -1,8 +1,12 @@
 /*
-Copyright 2022 EscherCloud.
+Copyright 2023 EscherCloud.
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,7 +17,7 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/eschercloudai/baskio/cmd/scan"
+	"github.com/eschercloudai/baskio/pkg/cmd/scan"
 	ostack "github.com/eschercloudai/baskio/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
