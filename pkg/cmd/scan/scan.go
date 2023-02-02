@@ -18,8 +18,8 @@ package scan
 
 import (
 	"fmt"
-	ostack "github.com/eschercloudai/baskio/pkg/openstack"
-	sshconnect "github.com/eschercloudai/baskio/pkg/ssh"
+	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	sshconnect "github.com/eschercloudai/baski/pkg/ssh"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/pkg/sftp"
 	"log"

@@ -18,7 +18,7 @@ package ostack
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baskio/pkg/constants"
+	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
@@ -75,7 +75,7 @@ func (c *Client) CreateKeypair(KeyNamePrefix string) *keypairs.KeyPair {
 	client.Microversion = "2.2"
 
 	kp, err := keypairs.Create(client, keypairs.CreateOpts{
-		Name: KeyNamePrefix + "-baskio-key",
+		Name: KeyNamePrefix + "-baski-key",
 		Type: "ssh",
 	}).Extract()
 	if err != nil {

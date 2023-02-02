@@ -1,4 +1,4 @@
-module github.com/eschercloudai/baskio
+module github.com/eschercloudai/baski
 
 go 1.19
 

@@ -18,10 +18,10 @@ package cmd
 
 var (
 	//Root
-	baskioConfigFlag string
-	cloudsPathFlag   string
-	cloudNameFlag    string
-	verboseFlag      bool
+	baskiConfigFlag string
+	cloudsPathFlag  string
+	cloudNameFlag   string
+	verboseFlag     bool
 
 	//Build & Scan
 	imageRepoFlag             string

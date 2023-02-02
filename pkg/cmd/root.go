@@ -31,8 +31,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd = &cobra.Command{
-		Use:   "baskio",
-		Short: "Baskio is a tools for building and scanning Kubernetes images within Openstack.",
+		Use:   "baski",
+		Short: "Baski is a tools for building and scanning Kubernetes images within Openstack.",
 		Long: `Build And Scan Kubernetes Images on Openstack
 This tool has been designed to automatically build images for the Openstack potion of the Kubernetes Image Builder.
 It could be extended out to provide images for a variety of other builders however for now it's main goal is to work with Openstack.`,
@@ -40,14 +40,14 @@ It could be extended out to provide images for a variety of other builders howev
 
 	rootCmd.PersistentFlags().StringVar(&cloudsPathFlag, "clouds-file", "~/.config/openstack/clouds.yaml", "The location of the openstack clouds.yaml file to use")
 	rootCmd.PersistentFlags().StringVar(&cloudNameFlag, "cloud-name", "", "The name of the cloud profile to use from the clouds.yaml file")
-	rootCmd.PersistentFlags().StringVar(&baskioConfigFlag, "baskio-config", "baskio.yaml", "The location of a baskio config file")
+	rootCmd.PersistentFlags().StringVar(&baskiConfigFlag, "baski-config", "baski.yaml", "The location of a baski config file")
 
 	bindPersistentViper(rootCmd, "clouds-file")
 	bindPersistentViper(rootCmd, "cloud-name")
-	bindPersistentViper(rootCmd, "baskio-config")
+	bindPersistentViper(rootCmd, "baski-config")
 
 	rootCmd.MarkFlagsRequiredTogether("clouds-file", "cloud-name")
-	rootCmd.MarkFlagsMutuallyExclusive("clouds-file", "baskio-config")
+	rootCmd.MarkFlagsMutuallyExclusive("clouds-file", "baski-config")
 
 	commands := []*cobra.Command{
 		versionCmd(),
@@ -61,10 +61,10 @@ It could be extended out to provide images for a variety of other builders howev
 
 // initConfig will initialise viper and the configuration file.
 func initConfig() {
-	if baskioConfigFlag != "" {
-		viper.SetConfigFile(baskioConfigFlag)
+	if baskiConfigFlag != "" {
+		viper.SetConfigFile(baskiConfigFlag)
 	} else {
-		viper.SetConfigName("baskio")
+		viper.SetConfigName("baski")
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath(".")
 

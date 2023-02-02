@@ -17,8 +17,8 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/eschercloudai/baskio/pkg/cmd/scan"
-	ostack "github.com/eschercloudai/baskio/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/cmd/scan"
+	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"
@@ -34,7 +34,7 @@ func NewScanCommand() *cobra.Command {
 Scanning an image requires the creation of a new instance in Openstack using the image you want to scan.
 Then, Trivy needs downloading and running against the filesystem. Again, this is time consuming.
 
-The scan section of baskio fixes this for you and allows you to drink coffee whilst it does the hard work for you.
+The scan section of baski fixes this for you and allows you to drink coffee whilst it does the hard work for you.
 
 It creates a new instance using the provided Openstack configuration variables and scans the image.
 Once complete, it generates a report file that you can read,

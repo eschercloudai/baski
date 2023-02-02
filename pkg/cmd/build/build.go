@@ -18,8 +18,8 @@ package build
 
 import (
 	"bufio"
-	gitRepo "github.com/eschercloudai/baskio/pkg/git"
-	systemUtils "github.com/eschercloudai/baskio/pkg/system"
+	gitRepo "github.com/eschercloudai/baski/pkg/git"
+	systemUtils "github.com/eschercloudai/baski/pkg/system"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"

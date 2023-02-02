@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/eschercloudai/baskio/pkg/cmd"
+	"github.com/eschercloudai/baski/pkg/cmd"
 	"log"
 	"os"
 	"runtime"

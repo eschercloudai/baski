@@ -18,7 +18,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baskio/pkg/constants"
+	"github.com/eschercloudai/baski/pkg/constants"
 
 	"github.com/spf13/cobra"
 )

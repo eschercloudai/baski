@@ -1,4 +1,4 @@
-# Baskio - Build And Scan Kubernetes Images OpenStack
+# Baski - Build And Scan Kubernetes Images OpenStack
 
 A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using
 the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo.
@@ -72,21 +72,21 @@ publish:
 
 ```
 
-Now supply this to baskio.
+Now supply this to baski.
 ```shell
 # Build an image
-baskio build --baskio-config path-to-config.yaml
+baski build --baski-config path-to-config.yaml
 
 # Scan an image
-baskio scan --baskio-config path-to-config.yaml
+baski scan --baski-config path-to-config.yaml
 
 # Publish the CVEs
-baskio publish --baskio-config path-to-config.yaml
+baski publish --baski-config path-to-config.yaml
 ```
 
 ### More info
 
-For more flags and more info, run `baskio --help`
+For more flags and more info, run `baski --help`
 
 ### GitHub Pages
 
