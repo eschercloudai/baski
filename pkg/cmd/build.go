@@ -98,12 +98,13 @@ To use baski to build an image, an Openstack cluster is required.`,
 	cmd.Flags().StringVar(&kubeVersionFlag, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
 	cmd.Flags().StringVar(&extraDebsFlag, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
 	cmd.Flags().BoolVar(&addNvidiaSupportFlag, "enable-nvidia-support", false, "This will configure Nvidia support in the image")
-	cmd.Flags().StringVar(&nvidiaInstallerURLFlag, "nvidia-installer-url", "", "The Nvidia installer location - this must be acquired from Nvidia")
 	cmd.Flags().StringVar(&nvidiaVersionFlag, "nvidia-driver-version", "510.73.08", "The Nvidia driver version")
-	cmd.Flags().StringVar(&gridLicenseServerFlag, "grid-license-server", "", "The url or address of the licensing server to pull the gridd.conf from")
+	cmd.Flags().StringVar(&nvidiaInstallerURLFlag, "nvidia-installer-url", "", "The Nvidia installer download URL - this must be acquired from Nvidia")
+	cmd.Flags().StringVar(&nvidiaTOKURLFlag, "nvidia-tok-url", "", "The Nvidia .tok file download URL - this must be acquired from Nvidia")
+	cmd.Flags().IntVar(&griddFeatureTypeFlag, "gridd-feature-type", 4, "The gridd feature type - See https://docs.nvidia.com/license-system/latest/nvidia-license-system-quick-start-guide/index.html#configuring-nls-licensed-client-on-linux for more information")
 	cmd.Flags().BoolVar(&verboseFlag, "verbose", false, "Enable verbose output to see the information from packer. Not turning this on will mean the process appears to hang while the image build happens.")
 
-	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "grid-license-server", "nvidia-installer-url")
+	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "nvidia-tok-url", "nvidia-installer-url", "nvidia-tok-url")
 	cmd.MarkFlagsRequiredTogether("use-floating-ip", "floating-ip-network-name")
 	cmd.MarkFlagsRequiredTogether("crictl-version", "kubernetes-version")
 
@@ -122,9 +123,10 @@ To use baski to build an image, an Openstack cluster is required.`,
 	bindViper(cmd, "build.kubernetes-version", "kubernetes-version")
 	bindViper(cmd, "build.extra-debs", "extra-debs")
 	bindViper(cmd, "build.enable-nvidia-support", "enable-nvidia-support")
-	bindViper(cmd, "build.grid-license-server", "grid-license-server")
+	bindViper(cmd, "build.gridd-feature-type", "gridd-feature-type")
 	bindViper(cmd, "build.nvidia-installer-url", "nvidia-installer-url")
 	bindViper(cmd, "build.nvidia-driver-version", "nvidia-driver-version")
+	bindViper(cmd, "build.nvidia-tok-url", "nvidia-tok-url")
 
 	return cmd
 }

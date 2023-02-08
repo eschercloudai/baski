@@ -41,7 +41,8 @@ var (
 	addNvidiaSupportFlag   bool
 	nvidiaVersionFlag      string
 	nvidiaInstallerURLFlag string
-	gridLicenseServerFlag  string
+	nvidiaTOKURLFlag       string
+	griddFeatureTypeFlag   int
 	imageIDFlag            string
 
 	// Publish

@@ -144,7 +144,7 @@ func buildConfigFromInputs() *PackerBuildConfig {
 	}
 	if viper.GetBool("build.enable-nvidia-support") {
 		buildConfig.NodeCustomRolesPost = "nvidia"
-		buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_installer_url=%s grid_license_server=%s", viper.GetString("build.nvidia-installer-url"), viper.GetString("build.grid-license-server"))
+		buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_installer_url=%s nvidia_tok_url=%s gridd_feature_type=%d", viper.GetString("build.nvidia-installer-url"), viper.GetString("build.nvidia-tok-url"), viper.GetString("build.gridd-feature-type"))
 	}
 	buildConfig.ImageName = generateImageName(buildConfig.KubernetesSemver)
 
@@ -170,13 +170,13 @@ func generateImageName(semVer string) string {
 
 // GenerateBuilderMetadata generates some glance metadata for the image.
 func GenerateBuilderMetadata() map[string]string {
-	gpu := viper.GetString("build.nvidia-driver-version")
-	if len(gpu) == 0 {
-		gpu = "no_gpu"
+	gpu := "no_gpu"
+	if viper.GetBool("build.enable-nvidia-support") {
+		gpu = viper.GetString("build.nvidia-driver-version")
 	}
 	return map[string]string{
 		"os":   viper.GetString("build.build-os"),
-		"k8s":  viper.GetString("build.kubernetes_version"),
+		"k8s":  viper.GetString("build.kubernetes-version"),
 		"gpu":  gpu,
 		"date": time.RFC3339,
 	}
