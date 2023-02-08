@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/eschercloudai/baski/pkg/cmd/util/completion"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -40,6 +41,10 @@ It could be extended out to provide images for a variety of other builders howev
 
 	rootCmd.PersistentFlags().StringVar(&cloudsPathFlag, "clouds-file", "~/.config/openstack/clouds.yaml", "The location of the openstack clouds.yaml file to use")
 	rootCmd.PersistentFlags().StringVar(&cloudNameFlag, "cloud-name", "", "The name of the cloud profile to use from the clouds.yaml file")
+
+	if err := rootCmd.RegisterFlagCompletionFunc("cloud-name", completion.CloudCompletionFunc); err != nil {
+		panic(err)
+	}
 	rootCmd.PersistentFlags().StringVar(&baskiConfigFlag, "baski-config", "baski.yaml", "The location of a baski config file")
 
 	bindPersistentViper(rootCmd, "clouds-file")
@@ -74,8 +79,8 @@ func initConfig() {
 		}
 	}
 
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
 	}
 }
 

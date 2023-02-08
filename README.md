@@ -1,4 +1,4 @@
-# Baski - Build And Scan Kubernetes Images OpenStack
+# Baski - Build And Scan Kubernetes Images
 
 A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using
 the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo.
@@ -53,15 +53,16 @@ build:
   kubernetes-version: "1.25.3"
   extra-debs: "nfs-common"
   enable-nvidia-support: false
-  nvidia-installer-url: "nvidia-install-download-url"
-  nvidia-driver-version: "used-for-image-name"
-  grid-license-server: "grid-server-ip"
+  #nvidia-installer-url: "download-url-for-nvidia-driver"
+  #nvidia_tok_url: "download-url-for-nvidia-tok-file"
+  #nvidia-driver-version: "525.85.05"
+  #grid_feature_type: "4"
 scan:
   image-id: ""
   flavor-name: "spicy-meatball"
   network-id: "network-id"
   attach-config-drive: false
-publish: 
+publish:
   image-id: ""
   github:
     user: "some-user"
