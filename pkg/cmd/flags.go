@@ -37,6 +37,7 @@ var (
 	crictlVersionFlag         string
 	kubeVersionFlag           string
 	extraDebsFlag             string
+	rootfsUUIDFlag            string
 
 	addNvidiaSupportFlag   bool
 	nvidiaVersionFlag      string

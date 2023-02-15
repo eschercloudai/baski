@@ -175,10 +175,11 @@ func GenerateBuilderMetadata() map[string]string {
 		gpu = viper.GetString("build.nvidia-driver-version")
 	}
 	return map[string]string{
-		"os":   viper.GetString("build.build-os"),
-		"k8s":  viper.GetString("build.kubernetes-version"),
-		"gpu":  gpu,
-		"date": time.RFC3339,
+		"os":          viper.GetString("build.build-os"),
+		"k8s":         viper.GetString("build.kubernetes_version"),
+		"gpu":         gpu,
+		"date":        time.RFC3339,
+		"rootfs_uuid": viper.GetString("build.rootfs-uuid"),
 	}
 }
 

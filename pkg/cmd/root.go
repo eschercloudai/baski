@@ -21,6 +21,7 @@ import (
 	"github.com/eschercloudai/baski/pkg/cmd/util/completion"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"log"
 )
 
 var (
@@ -80,7 +81,7 @@ func initConfig() {
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		panic(err)
+		log.Println(err)
 	}
 }
 
