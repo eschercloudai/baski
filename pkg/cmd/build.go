@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"github.com/eschercloudai/baski/pkg/cmd/build"
+	"github.com/eschercloudai/baski/pkg/cmd/util/data"
 	"log"
 	"path/filepath"
 	"strings"
@@ -72,7 +73,7 @@ To use baski to build an image, an Openstack cluster is required.`,
 				log.Fatalln(err)
 			}
 
-			imgID, err := build.RetrieveNewImageID()
+			imgID, err := data.RetrieveNewImageID()
 			if err != nil {
 				log.Fatalln(err)
 			}

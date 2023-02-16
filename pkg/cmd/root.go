@@ -58,6 +58,7 @@ It could be extended out to provide images for a variety of other builders howev
 	commands := []*cobra.Command{
 		versionCmd(),
 		NewBuildCommand(),
+		NewSignCommand(),
 		NewScanCommand(),
 		NewPublishCommand(),
 	}

@@ -23,7 +23,7 @@ var (
 	cloudNameFlag   string
 	verboseFlag     bool
 
-	//Build & Scan
+	//Build, Scan & sign
 	imageRepoFlag             string
 	buildOSFlag               string
 	sourceImageIDFlag         string
@@ -45,6 +45,10 @@ var (
 	nvidiaTOKURLFlag       string
 	griddFeatureTypeFlag   int
 	imageIDFlag            string
+
+	privateKeyFlag string
+	vaultURLFlag   string
+	vaultTokenFlag string
 
 	// Publish
 	ghUserFlag        string
