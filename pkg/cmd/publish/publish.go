@@ -17,323 +17,114 @@ limitations under the License.
 package publish
 
 import (
-	"embed"
-	"encoding/json"
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/constants"
-	"github.com/eschercloudai/baski/pkg/file"
-	gitRepo "github.com/eschercloudai/baski/pkg/git"
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/images"
-	"html/template"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
 	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	tpl "text/template"
-	"time"
 )
 
-//go:embed templates/*.html.gotmpl
-//go:embed templates/js/*.js.gotmpl
-var content embed.FS
-
-// FetchPagesRepo pulls the GitHub pages repo locally for modification.
-func FetchPagesRepo(ghUser, ghToken, ghAccount, ghProject, ghBranch string) (string, *git.Repository, error) {
-	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", ghUser, ghToken, ghAccount, ghProject)
-	pagesDir := filepath.Join("/tmp", ghProject)
-
-	err := os.MkdirAll(pagesDir, 0755)
-	if err != nil {
-		return "", nil, err
-	}
-
-	pagesBranch := plumbing.ReferenceName(filepath.Join("refs/heads", ghBranch))
-	g, err := gitRepo.GitClone(pagesRepo, pagesDir, pagesBranch)
-	if err != nil {
-		return "", nil, fmt.Errorf("git clone error: %s\n", err)
-	}
-
-	return pagesDir, g, nil
+type publishOptions struct {
+	flags.GlobalFlags
+	imageID       string
+	ghUser        string
+	ghAccount     string
+	ghProject     string
+	ghToken       string
+	ghPagesBranch string
+	ResultsFile   string
 }
 
-// CopyResultsFileIntoPages copies the results of the recent scan into the relevant
-// location for the static site to be able to display them.
-func CopyResultsFileIntoPages(gitDir, filename string, resultsFile *os.File) error {
-	log.Println("copying results file into pages repo")
-	resultsDir := filepath.Join(gitDir, "docs", "results")
-	cveFile := strings.Join([]string{filename, "json"}, ".")
+func (o *publishOptions) addFlags(cmd *cobra.Command) {
+	viperPrefix := "publish"
+	viperGithubPrefix := fmt.Sprintf("%s.github", viperPrefix)
 
-	err := os.MkdirAll(resultsDir, 0755)
-	if err != nil {
-		return err
-	}
+	o.GlobalFlags.AddFlags(cmd)
 
-	_, err = file.CopyFile(resultsFile.Name(), filepath.Join(resultsDir, cveFile))
-	if err != nil {
-		return err
-	}
+	flags.StringVarWithViper(cmd, &o.ghUser, viperGithubPrefix, "user", "", "The user for the GitHub project to which the pages will be pushed")
+	flags.StringVarWithViper(cmd, &o.ghProject, viperGithubPrefix, "project", "", "The GitHub project to which the pages will be pushed")
+	flags.StringVarWithViper(cmd, &o.ghAccount, viperGithubPrefix, "account", "", "The account in which the project is stored. This will default to the user")
+	flags.StringVarWithViper(cmd, &o.ghToken, viperGithubPrefix, "token", "", "The token for the GitHub project to which the pages will be pushed")
+	flags.StringVarWithViper(cmd, &o.ghPagesBranch, viperGithubPrefix, "pages-branch", "gh-pages", "The branch name for GitHub project to which the pages will be pushed")
+	flags.StringVarWithViper(cmd, &o.imageID, viperPrefix, "image-id", "", "The ID of the image to scan")
 
-	return nil
+	//TODO: this is currently not used or implemented in any way
+	flags.StringVarWithViper(cmd, &o.ResultsFile, viperPrefix, "results-file", "", "The results file location")
+
+	cmd.MarkFlagsRequiredTogether("user", "project", "token")
 }
 
-// FetchExistingReports runs to collect all reports from the results directory so that they can be parsed for later usage.
-func FetchExistingReports(gitDir string) ([]string, error) {
-	log.Println("collating existing reports")
-	var reportPaths []string
+// NewPublishCommand creates a command that publishes CVE data to GitHub Pages.
+func NewPublishCommand() *cobra.Command {
+	o := &publishOptions{}
 
-	resultsDir := filepath.Join(gitDir, "docs", "results")
+	cmd := &cobra.Command{
+		Use:   "publish",
+		Short: "Publish CVE data",
+		Long: `Publish CVE data.
 
-	dirs, err := os.ReadDir(resultsDir)
-	if err != nil {
-		return nil, err
-	}
+Scanning and image produces a long report in json format. It's not pretty to read.
+Sure, you can get a nice json formatter and attempt to do it that way or you can have a website generated for you in your 
+GitHub Pages and view the report there instead in a slightly nicer format.
 
-	for _, v := range dirs {
-		if !v.IsDir() {
-			reportPaths = append(reportPaths, filepath.Join(resultsDir, v.Name()))
-		}
-	}
+The website it generates isn't the prettiest right now but it will be improved on over time.`,
 
-	return reportPaths, nil
-}
+		Run: func(cmd *cobra.Command, args []string) {
+			// just setting defaults for account if it's not provided. Presume it's the same as the username.
+			if viper.GetString("publish.github.account") == "" {
+				viper.Set("publish.github.account", viper.GetString("publish.github.user"))
+			}
 
-// Image represents an Image returned by the Compute API.
-type Image struct {
-	ID        string `json:"id"`
-	CreatedAt string `json:"created_at"`
-	MinDisk   int    `json:"min_disk"`
-	MinRAM    int    `json:"min_ram"`
-	Name      string `json:"name"`
-	Status    string `json:"status"`
-	UpdatedAt string `json:"updated_at"`
-}
+			cloudsConfig := ostack.InitOpenstack()
+			cloudsConfig.SetOpenstackEnvs()
 
-// GetImageData pulls data on the image for naming the report.
-func GetImageData(client *ostack.Client, imgID string) *Image {
-	c, err := openstack.NewImageServiceV2(client.Provider, *client.EndpointOptions)
-	if err != nil {
-		log.Fatalln(err)
-	}
+			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[viper.GetString("cloud-name")])
 
-	im := &Image{}
-	img := images.Get(c, imgID)
-	err = img.Result.ExtractInto(im)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return im
-}
+			pagesGitDir, pagesRepo, err := FetchPagesRepo(viper.GetString("publish.github.user"), viper.GetString("publish.github.token"), viper.GetString("publish.github.account"), viper.GetString("publish.github.project"), viper.GetString("publish.github.pages-branch"))
+			if err != nil {
+				log.Fatalln(err)
+			}
 
-// ParseReports turns all json files into structs to be used in templating for the static site.
-func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) {
-	log.Println("parsing reports")
-	allReports := make(map[int]constants.Year)
+			resultsFile, err := os.Open("/tmp/results.json")
+			if err != nil {
+				log.Fatalln(err.Error())
+			}
 
-	for _, v := range reports {
-		var r constants.ReportData
-		file, err := os.ReadFile(v)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(file, &r)
-		if err != nil {
-			return nil, err
-		}
+			defer resultsFile.Close()
 
-		stripDirPrefix := strings.Split(v, "/")
-		fileName := strings.Split(img.CreatedAt, "-")
+			img := GetImageData(osClient, viper.GetString("publish.image-id"))
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
-		year, err := strconv.Atoi(fileName[0])
-		if err != nil {
-			return nil, err
-		}
-		month, err := strconv.Atoi(fileName[1])
-		if err != nil {
-			return nil, err
-		}
-		monthName := time.Month(month).String()
+			err = CopyResultsFileIntoPages(pagesGitDir, img.Name, resultsFile)
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
-		if _, ok := allReports[year]; !ok {
-			allReports[year] = constants.Year{}
-		}
+			reports, err := FetchExistingReports(pagesGitDir)
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
-		if _, ok := allReports[year].Months[monthName]; !ok {
-			y := allReports[year]
-			y.Months = make(map[string]constants.Month)
-			y.Months[monthName] = constants.Month{}
-			allReports[year] = y
-		}
+			results, err := ParseReports(reports, img)
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
-		reportName := stripDirPrefix[len(stripDirPrefix)-1:][0]
-		nameSplit := strings.Split(reportName, "-")
-		shortName := nameSplit[:len(nameSplit)-1]
-		r.ShortName = strings.Join(shortName, "-")
+			err = BuildPages(pagesGitDir, results)
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
-		if allReports[year].Months[monthName].Reports == nil {
-			m := allReports[year].Months[monthName]
-			m.Reports = make(map[string]constants.ReportData)
-			m.Reports[reportName] = r
-			allReports[year].Months[monthName] = m
-		} else {
-			allReports[year].Months[monthName].Reports[reportName] = r
-		}
-	}
-	return allReports, nil
-}
+			err = PublishPages(pagesRepo, pagesGitDir)
+			checkErrorPagesWithCleanup(err, pagesGitDir)
 
-// BuildPages will generate all the pages required for GitHub Pages.
-func BuildPages(projectDir string, allReports map[int]constants.Year) error {
-	log.Println("building pages")
-	baseDir := strings.Join([]string{projectDir, "docs"}, "/")
-	err := GenerateHTMLTemplate(baseDir, allReports)
-	if err != nil {
-		return err
-	}
-
-	err = GenerateJSTemplates(baseDir, allReports)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// GenerateHTMLTemplate creates the index.html page for the frontend website which displays the CVE data.
-func GenerateHTMLTemplate(baseDir string, allReports map[int]constants.Year) error {
-	log.Println("generating index.html")
-	// HTML template
-	htmlTarget := strings.Join([]string{baseDir, "index.html"}, "/")
-	htmlTmpl := "templates/index.html.gotmpl"
-	htmlFile, err := os.Create(htmlTarget)
-	if err != nil {
-		return err
-	}
-	t := template.Must(template.New("index.html.gotmpl").Funcs(template.FuncMap{
-		"inc": func(x int) int {
-			return x + 1
+			PagesCleanup(pagesGitDir)
 		},
-	}).ParseFS(content, htmlTmpl))
-	if err != nil {
-		return err
 	}
 
-	err = t.ExecuteTemplate(htmlFile, "index.html.gotmpl", allReports)
-	if err != nil {
-		return err
-	}
-	return nil
+	o.addFlags(cmd)
+
+	return cmd
 }
 
-// GenerateJSTemplates creates all the Javscript files for the frontend website.
-func GenerateJSTemplates(baseDir string, allReports map[int]constants.Year) error {
-	jsDir := filepath.Join(baseDir, "js")
-
-	err := os.MkdirAll(jsDir, 0755)
+// checkErrorPagesWithCleanup takes an error and if it is not nil, will attempt to run a cleanup to ensure no resources are left lying around.
+func checkErrorPagesWithCleanup(err error, dir string) {
 	if err != nil {
-		return err
-	}
-
-	// main.js template
-	log.Println("generating main.js")
-	mainJSTarget := filepath.Join(jsDir, "main.js")
-	mainJSTmpl := "templates/js/main.js.gotmpl"
-	mainFile, err := os.Create(mainJSTarget)
-	if err != nil {
-		return err
-	}
-
-	m := tpl.Must(tpl.New("main.js.gotmpl").Funcs(tpl.FuncMap{
-		"inc": func(x int) int {
-			return x + 1
-		},
-	}).ParseFS(content, mainJSTmpl))
-	if err != nil {
-		return err
-	}
-
-	err = m.ExecuteTemplate(mainFile, "main.js.gotmpl", allReports)
-	if err != nil {
-		return err
-	}
-
-	// class.js template
-	log.Println("generating class.js")
-	classJSTarget := filepath.Join(jsDir, "class.js")
-	classJSTmpl := "templates/js/class.js.gotmpl"
-	classFile, err := os.Create(classJSTarget)
-	if err != nil {
-		return err
-	}
-
-	c := tpl.Must(tpl.New("class.js.gotmpl").Funcs(tpl.FuncMap{
-		"inc": func(x int) int {
-			return x + 1
-		},
-	}).ParseFS(content, classJSTmpl))
-	if err != nil {
-		return err
-	}
-
-	err = c.ExecuteTemplate(classFile, "class.js.gotmpl", allReports)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// PublishPages pushes the generated javascript, html and results file to GitHub pages.
-func PublishPages(repository *git.Repository, gitPagesPath string) error {
-	log.Println("publishing to GitHub pages")
-
-	w, err := repository.Worktree()
-	if err != nil {
-		return fmt.Errorf("working tree error: %s", err)
-	}
-
-	_, err = w.Add("docs")
-	if err != nil {
-		return fmt.Errorf("adding files error: %s", err)
-	}
-
-	auth := &object.Signature{
-		Name:  "Openstack Kube Images",
-		Email: "openstack-kube-images@github",
-		When:  time.Now(),
-	}
-
-	commitOptions := &git.CommitOptions{
-		All:       false,
-		Author:    auth,
-		Committer: auth,
-	}
-
-	_, err = w.Commit("patch: Adding latest results and updating pages", commitOptions)
-	if err != nil {
-		return fmt.Errorf("commit error: %s", err)
-	}
-
-	err = repository.Push(&git.PushOptions{
-		RemoteName: "origin",
-	})
-	if err != nil {
-		return fmt.Errorf("push error %s", err)
-	}
-
-	return nil
-}
-
-// PagesCleanup just removes any leftover files/repo so that when running locally the binary doesn't hit a conflict.
-// This ensures that on multiple runs it always ahas the latest code base for the GitHub pages repo.
-func PagesCleanup(pagesDir string) {
-	err := os.RemoveAll(pagesDir)
-	if err != nil {
+		PagesCleanup(dir)
 		log.Fatalln(err)
 	}
 }
