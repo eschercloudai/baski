@@ -17,72 +17,74 @@ limitations under the License.
 package scan
 
 import (
-	"fmt"
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
-	sshconnect "github.com/eschercloudai/baski/pkg/ssh"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
-	"github.com/pkg/sftp"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
-	"os"
-	"time"
 )
 
-// FetchResultsFromServer pulls the results.json from the remote scanning server.
-func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) (*os.File, error) {
-	client, err := sshconnect.NewClient(kp, freeIP)
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
+type scanOptions struct {
+	flags.GlobalFlags
 
-	log.Println("Successfully connected to ssh server.")
-	log.Println("waiting 2 minutes for the results of the scan to become available.")
-	time.Sleep(2 * time.Minute)
-
-	//remoteCommand := "while [ ! -f /tmp/results.json ] && [ -s /tmp/results.json ] ; do echo \"results not ready\"; sleep 5; done;"
-	//err = sshconnect.RunRemoteCommand(client, remoteCommand)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	// open an SFTP session over an existing ssh connection.
-	log.Println("pulling results.")
-	sftpConnection, err := sftp.NewClient(client)
-	if err != nil {
-		return nil, err
-	}
-	defer sftpConnection.Close()
-
-	resultsFile, err := sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
-	if err != nil {
-		log.Println(err.Error())
-	}
-
-	//Check there is data in the file
-	fi, err := os.Stat(resultsFile.Name())
-	if err != nil {
-		log.Println(err.Error())
-	}
-
-	for fi.Size() == 0 {
-		fmt.Println(fi.Size())
-		resultsFile, err = sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
-		if err != nil {
-			log.Println(err.Error())
-		}
-
-		fi, err = resultsFile.Stat()
-		if err != nil {
-			log.Println(err.Error())
-		}
-		time.Sleep(10 * time.Second)
-	}
-
-	return resultsFile, err
+	imageID           string
+	flavorName        string
+	networkID         string
+	attachConfigDrive bool
 }
 
-// RemoveScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
-func RemoveScanningResources(serverID, keyName string, os *ostack.Client) {
-	os.RemoveServer(serverID)
-	os.RemoveKeypair(keyName)
+func (o *scanOptions) addFlags(cmd *cobra.Command) {
+	viperPrefix := "scan"
+
+	o.GlobalFlags.AddFlags(cmd)
+
+	flags.StringVarWithViper(cmd, &o.flavorName, viperPrefix, "flavor-name", "", "The flavor of instance to build for scanning the image")
+	flags.StringVarWithViper(cmd, &o.imageID, viperPrefix, "image-id", "", "The ID of the image to scan")
+	flags.StringVarWithViper(cmd, &o.networkID, viperPrefix, "network-id", "", "Network ID to deploy the server onto for scanning")
+	flags.BoolVarWithViper(cmd, &o.attachConfigDrive, viperPrefix, "attach-config-drive", false, "Used to enable a config drive on Openstack - this may be required if using an external network")
+}
+
+// NewScanCommand creates a command that allows the scanning of an image.
+func NewScanCommand() *cobra.Command {
+	o := &scanOptions{}
+
+	cmd := &cobra.Command{
+		Use:   "scan",
+		Short: "Scan image",
+		Long: `Scan image.
+
+Scanning an image requires the creation of a new instance in Openstack using the image you want to scan.
+Then, Trivy needs downloading and running against the filesystem. Again, this is time consuming.
+
+The scan section of baski fixes this for you and allows you to drink coffee whilst it does the hard work for you.
+
+It creates a new instance using the provided Openstack configuration variables and scans the image.
+Once complete, it generates a report file that you can read,
+OR!
+Use the publish command to create a "pretty" interface in GitHub Pages through which you can browse the results.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			cloudsConfig := ostack.InitOpenstack()
+			cloudsConfig.SetOpenstackEnvs()
+
+			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[viper.GetString("cloud-name")])
+
+			kp := osClient.CreateKeypair(viper.GetString("scan.image-id"))
+			server, freeIP := osClient.CreateServer(kp, viper.GetString("scan.image-id"), viper.GetString("scan.flavor-name"), viper.GetString("scan.network-id"), viper.GetBool("scan.attach-config-drive"))
+
+			resultsFile, err := FetchResultsFromServer(freeIP, kp)
+			if err != nil {
+				RemoveScanningResources(server.ID, kp.Name, osClient)
+				log.Fatalln(err.Error())
+			}
+
+			defer resultsFile.Close()
+
+			//Cleanup the scanning resources
+			RemoveScanningResources(server.ID, kp.Name, osClient)
+		},
+	}
+
+	o.addFlags(cmd)
+
+	return cmd
 }

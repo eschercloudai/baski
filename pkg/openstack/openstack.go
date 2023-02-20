@@ -25,6 +25,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"log"
 	"strconv"
 	"strings"
@@ -39,24 +40,61 @@ type Client struct {
 	EndpointOptions *gophercloud.EndpointOpts
 }
 
-// OpenstackInit creates the initial client for connecting to Openstack.
-func (c *Client) OpenstackInit() {
+// NewOpenstackClient creates the initial client for connecting to Openstack.
+func NewOpenstackClient(cloud OpenstackCloud) *Client {
+	client := &Client{
+		Cloud: cloud,
+	}
 	opts := gophercloud.AuthOptions{
-		IdentityEndpoint: c.Cloud.Auth.AuthURL + "/" + strings.Join([]string{"v", strconv.Itoa(c.Cloud.IdentityApiVersion)}, ""),
-		Username:         c.Cloud.Auth.Username,
-		Password:         c.Cloud.Auth.Password,
-		DomainName:       c.Cloud.Auth.UserDomainName,
-		TenantName:       c.Cloud.Auth.ProjectName,
+		IdentityEndpoint: client.Cloud.Auth.AuthURL + "/" + strings.Join([]string{"v", strconv.Itoa(client.Cloud.IdentityApiVersion)}, ""),
+		Username:         client.Cloud.Auth.Username,
+		Password:         client.Cloud.Auth.Password,
+		DomainName:       client.Cloud.Auth.UserDomainName,
+		TenantName:       client.Cloud.Auth.ProjectName,
 	}
 	provider, err := openstack.AuthenticatedClient(opts)
 	if err != nil {
 		panic(err)
 	}
 	epOpts := &gophercloud.EndpointOpts{
-		Region: c.Cloud.RegionName,
+		Region: client.Cloud.RegionName,
 	}
-	c.Provider = provider
-	c.EndpointOptions = epOpts
+	client.Provider = provider
+	client.EndpointOptions = epOpts
+
+	return client
+}
+
+// createImageClient will generate the image client required for updating image metadata.
+func createImageClient(client *Client) *gophercloud.ServiceClient {
+	c, err := openstack.NewImageServiceV2(client.Provider, *client.EndpointOptions)
+	if err != nil {
+		panic(err)
+	}
+
+	return c
+}
+
+// UpdateImageMetadata updates an images metadata
+func (c *Client) UpdateImageMetadata(imgID string, digest string) *images.Image {
+	client := createImageClient(c)
+	client.Microversion = "2.2"
+
+	updateOpts := images.UpdateOpts{
+		images.UpdateImageProperty{
+			Op:    images.AddOp,
+			Name:  "/digest",
+			Value: digest,
+		},
+	}
+
+	img, err := images.Update(client, imgID, updateOpts).Extract()
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return img
 }
 
 // createComputeClient will generate the compute client required for creating Servers and KeyPairs in Openstack.
