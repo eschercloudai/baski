@@ -50,7 +50,7 @@ build:
   floating-ip-network-name: "Internet"
   image-visibility: "private"
   crictl-version: "1.25.0"
-  cni-version: "1.1.1"
+  cni-version: "1.2.0"
   kubernetes-version: "1.25.3"
   extra-debs: "nfs-common"
   enable-nvidia-support: true

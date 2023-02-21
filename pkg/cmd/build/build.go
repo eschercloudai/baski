@@ -75,7 +75,7 @@ func (o *buildOptions) addFlags(cmd *cobra.Command) {
 	flags.BoolVarWithViper(cmd, &o.userFloatingIP, viperPrefix, "use-floating-ip", true, "Whether to use a floating IP for the instance")
 	flags.StringVarWithViper(cmd, &o.floatingIPNetworkName, viperPrefix, "floating-ip-network-name", "Internet", "The Name of the network in which to create the floating ip")
 	flags.StringVarWithViper(cmd, &o.imageVisibility, viperPrefix, "image-visibility", "private", "Change the image visibility in Openstack - you need to ensure the use you're authenticating with has permissions to do so or this will fail")
-	flags.StringVarWithViper(cmd, &o.cniVersion, viperPrefix, "cni-version", "1.1.1", "The CNI plugins version to include to the built image")
+	flags.StringVarWithViper(cmd, &o.cniVersion, viperPrefix, "cni-version", "1.2.0", "The CNI plugins version to include to the built image")
 	flags.StringVarWithViper(cmd, &o.crictlVersion, viperPrefix, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
 	flags.StringVarWithViper(cmd, &o.kubeVersion, viperPrefix, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
 	flags.StringVarWithViper(cmd, &o.extraDebs, viperPrefix, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
