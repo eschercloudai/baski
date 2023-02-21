@@ -31,8 +31,7 @@ import (
 
 type signGenerateOptions struct {
 	flags.GlobalFlags
-	path      string
-	encodePEM bool
+	path string
 }
 
 func (o *signGenerateOptions) addFlags(cmd *cobra.Command) {
