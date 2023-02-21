@@ -33,7 +33,6 @@ type signImageOptions struct {
 	imageID     string
 	privateKey  string
 	vaultURL    string
-	vaultRoleID string
 	vaultSecret string
 }
 
