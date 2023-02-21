@@ -83,7 +83,7 @@ func (o *buildOptions) addFlags(cmd *cobra.Command) {
 	flags.StringVarWithViper(cmd, &o.rootfsUUID, viperPrefix, "rootfs-uuid", "", "The UUID of the root filesystem. This can be acquired from the source image that the resulting image will be built from - (this will be automated soon™)")
 	// NVIDIA flags
 	flags.BoolVarWithViper(cmd, &o.addNvidiaSupport, viperPrefix, "enable-nvidia-support", false, "This will configure NVIDIA support in the image")
-	flags.StringVarWithViper(cmd, &o.nvidiaVersion, viperPrefix, "nvidia-driver-version", "510.73.08", "The NVIDIA driver version")
+	flags.StringVarWithViper(cmd, &o.nvidiaVersion, viperPrefix, "nvidia-driver-version", "525.85.05", "The NVIDIA driver version")
 	flags.StringVarWithViper(cmd, &o.nvidiaBucketEndpoint, viperPrefix, "nvidia-bucket-endpoint", "", "The endpoint of the bucket from which to download the NVIDIA components")
 	flags.StringVarWithViper(cmd, &o.nvidiaBucketName, viperPrefix, "nvidia-bucket-name", "", "The bucket name that the NVIDIA components are uploaded to")
 	flags.StringVarWithViper(cmd, &o.nvidiaBucketAccessKey, viperPrefix, "nvidia-bucket-access", "", "The access key used to access the bucket from which to download the NVIDIA components")
