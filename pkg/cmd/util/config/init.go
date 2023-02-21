@@ -9,6 +9,7 @@ import (
 func InitConfig() {
 	viper.SetConfigName("baski")
 	viper.SetConfigType("yaml")
+	viper.AddConfigPath("/tmp/")
 	viper.AddConfigPath("/etc/baski/")
 	viper.AddConfigPath("$HOME/.baski/")
 	viper.AddConfigPath(".")
