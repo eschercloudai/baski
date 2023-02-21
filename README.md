@@ -35,6 +35,7 @@ Simply run the binary with the following flags (minimum required). See the examp
 You will also require a source image to reference for the build to succeed.
 You must supply a clouds.yaml file for OpenStack connectivity.
 
+The following is an example of the `baski.yaml` config file. This can be stored in `/tmp/`, `/etc/baski`, `$HOME/.baski` or the "current" directory.
 ```yaml
 clouds-file: "~/.config/openstack/clouds.yaml"
 cloud-name: "image-builder"
@@ -85,18 +86,6 @@ publish:
     pages-branch: ""
   results-file: ""
 
-```
-
-Now supply this to baski.
-```shell
-# Build an image
-baski build --baski-config path-to-config.yaml
-
-# Scan an image
-baski scan --baski-config path-to-config.yaml
-
-# Publish the CVEs
-baski publish --baski-config path-to-config.yaml
 ```
 
 ### More info
