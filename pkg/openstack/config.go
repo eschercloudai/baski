@@ -183,7 +183,7 @@ func GenerateBuilderMetadata() map[string]string {
 	}
 	return map[string]string{
 		"os":          viper.GetString("build.build-os"),
-		"k8s":         viper.GetString("build.kubernetes_version"),
+		"k8s":         viper.GetString("build.kubernetes-version"),
 		"gpu":         gpu,
 		"date":        time.RFC3339,
 		"rootfs_uuid": viper.GetString("build.rootfs-uuid"),
