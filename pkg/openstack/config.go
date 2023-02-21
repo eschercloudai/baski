@@ -144,7 +144,14 @@ func buildConfigFromInputs() *PackerBuildConfig {
 	}
 	if viper.GetBool("build.enable-nvidia-support") {
 		buildConfig.NodeCustomRolesPost = "nvidia"
-		buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_installer_url=%s nvidia_tok_url=%s gridd_feature_type=%d", viper.GetString("build.nvidia-installer-url"), viper.GetString("build.nvidia-tok-url"), viper.GetString("build.gridd-feature-type"))
+		buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%s",
+			viper.GetString("build.nvidia-bucket-endpoint"),
+			viper.GetString("build.nvidia-bucket-name"),
+			viper.GetString("build.nvidia-bucket-access"),
+			viper.GetString("build.nvidia-bucket-secret"),
+			viper.GetString("build.nvidia-installer-location"),
+			viper.GetString("build.nvidia-tok-location"),
+			viper.GetString("build.gridd-feature-type"))
 	}
 	buildConfig.ImageName = generateImageName(buildConfig.KubernetesSemver)
 

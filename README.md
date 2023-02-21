@@ -52,18 +52,32 @@ build:
   cni-version: "1.1.1"
   kubernetes-version: "1.25.3"
   extra-debs: "nfs-common"
-  enable-nvidia-support: false
-  #nvidia-installer-url: "download-url-for-nvidia-driver"
-  #nvidia_tok_url: "download-url-for-nvidia-tok-file"
-  #nvidia-driver-version: "525.85.05"
-  #grid_feature_type: "4"
+  enable-nvidia-support: true
+  nvidia-driver-version: "525.85.05"
+  nvidia-bucket-endpoint: "S3_ENDPOINT_URL"
+  nvidia-bucket-name: "nvidia"
+  nvidia-bucket-access: "ACCESS_KEY"
+  nvidia-bucket-secret: "SECRET_KEY"
+  nvidia-installer-location: "NVIDIA-Linux-x86_64-525.85.05-grid.run"
+  nvidia-tok-location: "client_configuration_token.tok"
+  gridd-feature-type: "4"
 scan:
-  image-id: ""
+  image-id: "" # Only set if you are running this separately after a build has been performed
   flavor-name: "spicy-meatball"
   network-id: "network-id"
   attach-config-drive: false
+sign:
+  generate:
+    path: "." # Output path of any generated keys 
+  vault:
+    url: "https://vault.ENDPOINT/"
+    token: "VAULT_TOKEN"
+  image-id: "" # Only set if you are running this separately after a build has been performed
+  private-key: "" # Don't use with Vault config as it takes precedence over vault.
+  public-key: "" # Don't use with Vault as it takes precedence over vault.
+  digest: "" # Used to verify a digest. Not required for image signing.
 publish:
-  image-id: ""
+  image-id: "" # Only set if you are running this separately after a build has been performed
   github:
     user: "some-user"
     project: "some-project"
@@ -97,9 +111,10 @@ GitHub Pages should be configured to point to a `docs` directory as this is wher
 placed.
 
 # TODO
-* Create all option to allow whole process
-* Make scanning a separate binary instead of packaging it in here - started process here by separating out building, scanning & publishing
 * Make this work for more than just Openstack so that it's more useful to the community around the Kubernetes Image Builder?
+* Remove dependency on GitHub Pages in the publish section - have this generate an artifact instead
+* Fail on CVE critical discovery and remove any uploaded image
+* Create all option to allow whole process?
 
 # License
 
