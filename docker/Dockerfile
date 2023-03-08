@@ -1,4 +1,4 @@
-FROM alpine:3.17.1
+FROM alpine:3.17
 
 RUN apk update --no-cache
 RUN apk add bash build-base jq curl git python3 py3-pip openssh-client
