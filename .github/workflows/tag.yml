@@ -20,6 +20,7 @@ jobs:
         with:
           version: latest
           skip-cache: true
+
   test:
     name: Run tests
     runs-on: 'ubuntu-22.04'
@@ -30,10 +31,34 @@ jobs:
         with:
           go-version: '1.19.2'
       - run: go test -v -cover ./...
+
+  container:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - name: Build Local Container
+        uses: eschercloudai/container-security-action@main
+        if: github.event_name != 'pull_request'
+        id: build-and-scan
+        with:
+          image-repo: ghcr.io
+          repo-username: ${{ github.repository_owner }}
+          repo-password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: cloud-cli-tools
+          image-tag: ${{ github.ref_name }}
+          min-severity: critical
+          add-latest-tag: true
+          publish-image: true
+          cosign-private-key: ${{secrets.COSIGN_KEY}}
+          cosign-password: ${{secrets.COSIGN_PASSWORD}}
+
   release:
     name: Create Release
     runs-on: 'ubuntu-22.04'
-    needs: test
+    needs: container
     steps:
       - uses: actions/checkout@v3
         with:

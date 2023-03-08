@@ -1,5 +1,8 @@
 # Baski - Build And Scan Kubernetes Images
 
+[//]: # ([![Known Vulnerabilities]&#40;https://snyk.io/test/github/eschercloudai/baski/badge.svg&#41;]&#40;https://snyk.io/test/github/eschercloudai/baski&#41;)
+[![Builds](https://github.com/eschercloudai/baski/actions/workflows/tag.yml/badge.svg)](https://github.com/eschercloudai/baski/actions)
+
 A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using
 the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo.
 Once the image has been built, the CVE results will be pushed to GitHub Pages. Simply provide the required GitHub
