@@ -153,26 +153,22 @@ func buildConfigFromInputs() *PackerBuildConfig {
 			viper.GetString("build.nvidia-tok-location"),
 			viper.GetString("build.gridd-feature-type"))
 	}
-	buildConfig.ImageName = generateImageName(buildConfig.KubernetesSemver)
+	buildConfig.ImageName = generateImageName()
 
 	return buildConfig
 }
 
 // generateImageName creates a name for the image that will be built.
-func generateImageName(semVer string) string {
+func generateImageName() string {
 	imageUUID, err := uuid.NewUUID()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	buildOS := viper.GetString("build.build-os")
+	shortDate := time.Now().Format("060201")
+	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
 
-	imageName := buildOS[:3] + buildOS[strings.Index(buildOS, "-")+1:] + "-" + semVer
-	if viper.GetBool("build.enable-nvidia-support") {
-		imageName = imageName + "-" + "gpu" + "-" + viper.GetString("build.nvidia-driver-version")
-	}
-
-	return imageName + "-" + imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
+	return "eck" + "-" + shortDate + "-" + shortUUID
 }
 
 // GenerateBuilderMetadata generates some glance metadata for the image.
