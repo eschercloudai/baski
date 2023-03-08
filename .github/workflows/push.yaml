@@ -1,0 +1,52 @@
+name: Validate on push
+
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore:
+      - "main"
+    branch:
+      - "*"
+
+jobs:
+  lint:
+    name: Lint files
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.19'
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          skip-cache: true
+  test:
+    name: Run tests
+    runs-on: 'ubuntu-22.04'
+    needs: lint
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.19.2'
+      - run: go test -v -cover ./...
+
+  container:
+    - name: Build Scan and Publish Container
+      uses: eschercloudai/container-security-action@main
+      needs: test
+      id: build-and-scan
+      with:
+        image-repo: ghcr.io
+        repo-username: ${{ github.repository_owner }}
+        repo-password: ${{ secrets.GITHUB_TOKEN }}
+        image-name: cloud-cli-tools
+        image-tag: ${{ github.ref_name }}
+        min-severity: critical
+        add-latest-tag: false
+        publish-image: false
+        cosign-private-key: ${{secrets.COSIGN_KEY}}
+        cosign-password: ${{secrets.COSIGN_PASSWORD}}
+
