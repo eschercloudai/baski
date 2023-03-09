@@ -61,9 +61,9 @@ type OpenstackAuth struct {
 // PackerBuildConfig exists to allow variables to be parsed into a packer json file which can then be used for a build.
 type PackerBuildConfig struct {
 	ImageName            string `json:"image_name,omitempty"`
-	SourceImage          string `json:"source_image,omitempty"`
-	Networks             string `json:"networks,omitempty"`
-	Flavor               string `json:"flavor,omitempty"`
+	SourceImage          string `json:"source_image"`
+	Networks             string `json:"networks"`
+	Flavor               string `json:"flavor"`
 	AttachConfigDrive    string `json:"attach_config_drive,omitempty"`
 	UseFloatingIp        string `json:"use_floating_ip,omitempty"`
 	FloatingIpNetwork    string `json:"floating_ip_network,omitempty"`
@@ -78,6 +78,8 @@ type PackerBuildConfig struct {
 	NodeCustomRolesPost  string `json:"node_custom_roles_post,omitempty"`
 	AnsibleUserVars      string `json:"ansible_user_vars,omitempty"`
 	ExtraDebs            string `json:"extra_debs,omitempty"`
+	VolumeType           string `json:"volume_type"`
+	ImageDiskFormat      string `json:"image_disk_format"`
 }
 
 // InitOpenstack translates the clouds.yaml file into a struct to be used in app.
@@ -141,6 +143,8 @@ func buildConfigFromInputs() *PackerBuildConfig {
 		KubernetesRpmVersion: viper.GetString("build.kubernetes-version") + "-0",
 		KubernetesDebVersion: viper.GetString("build.kubernetes-version") + "-00",
 		ExtraDebs:            viper.GetString("build.extra-debs"),
+		ImageDiskFormat:      viper.GetString("build.image-disk-format"),
+		VolumeType:           "",
 	}
 	if viper.GetBool("build.enable-nvidia-support") {
 		buildConfig.NodeCustomRolesPost = "nvidia"
@@ -160,15 +164,15 @@ func buildConfigFromInputs() *PackerBuildConfig {
 
 // generateImageName creates a name for the image that will be built.
 func generateImageName() string {
-	imageUUID, err := uuid.NewUUID()
+	imageUUID, err := uuid.NewRandom()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	shortDate := time.Now().Format("060201")
+	shortDate := time.Now().Format("060102")
 	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
 
-	return "eck" + "-" + shortDate + "-" + shortUUID
+	return viper.GetString("build.image-prefix") + "-" + shortDate + "-" + shortUUID
 }
 
 // GenerateBuilderMetadata generates some glance metadata for the image.

@@ -32,7 +32,7 @@ import (
 // CreateRepoDirectory create the random directory where the Image repo will be cloned into.
 func CreateRepoDirectory() string {
 	var tmpDir string
-	uuidDir, err := uuid.NewUUID()
+	uuidDir, err := uuid.NewRandom()
 	if err != nil {
 		tmpDir = "aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb"
 	} else {

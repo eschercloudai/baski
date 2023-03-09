@@ -37,6 +37,7 @@ type buildOptions struct {
 
 	verbose                 bool
 	buildOS                 string
+	imagePrefix             string
 	imageRepo               string
 	networkID               string
 	sourceImageID           string
@@ -58,6 +59,7 @@ type buildOptions struct {
 	nvidiaInstallerLocation string
 	nvidiaTOKLocation       string
 	griddFeatureType        int
+	imageDiskFormat         string
 	rootfsUUID              string
 }
 
@@ -67,6 +69,7 @@ func (o *buildOptions) addFlags(cmd *cobra.Command) {
 	o.GlobalFlags.AddFlags(cmd)
 	// Build flags
 	flags.StringVarWithViper(cmd, &o.buildOS, viperPrefix, "build-os", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204")
+	flags.StringVarWithViper(cmd, &o.imagePrefix, viperPrefix, "image-prefix", "kube", "This will prefix the image with the value provided. Defaults to 'kube' producing an image name of kube-yymmdd-xxxxxxxx")
 	flags.BoolVarWithViper(cmd, &o.attachConfigDrive, viperPrefix, "attach-config-drive", false, "Used to enable a config drive on Openstack. This may be required if directly attaching an external network to the instance")
 	flags.StringVarWithViper(cmd, &o.imageRepo, viperPrefix, "image-repo", strings.Join([]string{repoRoot, "git"}, "."), "The imageRepo from which the image builder should be deployed")
 	flags.StringVarWithViper(cmd, &o.sourceImageID, viperPrefix, "source-image-id", "ubuntu-2204", "The ID of the image that will be used as a base for the newly built image")
@@ -79,6 +82,7 @@ func (o *buildOptions) addFlags(cmd *cobra.Command) {
 	flags.StringVarWithViper(cmd, &o.crictlVersion, viperPrefix, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
 	flags.StringVarWithViper(cmd, &o.kubeVersion, viperPrefix, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
 	flags.StringVarWithViper(cmd, &o.extraDebs, viperPrefix, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
+	flags.StringVarWithViper(cmd, &o.imageDiskFormat, viperPrefix, "image-disk-format", "raw", "The image disk format in Openstack")
 	// Bare Metal Requirement flags
 	flags.StringVarWithViper(cmd, &o.rootfsUUID, viperPrefix, "rootfs-uuid", "", "The UUID of the root filesystem. This can be acquired from the source image that the resulting image will be built from - (this will be automated soon™)")
 	// NVIDIA flags
