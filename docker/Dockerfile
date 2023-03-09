@@ -16,7 +16,7 @@ RUN CGO_ENABLED=0 go build -o /tmp/baski /app/cmd/baski/main.go
 FROM alpine:3.17
 
 RUN apk update --no-cache
-RUN apk add bash build-base curl jq git openssh-client
+RUN apk add bash build-base jq curl git python3 py3-pip openssh-client
 
 RUN echo "ServerAliveInterval 120" >> /etc/ssh/ssh_config
 
