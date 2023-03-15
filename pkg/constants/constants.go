@@ -21,12 +21,12 @@ import (
 )
 
 var (
-	Version     = "v0.0.4-beta.2"
+	Version     = "v0.0.5-beta.1"
 	SupportedOS = []string{
 		"ubuntu-2004",
 		"ubuntu-2204",
 	}
-	TrivyVersion = "0.36.1"
+	TrivyVersion = "0.38.3"
 )
 
 // Year is used in reports parsing. It is the top level and contains multiple Month(s).

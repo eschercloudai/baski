@@ -43,14 +43,16 @@ The following is an example of the `baski.yaml` config file. This can be stored 
 clouds-file: "~/.config/openstack/clouds.yaml"
 cloud-name: "image-builder"
 build:
+  verbose: true
   build-os: "ubuntu-2204"
-  attach-config-drive: false
+  image-prefix: "kube"
   #image-repo: ""
   network-id: "network-id"
   source-image: "source-image"
   flavor-name: "spicy-meatball"
   use-floating-ip: true
   floating-ip-network-name: "Internet"
+  attach-config-drive: false
   image-visibility: "private"
   crictl-version: "1.25.0"
   cni-version: "1.2.0"
@@ -65,29 +67,34 @@ build:
   nvidia-installer-location: "NVIDIA-Linux-x86_64-525.85.05-grid.run"
   nvidia-tok-location: "client_configuration_token.tok"
   gridd-feature-type: "4"
+  image-disk-format: "raw"
+  rootfs-uuid: "ROOT_FS_UUID" # The image in Openstack will be tagged with this. Useful for bare-metal in some use cases.
 scan:
-  image-id: "" # Only set if you are running this separately after a build has been performed
+  image-id: "" # Used for existing images
   flavor-name: "spicy-meatball"
   network-id: "network-id"
   attach-config-drive: false
+  skip-cve-check: false
+  max-severity-score: 7.0 # Minimum severity score to check for
+  max-severity-type: MEDIUM # Minimum severity to check for
 sign:
   generate:
     path: "." # Output path of any generated keys 
   vault:
     url: "https://vault.ENDPOINT/"
     token: "VAULT_TOKEN"
-  image-id: "" # Only set if you are running this separately after a build has been performed
-  private-key: "" # Don't use with Vault config as it takes precedence over vault.
-  public-key: "" # Don't use with Vault as it takes precedence over vault.
+  image-id: "" # Used for existing images
+  private-key: "" # Takes precedence over vault.
+  public-key: "" # Takes precedence over vault.
   digest: "" # Used to verify a digest. Not required for image signing.
 publish:
-  image-id: "" # Only set if you are running this separately after a build has been performed
+  image-id: "" # Used for existing images
   github:
     user: "some-user"
     project: "some-project"
     token: "123456789"
     pages-branch: ""
-  results-file: ""
+  results-file: "/tmp/results.json"
 
 ```
 

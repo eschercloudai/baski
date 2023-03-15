@@ -17,11 +17,15 @@ limitations under the License.
 package scan
 
 import (
+	"encoding/json"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/trivy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"
+	"os"
+	"strings"
 )
 
 type scanOptions struct {
@@ -31,6 +35,10 @@ type scanOptions struct {
 	flavorName        string
 	networkID         string
 	attachConfigDrive bool
+	autoDeleteImage   bool
+	skipCVECheck      bool
+	maxSeverityScore  float64
+	maxSeverityType   string
 }
 
 func (o *scanOptions) addFlags(cmd *cobra.Command) {
@@ -42,6 +50,10 @@ func (o *scanOptions) addFlags(cmd *cobra.Command) {
 	flags.StringVarWithViper(cmd, &o.imageID, viperPrefix, "image-id", "", "The ID of the image to scan")
 	flags.StringVarWithViper(cmd, &o.networkID, viperPrefix, "network-id", "", "Network ID to deploy the server onto for scanning")
 	flags.BoolVarWithViper(cmd, &o.attachConfigDrive, viperPrefix, "attach-config-drive", false, "Used to enable a config drive on Openstack - this may be required if using an external network")
+	flags.BoolVarWithViper(cmd, &o.autoDeleteImage, viperPrefix, "auto-delete-image", false, "If true, the image will be deleted if a vulnerability check does not succeed - recommended when building new images.")
+	flags.BoolVarWithViper(cmd, &o.skipCVECheck, viperPrefix, "skip-cve-check", false, "If true, the image will be allowed even if a vulnerability is detected.")
+	flags.Float64VarWithViper(cmd, &o.maxSeverityScore, viperPrefix, "max-severity-score", 7.0, "Can be anything from 0.1 to 10.0. Anything equal to or above this value will cause a failure. (Unless skip-cve-check is supplied)")
+	flags.StringVarWithViper(cmd, &o.maxSeverityType, viperPrefix, "max-severity-type", "MEDIUM", "Accepted values are NONE, LOW, MEDIUM, HIGH, CRITICAL. This value will be what the score is checked against For example, a LOW 7.0 would be ignored if the value was HIGH with a `max-severity-score` of 7.0. (Unless skip-cve-check is supplied)")
 }
 
 // NewScanCommand creates a command that allows the scanning of an image.
@@ -63,6 +75,11 @@ Once complete, it generates a report file that you can read,
 OR!
 Use the publish command to create a "pretty" interface in GitHub Pages through which you can browse the results.`,
 		Run: func(cmd *cobra.Command, args []string) {
+
+			if !trivy.ValidSeverity(strings.ToUpper(viper.GetString("scan.max-severity-type"))) {
+				log.Fatalln("severity value passed is invalid. Allowed values are: NONE, LOW, MEDIUM, HIGH, CRITICAL")
+			}
+
 			cloudsConfig := ostack.InitOpenstack()
 			cloudsConfig.SetOpenstackEnvs()
 
@@ -71,13 +88,34 @@ Use the publish command to create a "pretty" interface in GitHub Pages through w
 			kp := osClient.CreateKeypair(viper.GetString("scan.image-id"))
 			server, freeIP := osClient.CreateServer(kp, viper.GetString("scan.image-id"), viper.GetString("scan.flavor-name"), viper.GetString("scan.network-id"), viper.GetBool("scan.attach-config-drive"))
 
-			resultsFile, err := FetchResultsFromServer(freeIP, kp)
+			err := FetchResultsFromServer(freeIP, kp)
 			if err != nil {
 				RemoveScanningResources(server.ID, kp.Name, osClient)
 				log.Fatalln(err.Error())
 			}
+			if !viper.GetBool("scan.skip-cve-check") {
+				scoreCheck := CheckForVulnerabilities(viper.GetFloat64("scan.max-severity-score"), strings.ToUpper(viper.GetString("scan.max-severity-type")))
+				if len(scoreCheck) != 0 {
+					//Cleanup the scanning resources
+					RemoveScanningResources(server.ID, kp.Name, osClient)
 
-			defer resultsFile.Close()
+					if viper.GetBool("scan.auto-delete-image") {
+						osClient.RemoveImage(viper.GetString("scan.image-id"))
+					}
+
+					var j []byte
+					j, err = json.Marshal(scoreCheck)
+					if err != nil {
+						log.Fatalln("couldn't marshall vulnerability data")
+					}
+					err = os.WriteFile("/tmp/required-fixes.json", j, os.FileMode(0644))
+					if err != nil {
+						log.Fatalln("couldn't write vulnerability data to file")
+					}
+
+					log.Fatalln("Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/required-fixes.json' for further information on this.")
+				}
+			}
 
 			//Cleanup the scanning resources
 			RemoveScanningResources(server.ID, kp.Name, osClient)
