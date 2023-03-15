@@ -89,24 +89,25 @@ Use the publish command to create a "pretty" interface in GitHub Pages through w
 			}
 			if !viper.GetBool("scan.skip-cve-check") {
 				scoreCheck := CheckForVulnerabilities(viper.GetFloat64("scan.max-severity-score"), strings.ToUpper(viper.GetString("scan.max-severity-type")))
-				if scoreCheck != nil {
+				if len(scoreCheck) != 0 {
 					//Cleanup the scanning resources
 					RemoveScanningResources(server.ID, kp.Name, osClient)
 
 					if viper.GetBool("scan.auto-delete-image") {
 						osClient.RemoveImage(viper.GetString("scan.image-id"))
 					}
+
 					var j []byte
 					j, err = json.Marshal(scoreCheck)
 					if err != nil {
 						log.Fatalln("couldn't marshall vulnerability data")
 					}
-					err = os.WriteFile("/tmp/requires-fix.json", j, os.FileMode(0644))
+					err = os.WriteFile("/tmp/required-fixes.json", j, os.FileMode(0644))
 					if err != nil {
 						log.Fatalln("couldn't write vulnerability data to file")
 					}
 
-					log.Fatalln("Vulnerabilities detected below threshold - removed image from infra. Please see the possible fixes located at '/tmp/required-fixes.json' for further information on this.")
+					log.Fatalln("Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/required-fixes.json' for further information on this.")
 				}
 			}
 

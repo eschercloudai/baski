@@ -18,7 +18,6 @@ package scan
 
 import (
 	"encoding/json"
-	"fmt"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	sshconnect "github.com/eschercloudai/baski/pkg/ssh"
 	"github.com/eschercloudai/baski/pkg/trivy"
@@ -41,12 +40,6 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) error {
 	log.Println("waiting 2 minutes for the results of the scan to become available.")
 	time.Sleep(2 * time.Minute)
 
-	//remoteCommand := "while [ ! -f /tmp/results.json ] && [ -s /tmp/results.json ] ; do echo \"results not ready\"; sleep 5; done;"
-	//err = sshconnect.RunRemoteCommand(client, remoteCommand)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	// open an SFTP session over an existing ssh connection.
 	log.Println("pulling results.")
 	sftpConnection, err := sftp.NewClient(client)
@@ -67,7 +60,6 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) error {
 	}
 
 	for fi.Size() == 0 {
-		fmt.Println(fi.Size())
 		resultsFile, err = sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
 
 		if err != nil {
@@ -92,7 +84,7 @@ func RemoveScanningResources(serverID, keyName string, os *ostack.Client) {
 }
 
 // CheckForVulnerabilities will scan the results file for any 7+ CVE scores and if so will delete the image from Openstack and bail out here.
-func CheckForVulnerabilities(checkScore float64, checkSeverity string) *[]trivy.Vulnerabilities {
+func CheckForVulnerabilities(checkScore float64, checkSeverity string) []trivy.Vulnerabilities {
 	log.Println("checking results for failures")
 	rf, err := os.ReadFile("/tmp/results.json")
 	if err != nil {
@@ -103,6 +95,7 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) *[]trivy.
 	report := &trivy.Report{}
 
 	err = json.Unmarshal(rf, report)
+
 	if err != nil {
 		log.Println(err)
 		return nil
@@ -122,7 +115,7 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) *[]trivy.
 					PublishedDate:    v.PublishedDate,
 					LastModifiedDate: v.LastModifiedDate,
 				}
-				// We don't need all scores in here so we just grab the one that triggered the threshold
+				// We don't need all scores in here, so we just grab the one that triggered the threshold
 				if v.Cvss.Nvd != nil {
 					if v.Cvss.Nvd.V3Score >= checkScore {
 						vuln.Cvss = trivy.CVSS{Nvd: &trivy.Score{V3Score: v.Cvss.Nvd.V3Score}}
@@ -145,7 +138,7 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) *[]trivy.
 			}
 		}
 	}
-	return &vf
+	return vf
 }
 
 // checkSeverityThresholdPassed checks for a score that is >= checkScore and checkSeverity. It will return true if so.

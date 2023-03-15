@@ -48,101 +48,101 @@ func parseSeverity(val Severity) int {
 
 // Report and all its sub-structs is used to unmarshal the json reports into a usable format.
 type Report struct {
-	SchemaVersion int    `json:"SchemaVersion,omitempty"`
-	ArtifactName  string `json:"ArtifactName,omitempty"`
-	ArtifactType  string `json:"ArtifactType,omitempty"`
+	SchemaVersion int    `json:"SchemaVersion"`
+	ArtifactName  string `json:"ArtifactName"`
+	ArtifactType  string `json:"ArtifactType"`
 	Metadata      struct {
 		Os struct {
-			Family string `json:"Family,omitempty"`
-			Name   string `json:"Name,omitempty"`
-		} `json:"OS,omitempty"`
+			Family string `json:"Family"`
+			Name   string `json:"Name"`
+		} `json:"OS"`
 		ImageConfig struct {
-			Architecture string    `json:"architecture,omitempty"`
-			Created      time.Time `json:"created,omitempty"`
-			Os           string    `json:"os,omitempty"`
+			Architecture string    `json:"architecture"`
+			Created      time.Time `json:"created"`
+			Os           string    `json:"os"`
 			Rootfs       struct {
-				Type    string `json:"type,omitempty"`
-				DiffIds any    `json:"diff_ids,omitempty"`
-			} `json:"rootfs,omitempty"`
+				Type    string `json:"type"`
+				DiffIds any    `json:"diff_ids"`
+			} `json:"rootfs"`
 			Config struct {
-			} `json:"config,omitempty"`
-		} `json:"ImageConfig,omitempty"`
-	} `json:"Metadata,omitempty"`
+			} `json:"config"`
+		} `json:"ImageConfig"`
+	} `json:"Metadata"`
 	Results []struct {
-		Target          string            `json:"Target,omitempty"`
-		Class           string            `json:"Class,omitempty"`
-		Type            string            `json:"Type,omitempty"`
-		Vulnerabilities []Vulnerabilities `json:"Vulnerabilities,omitempty"`
-		Secrets         []Secrets         `json:"Secrets,omitempty"`
-	} `json:"Results,omitempty"`
+		Target          string            `json:"Target"`
+		Class           string            `json:"Class"`
+		Type            string            `json:"Type"`
+		Vulnerabilities []Vulnerabilities `json:"Vulnerabilities"`
+		Secrets         []Secrets         `json:"Secrets"`
+	} `json:"Results"`
 }
 
 // CVSS stores all the score data from different sources within the Trivy report.
 type CVSS struct {
-	Ghsa   *Score `json:"ghsa,omitempty"`
-	Nvd    *Score `json:"nvd,omitempty"`
-	Redhat *Score `json:"redhat,omitempty"`
+	Ghsa   *Score `json:"ghsa"`
+	Nvd    *Score `json:"nvd"`
+	Redhat *Score `json:"redhat"`
 }
 
 // Score contains the score values and vectors from a Trivy report.
 type Score struct {
-	V2Vector string  `json:"V2Vector,omitempty"`
-	V3Vector string  `json:"V3Vector,omitempty"`
-	V2Score  float64 `json:"V2Score,omitempty"`
-	V3Score  float64 `json:"V3Score,omitempty"`
+	V2Vector string  `json:"V2Vector"`
+	V3Vector string  `json:"V3Vector"`
+	V2Score  float64 `json:"V2Score"`
+	V3Score  float64 `json:"V3Score"`
 }
 
 // Vulnerabilities contains the vulnerability information from a Trivy report.
 type Vulnerabilities struct {
-	VulnerabilityID  string `json:"VulnerabilityID,omitempty"`
-	PkgID            string `json:"PkgID,omitempty"`
-	PkgName          string `json:"PkgName,omitempty"`
-	InstalledVersion string `json:"InstalledVersion,omitempty"`
+	VulnerabilityID  string `json:"VulnerabilityID"`
+	PkgID            string `json:"PkgID"`
+	PkgName          string `json:"PkgName"`
+	InstalledVersion string `json:"InstalledVersion"`
 	Layer            struct {
-		Digest string `json:",omitempty"`
-		DiffID string `json:",omitempty"`
-	} `json:"Layer,omitempty"`
-	SeveritySource string `json:"Severity,omitempty"`
-	PrimaryURL     string `json:"PrimaryURL,omitempty"`
+		Digest string `json:"Digest"`
+		DiffID string `json:"DiffID"`
+	} `json:"layer"`
+	SeveritySource string `json:"SeveritySource"`
+	PrimaryURL     string `json:"PrimaryURL"`
 	DataSource     struct {
-		ID   string `json:"ID,omitempty"`
-		Name string `json:"Name,omitempty"`
-		URL  string `json:"URL,omitempty"`
-	} `json:"DataSource,omitempty"`
-	Title            string    `json:"Title,omitempty"`
-	Description      string    `json:"Description,omitempty"`
-	Severity         string    `json:"Severity,omitempty"`
-	CweIDs           []string  `json:"CweIDs,omitempty"`
-	Cvss             CVSS      `json:"CVSS,omitempty"`
-	References       []string  `json:"References,omitempty"`
-	PublishedDate    time.Time `json:"PublishedDate,omitempty"`
-	LastModifiedDate time.Time `json:"LastModifiedDate,omitempty"`
-	FixedVersion     string    `json:"FixedVersion,omitempty"`
+		ID   string `json:"ID"`
+		Name string `json:"Name"`
+		URL  string `json:"URL"`
+	} `json:"DataSource"`
+	Title            string    `json:"Title"`
+	Description      string    `json:"Description"`
+	Severity         string    `json:"Severity"`
+	CweIDs           []string  `json:"CweIDs"`
+	Cvss             CVSS      `json:"CVSS"`
+	References       []string  `json:"References"`
+	PublishedDate    time.Time `json:"PublishedDate"`
+	LastModifiedDate time.Time `json:"LastModifiedDate"`
+	FixedVersion     string    `json:"FixedVersion"`
 }
 
 // Secrets contains the secret information from a Trivy report.
 type Secrets struct {
-	RuleID    string `json:"RuleID,omitempty"`
-	Category  string `json:"Category,omitempty"`
-	Severity  string `json:"Severity,omitempty"`
-	Title     string `json:"Title,omitempty"`
-	StartLine int    `json:"StartLine,omitempty"`
-	EndLine   int    `json:"EndLine,omitempty"`
+	RuleID    string `json:"RuleID"`
+	Category  string `json:"Category"`
+	Severity  string `json:"Severity"`
+	Title     string `json:"Title"`
+	StartLine int    `json:"StartLine"`
+	EndLine   int    `json:"EndLine"`
 	Code      struct {
 		Lines []struct {
-			Number      int    `json:"Number,omitempty"`
-			Content     string `json:"Content,omitempty"`
-			IsCause     bool   `json:"IsCause,omitempty"`
-			Annotation  string `json:"Annotation,omitempty"`
-			Truncated   bool   `json:"Truncated,omitempty"`
-			Highlighted string `json:"Highlighted,omitempty"`
-			FirstCause  bool   `json:"FirstCause,omitempty"`
-			LastCause   bool   `json:"LastCause,omitempty"`
-		} `json:"Lines,omitempty"`
-	} `json:"Code,omitempty"`
-	Match string `json:"Match,omitempty"`
+			Number      int    `json:"Number"`
+			Content     string `json:"Content"`
+			IsCause     bool   `json:"IsCause"`
+			Annotation  string `json:"Annotation"`
+			Truncated   bool   `json:"Truncated"`
+			Highlighted string `json:"Highlighted"`
+			FirstCause  bool   `json:"FirstCause"`
+			LastCause   bool   `json:"LastCause"`
+		} `json:"Lines"`
+	} `json:"Code"`
+	Match string `json:"Match"`
 	Layer struct {
-		Digest string `json:",omitempty"`
-		DiffID string `json:",omitempty"`
-	} `json:"Layer,omitempty"`
+		Digest string `json:"Digest"`
+		DiffID string `json:"DiffID"`
+	} `json:"Layer"`
 }
