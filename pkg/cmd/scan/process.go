@@ -122,6 +122,7 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) *[]trivy.
 					PublishedDate:    v.PublishedDate,
 					LastModifiedDate: v.LastModifiedDate,
 				}
+				// We don't need all scores in here so we just grab the one that triggered the threshold
 				if v.Cvss.Nvd != nil {
 					if v.Cvss.Nvd.V3Score >= checkScore {
 						vuln.Cvss = trivy.CVSS{Nvd: &trivy.Score{V3Score: v.Cvss.Nvd.V3Score}}
