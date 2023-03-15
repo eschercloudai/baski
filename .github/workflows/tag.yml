@@ -48,7 +48,7 @@ jobs:
           image-repo: ghcr.io
           repo-username: ${{ github.repository_owner }}
           repo-password: ${{ secrets.GITHUB_TOKEN }}
-          image-name: cloud-cli-tools
+          image-name: baski
           image-tag: ${{ github.ref_name }}
           min-severity: critical
           add-latest-tag: true
