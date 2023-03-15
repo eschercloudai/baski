@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/trivy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"
@@ -74,6 +75,11 @@ Once complete, it generates a report file that you can read,
 OR!
 Use the publish command to create a "pretty" interface in GitHub Pages through which you can browse the results.`,
 		Run: func(cmd *cobra.Command, args []string) {
+
+			if !trivy.ValidSeverity(strings.ToUpper(viper.GetString("scan.max-severity-type"))) {
+				log.Fatalln("severity value passed is invalid. Allowed values are: NONE, LOW, MEDIUM, HIGH, CRITICAL")
+			}
+
 			cloudsConfig := ostack.InitOpenstack()
 			cloudsConfig.SetOpenstackEnvs()
 

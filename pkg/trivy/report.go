@@ -28,6 +28,24 @@ func CheckSeverity(sev, check string) bool {
 	return false
 }
 
+// ValidSeverity confirms that the supplied value is a valid severity value.
+func ValidSeverity(val string) bool {
+	switch val {
+	case "NONE":
+		return true
+	case "LOW":
+		return true
+	case "MEDIUM":
+		return true
+	case "HIGH":
+		return true
+	case "CRITICAL":
+		return true
+	}
+
+	return false
+}
+
 // parseSeverity takes a Severity and turns it into a numerical value so that it can be compared.
 func parseSeverity(val Severity) int {
 	switch val {
