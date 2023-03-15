@@ -75,7 +75,7 @@ func createImageClient(client *Client) *gophercloud.ServiceClient {
 	return c
 }
 
-// UpdateImageMetadata updates an images metadata
+// UpdateImageMetadata updates an images metadata.
 func (c *Client) UpdateImageMetadata(imgID string, digest string) *images.Image {
 	client := createImageClient(c)
 	client.Microversion = "2.2"
@@ -95,6 +95,16 @@ func (c *Client) UpdateImageMetadata(imgID string, digest string) *images.Image 
 	}
 
 	return img
+}
+
+// RemoveImage will delete an image from Openstack.
+func (c *Client) RemoveImage(imgID string) {
+	log.Println("removing image")
+	client := createImageClient(c)
+	res := images.Delete(client, imgID)
+	if res.Err != nil {
+		log.Println(res.Err)
+	}
 }
 
 // createComputeClient will generate the compute client required for creating Servers and KeyPairs in Openstack.
@@ -168,9 +178,9 @@ sudo ./trivy rootfs -f json -o /tmp/results.json /
 	return server, freeIP
 }
 
-// RemoveServer will delete a Server from Openstack
+// RemoveServer will delete a Server from Openstack.
 func (c *Client) RemoveServer(serverID string) {
-	log.Println("removing scanning server.")
+	log.Println("removing scanning server")
 	client := createComputeClient(c)
 	res := servers.Delete(client, serverID)
 
@@ -179,7 +189,7 @@ func (c *Client) RemoveServer(serverID string) {
 	}
 }
 
-// RemoveKeypair will delete a Keypair from Openstack
+// RemoveKeypair will delete a Keypair from Openstack.
 func (c *Client) RemoveKeypair(keyName string) {
 	log.Println("removing keypair.")
 	client := createComputeClient(c)

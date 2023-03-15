@@ -58,6 +58,11 @@ func IntVarWithViper(cmd *cobra.Command, p *int, viperPrefix, name string, value
 	bindViper(cmd, viperPrefix, name, false)
 }
 
+func Float64VarWithViper(cmd *cobra.Command, p *float64, viperPrefix, name string, value float64, usage string) {
+	cmd.Flags().Float64Var(p, name, value, usage)
+	bindViper(cmd, viperPrefix, name, false)
+}
+
 func PersistentStringVarWithViper(cmd *cobra.Command, p *string, viperPrefix, name, value, usage string) {
 	cmd.PersistentFlags().StringVar(p, name, value, usage)
 	bindViper(cmd, viperPrefix, name, true)
