@@ -112,8 +112,7 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) *[]trivy.
 
 	for _, r := range report.Results {
 		for _, v := range r.Vulnerabilities {
-			score := isScoreHigherThanLimit(v.Severity, v.Cvss, checkScore, checkSeverity)
-			if score {
+			if checkSeverityThresholdPassed(v.Severity, v.Cvss, checkScore, checkSeverity) {
 				vuln := trivy.Vulnerabilities{
 					VulnerabilityID:  v.VulnerabilityID,
 					PkgName:          v.PkgName,
@@ -148,8 +147,8 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) *[]trivy.
 	return &vf
 }
 
-// isScoreHigherThanLimit checks for a score that is >= checkScore and checkSeverity. It will return true if so.
-func isScoreHigherThanLimit(severity string, cvss trivy.CVSS, checkScore float64, checkSeverity string) bool {
+// checkSeverityThresholdPassed checks for a score that is >= checkScore and checkSeverity. It will return true if so.
+func checkSeverityThresholdPassed(severity string, cvss trivy.CVSS, checkScore float64, checkSeverity string) bool {
 	if cvss.Nvd != nil {
 		if cvss.Nvd.V3Score >= checkScore && trivy.CheckSeverity(severity, checkSeverity) {
 			return true
