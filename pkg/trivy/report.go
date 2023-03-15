@@ -21,11 +21,7 @@ func CheckSeverity(sev, check string) bool {
 	sevValue = parseSeverity(Severity(sev))
 	checkValue = parseSeverity(Severity(check))
 
-	if sevValue >= checkValue {
-		return true
-	}
-
-	return false
+	return sevValue >= checkValue
 }
 
 // ValidSeverity confirms that the supplied value is a valid severity value.
