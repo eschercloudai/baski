@@ -1,7 +1,7 @@
 # Baski - Build And Scan Kubernetes Images
 
 [//]: # ([![Known Vulnerabilities]&#40;https://snyk.io/test/github/eschercloudai/baski/badge.svg&#41;]&#40;https://snyk.io/test/github/eschercloudai/baski&#41;)
-[![Builds](https://github.com/eschercloudai/baski/actions/workflows/tag.yml/badge.svg)](https://github.com/eschercloudai/baski/actions)
+[![Build on Tag](https://github.com/eschercloudai/baski/actions/workflows/tag.yml/badge.svg?branch=main&event=release)](https://github.com/eschercloudai/baski/actions/workflows/tag.yml)
 
 A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using
 the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo.
@@ -79,7 +79,7 @@ scan:
   max-severity-type: MEDIUM # Minimum severity to check for
 sign:
   generate:
-    path: "." # Output path of any generated keys 
+    path: "." # Output path of any generated keys
   vault:
     url: "https://vault.ENDPOINT/"
     token: "VAULT_TOKEN"
