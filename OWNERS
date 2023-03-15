@@ -1,10 +1,6 @@
-filters:
-  ".*":
-    reviewers:
-      - drew-viles
-      - spjmurray
-      - yankcrime
-    approvers:
-      - drew-viles
-      - spjmurray
-      - yankcrime
+reviewers:
+  - baski-reviewers
+  - baski-maintainers
+
+approvers:
+  - baski-maintainers
