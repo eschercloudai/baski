@@ -170,7 +170,7 @@ func generateImageName() string {
 	}
 
 	shortDate := time.Now().Format("060102")
-	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")+1]
+	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
 
 	return viper.GetString("build.image-prefix") + "-" + shortDate + "-" + shortUUID
 }
