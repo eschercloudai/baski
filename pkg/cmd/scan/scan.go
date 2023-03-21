@@ -18,14 +18,15 @@ package scan
 
 import (
 	"encoding/json"
+	"log"
+	"os"
+	"strings"
+
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/eschercloudai/baski/pkg/trivy"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
-	"strings"
 )
 
 type scanOptions struct {
@@ -96,7 +97,7 @@ Use the publish command to create a "pretty" interface in GitHub Pages through w
 			if !viper.GetBool("scan.skip-cve-check") {
 				scoreCheck := CheckForVulnerabilities(viper.GetFloat64("scan.max-severity-score"), strings.ToUpper(viper.GetString("scan.max-severity-type")))
 				if len(scoreCheck) != 0 {
-					//Cleanup the scanning resources
+					// Cleanup the scanning resources
 					RemoveScanningResources(server.ID, kp.Name, osClient)
 
 					if viper.GetBool("scan.auto-delete-image") {
@@ -108,7 +109,15 @@ Use the publish command to create a "pretty" interface in GitHub Pages through w
 					if err != nil {
 						log.Fatalln("couldn't marshall vulnerability data")
 					}
-					err = os.WriteFile("/tmp/required-fixes.json", j, os.FileMode(0644))
+
+					// empty out the results json - we don't need the original since threshold vulnerabilities were found.
+					err = os.Truncate("/tmp/results.json", 0)
+					if err != nil {
+						log.Fatalln("couldn't empty the results file")
+					}
+
+					// write the vulnerabilities into the results file
+					err = os.WriteFile("/tmp/results.json", j, os.FileMode(0644))
 					if err != nil {
 						log.Fatalln("couldn't write vulnerability data to file")
 					}
@@ -117,7 +126,7 @@ Use the publish command to create a "pretty" interface in GitHub Pages through w
 				}
 			}
 
-			//Cleanup the scanning resources
+			// Cleanup the scanning resources
 			RemoveScanningResources(server.ID, kp.Name, osClient)
 		},
 	}
