@@ -18,6 +18,11 @@ package ostack
 
 import (
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -26,10 +31,6 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	"log"
-	"strconv"
-	"strings"
-	"time"
 )
 
 // Client contains the Env vars of the program as well as the Provider and any EndpointOptions.
@@ -118,12 +119,12 @@ func createComputeClient(client *Client) *gophercloud.ServiceClient {
 }
 
 // CreateKeypair creates a new KeyPair in Openstack.
-func (c *Client) CreateKeypair(KeyNamePrefix string) *keypairs.KeyPair {
+func (c *Client) CreateKeypair(keyNamePrefix string) *keypairs.KeyPair {
 	client := createComputeClient(c)
 	client.Microversion = "2.2"
 
 	kp, err := keypairs.Create(client, keypairs.CreateOpts{
-		Name: KeyNamePrefix + "-baski-key",
+		Name: keyNamePrefix + "-baski-key",
 		Type: "ssh",
 	}).Extract()
 	if err != nil {
@@ -148,7 +149,7 @@ func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, flavorName, ne
 		UserData: []byte(fmt.Sprintf(`#!/bin/bash
 wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_Linux-64bit.tar.gz" | tar xzf -
 chmod u+x trivy
-sudo ./trivy rootfs -f json -o /tmp/results.json /
+sudo ./trivy rootfs --security-checks vuln -f json -o /tmp/results.json /
 `, trivyVersion, trivyVersion)),
 		AvailabilityZone: "",
 		Networks: []servers.Network{

@@ -17,15 +17,16 @@ limitations under the License.
 package build
 
 import (
+	"log"
+	"path/filepath"
+	"strings"
+
 	"github.com/eschercloudai/baski/pkg/cmd/util/data"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/constants"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"path/filepath"
-	"strings"
 )
 
 var (
@@ -60,6 +61,7 @@ type buildOptions struct {
 	nvidiaTOKLocation       string
 	griddFeatureType        int
 	imageDiskFormat         string
+	volumeType              string
 	rootfsUUID              string
 }
 
@@ -83,6 +85,7 @@ func (o *buildOptions) addFlags(cmd *cobra.Command) {
 	flags.StringVarWithViper(cmd, &o.kubeVersion, viperPrefix, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
 	flags.StringVarWithViper(cmd, &o.extraDebs, viperPrefix, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
 	flags.StringVarWithViper(cmd, &o.imageDiskFormat, viperPrefix, "image-disk-format", "raw", "The image disk format in Openstack")
+	flags.StringVarWithViper(cmd, &o.volumeType, viperPrefix, "volume-type", "", "The volume type in Openstack")
 	// Bare Metal Requirement flags
 	flags.StringVarWithViper(cmd, &o.rootfsUUID, viperPrefix, "rootfs-uuid", "", "The UUID of the root filesystem. This can be acquired from the source image that the resulting image will be built from - (this will be automated soon™)")
 	// NVIDIA flags
@@ -115,7 +118,7 @@ func NewBuildCommand() *cobra.Command {
 Building images requires a set of commands to be run on the terminal however this is tedious and time consuming.
 By using this, the time is reduced and automation can be enabled.
 
-Overtime this will become more dynamic to allow for build customised 
+Overtime this will become more dynamic to allow for build customised
 images such as ones with GPU/HPC drivers/tools.
 
 To use baski to build an image, an Openstack cluster is required.`,
@@ -131,7 +134,10 @@ To use baski to build an image, an Openstack cluster is required.`,
 			FetchBuildRepo(buildGitDir, viper.GetString("build.image-repo"), viper.GetBool("build.enable-nvidia-support"))
 
 			metadata := ostack.GenerateBuilderMetadata()
-			ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
+			err := ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
+			if err != nil {
+				log.Fatalln(err)
+			}
 
 			capiPath := filepath.Join(buildGitDir, "images", "capi")
 			packerBuildConfig.GenerateVariablesFile(capiPath)
@@ -140,7 +146,7 @@ To use baski to build an image, an Openstack cluster is required.`,
 
 			cloudsConfig.SetOpenstackEnvs()
 
-			err := BuildImage(capiPath, viper.GetString("build.build-os"))
+			err = BuildImage(capiPath, viper.GetString("build.build-os"))
 			if err != nil {
 				log.Fatalln(err)
 			}

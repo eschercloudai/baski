@@ -144,7 +144,7 @@ func buildConfigFromInputs() *PackerBuildConfig {
 		KubernetesDebVersion: viper.GetString("build.kubernetes-version") + "-00",
 		ExtraDebs:            viper.GetString("build.extra-debs"),
 		ImageDiskFormat:      viper.GetString("build.image-disk-format"),
-		VolumeType:           "",
+		VolumeType:           viper.GetString("build.volume-type"),
 	}
 	if viper.GetBool("build.enable-nvidia-support") {
 		buildConfig.NodeCustomRolesPost = "nvidia"
@@ -170,7 +170,7 @@ func generateImageName() string {
 	}
 
 	shortDate := time.Now().Format("060102")
-	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
+	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")+1]
 
 	return viper.GetString("build.image-prefix") + "-" + shortDate + "-" + shortUUID
 }
@@ -191,33 +191,34 @@ func GenerateBuilderMetadata() map[string]string {
 }
 
 // UpdatePackerBuildersJson pre-populates the metadata field in the packer.json file as objects cannot be passed as variables in packer.
-func UpdatePackerBuildersJson(dir string, metadata map[string]string) {
+func UpdatePackerBuildersJson(dir string, metadata map[string]string) error {
 	file, err := os.OpenFile(filepath.Join(dir, "images", "capi", "packer", "openstack", "packer.json"), os.O_RDWR, 0644)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	defer file.Close()
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	res := addMetadataToBuilders(metadata, data)
 
 	err = file.Truncate(0)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	_, err = file.Seek(0, 0)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	_, err = file.Write(res)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
+	return nil
 }
 
 // addMetadataToBuilders inserts the metadata into the packer's builder section.
