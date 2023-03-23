@@ -37,8 +37,8 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) error {
 	defer client.Close()
 
 	log.Println("Successfully connected to ssh server.")
-	log.Println("waiting 2 minutes for the results of the scan to become available.")
-	time.Sleep(2 * time.Minute)
+	log.Println("waiting 4 minutes for Trivy to update and the results of the scan to become available.")
+	time.Sleep(4 * time.Minute)
 
 	// open an SFTP session over an existing ssh connection.
 	log.Println("pulling results.")
