@@ -48,12 +48,16 @@ func CreateRepoDirectory() string {
 }
 
 // FetchBuildRepo simply pulls the contents of the imageRepo to the specified path
-func FetchBuildRepo(path, imageRepo string, gpuSupport bool) {
+func FetchBuildRepo(path, imageRepo string, gpuSupport, addTrivy, addFalco bool) {
 	var branch plumbing.ReferenceName
 	branch = plumbing.Master
 
-	if gpuSupport {
-		branch = "refs/heads/nvidia-driver-support"
+	//FIXME: This check is in place until the nvidia branch and security branch in this repo go upstream.
+	// Until it has been added, we must force users over to this repo as it's the only one that has these new additions.
+	if gpuSupport || addTrivy || addFalco {
+		log.Println("the kubernetes sigs project doesn't currently support nvidia, falco or trivy. Using https://github.com/eschercloudai/image-builder.git until it's pushed upstream")
+		imageRepo = "https://github.com/eschercloudai/image-builder.git"
+		branch = "refs/heads/nvidia-security"
 	}
 
 	_, err := gitRepo.GitClone(imageRepo, path, branch)

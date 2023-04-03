@@ -131,7 +131,7 @@ To use baski to build an image, an Openstack cluster is required.`,
 			}
 
 			buildGitDir := CreateRepoDirectory()
-			FetchBuildRepo(buildGitDir, viper.GetString("build.image-repo"), viper.GetBool("build.enable-nvidia-support"))
+			FetchBuildRepo(buildGitDir, viper.GetString("build.image-repo"), viper.GetBool("build.enable-nvidia-support"), viper.GetBool("build.add-trivy"), viper.GetBool("build.add-falco"))
 
 			metadata := ostack.GenerateBuilderMetadata()
 			err := ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
