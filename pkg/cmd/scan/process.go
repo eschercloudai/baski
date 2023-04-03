@@ -84,7 +84,7 @@ func RemoveScanningResources(serverID, keyName string, os *ostack.Client) {
 }
 
 // CheckForVulnerabilities will scan the results file for any 7+ CVE scores and if so will delete the image from Openstack and bail out here.
-func CheckForVulnerabilities(checkScore float64, checkSeverity string) []trivy.Vulnerabilities {
+func CheckForVulnerabilities(checkScore float64, checkSeverity string) []trivy.ScanFailedReport {
 	log.Println("checking results for failures")
 	rf, err := os.ReadFile("/tmp/results.json")
 	if err != nil {
@@ -101,19 +101,17 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) []trivy.V
 		return nil
 	}
 
-	var vf []trivy.Vulnerabilities
+	var vf []trivy.ScanFailedReport
 
 	for _, r := range report.Results {
 		for _, v := range r.Vulnerabilities {
 			if checkSeverityThresholdPassed(v.Severity, v.Cvss, checkScore, checkSeverity) {
-				vuln := trivy.Vulnerabilities{
+				vuln := trivy.ScanFailedReport{
 					VulnerabilityID:  v.VulnerabilityID,
 					PkgName:          v.PkgName,
 					InstalledVersion: v.InstalledVersion,
 					FixedVersion:     v.FixedVersion,
 					Severity:         v.Severity,
-					PublishedDate:    v.PublishedDate,
-					LastModifiedDate: v.LastModifiedDate,
 				}
 				// We don't need all scores in here, so we just grab the one that triggered the threshold
 				if v.Cvss.Nvd != nil {

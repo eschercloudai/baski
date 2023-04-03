@@ -146,9 +146,12 @@ func buildConfigFromInputs() *PackerBuildConfig {
 		ImageDiskFormat:      viper.GetString("build.image-disk-format"),
 		VolumeType:           viper.GetString("build.volume-type"),
 	}
+
+	var ansibleUserVars string
+	var customRoles string
 	if viper.GetBool("build.enable-nvidia-support") {
-		buildConfig.NodeCustomRolesPost = "nvidia"
-		buildConfig.AnsibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%s",
+		customRoles = "nvidia"
+		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%s",
 			viper.GetString("build.nvidia-bucket-endpoint"),
 			viper.GetString("build.nvidia-bucket-name"),
 			viper.GetString("build.nvidia-bucket-access"),
@@ -157,6 +160,31 @@ func buildConfigFromInputs() *PackerBuildConfig {
 			viper.GetString("build.nvidia-tok-location"),
 			viper.GetString("build.gridd-feature-type"))
 	}
+
+	if viper.GetBool("build.add-falco") {
+		customRoles = customRoles + " security"
+		if len(ansibleUserVars) == 0 {
+			ansibleUserVars = "install_falco=true"
+		} else {
+			ansibleUserVars = ansibleUserVars + " install_falco=true"
+		}
+	}
+
+	if viper.GetBool("build.add-trivy") {
+		if !strings.Contains(customRoles, "security") {
+			customRoles = customRoles + "security"
+		} else {
+			customRoles = "security"
+		}
+		if len(ansibleUserVars) == 0 {
+			ansibleUserVars = "install_trivy=true"
+		} else {
+			ansibleUserVars = ansibleUserVars + " install_trivy=true"
+		}
+	}
+
+	buildConfig.NodeCustomRolesPost = customRoles
+	buildConfig.AnsibleUserVars = ansibleUserVars
 	buildConfig.ImageName = generateImageName()
 
 	return buildConfig

@@ -60,6 +60,15 @@ func parseSeverity(val Severity) int {
 	return 0
 }
 
+type ScanFailedReport struct {
+	VulnerabilityID  string `json:"VulnerabilityID"`
+	PkgName          string `json:"PkgName"`
+	InstalledVersion string `json:"InstalledVersion"`
+	Severity         string `json:"Severity"`
+	Cvss             CVSS   `json:"CVSS"`
+	FixedVersion     string `json:"FixedVersion"`
+}
+
 // Report and all its sub-structs is used to unmarshal the json reports into a usable format.
 type Report struct {
 	SchemaVersion int    `json:"SchemaVersion"`
