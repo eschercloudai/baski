@@ -172,7 +172,7 @@ func buildConfigFromInputs() *PackerBuildConfig {
 
 	if viper.GetBool("build.add-trivy") {
 		if !strings.Contains(customRoles, "security") {
-			customRoles = customRoles + "security"
+			customRoles = customRoles + " security"
 		} else {
 			customRoles = "security"
 		}
