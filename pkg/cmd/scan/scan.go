@@ -69,12 +69,16 @@ func NewScanCommand() *cobra.Command {
 Scanning an image requires the creation of a new instance in Openstack using the image you want to scan.
 Then, Trivy needs downloading and running against the filesystem. Again, this is time consuming.
 
-The scan section of baski fixes this for you and allows you to drink coffee whilst it does the hard work for you.
+The scan section of Baski fixes this for you and allows you to drink <enter drink here> whilst it does the hard work for you.
 
-It creates a new instance using the provided Openstack configuration variables and scans the image.
-Once complete, it generates a report file that you can read,
-OR!
-Use the publish command to create a "pretty" interface in GitHub Pages through which you can browse the results.`,
+It does the following:
+* Creates a new instance using the provided Openstack configuration variables
+* Check if Trivy is available already, if not it'll download it
+* Scans the rootfs
+* Generates a report file that you can read with your eyes or via other means
+
+If the checks for CVE flags/config values are set then it will bail out and generate a report with the CVEs that caused it to do so.
+`,
 		Run: func(cmd *cobra.Command, args []string) {
 
 			if !trivy.ValidSeverity(strings.ToUpper(viper.GetString("scan.max-severity-type"))) {
@@ -122,7 +126,7 @@ Use the publish command to create a "pretty" interface in GitHub Pages through w
 						log.Fatalln("couldn't write vulnerability data to file")
 					}
 
-					log.Fatalln("Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/required-fixes.json' for further information on this.")
+					log.Fatalln("Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/results.json' for further information on this.")
 				}
 			}
 

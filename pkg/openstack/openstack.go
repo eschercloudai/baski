@@ -147,9 +147,11 @@ func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, flavorName, ne
 		ImageRef:       imageID,
 		SecurityGroups: []string{"default"},
 		UserData: []byte(fmt.Sprintf(`#!/bin/bash
-wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_Linux-64bit.tar.gz" | tar xzf -
-chmod u+x trivy
-sudo ./trivy rootfs --scanners vuln -f json -o /tmp/results.json /
+if ! command -v trivy &> /dev/null; then
+wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_Linux-64bit.tar.gz" | tar xzf -;
+chmod u+x trivy;
+fi
+sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /
 `, trivyVersion, trivyVersion)),
 		AvailabilityZone: "",
 		Networks: []servers.Network{
