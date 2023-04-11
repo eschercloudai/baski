@@ -17,11 +17,11 @@ limitations under the License.
 package build
 
 import (
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	gitRepo "github.com/eschercloudai/baski/pkg/git"
 	systemUtils "github.com/eschercloudai/baski/pkg/system"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
-	"github.com/spf13/viper"
 	"io"
 	"log"
 	"os"
@@ -48,13 +48,14 @@ func CreateRepoDirectory() string {
 }
 
 // FetchBuildRepo simply pulls the contents of the imageRepo to the specified path
-func FetchBuildRepo(path, imageRepo string, gpuSupport, addTrivy, addFalco bool) {
+func FetchBuildRepo(path string, o *flags.BuildOptions) {
 	var branch plumbing.ReferenceName
 	branch = plumbing.Master
+	imageRepo := o.ImageRepo
 
 	//FIXME: This check is in place until the nvidia branch and security branch in this repo go upstream.
 	// Until it has been added, we must force users over to this repo as it's the only one that has these new additions.
-	if gpuSupport || addTrivy || addFalco {
+	if o.AddNvidiaSupport || o.AddTrivy || o.AddFalco {
 		log.Println("the kubernetes sigs project doesn't currently support nvidia, falco or trivy. Using https://github.com/eschercloudai/image-builder.git until it's pushed upstream")
 		imageRepo = "https://github.com/eschercloudai/image-builder.git"
 		branch = "refs/heads/nvidia-security"
@@ -68,7 +69,7 @@ func FetchBuildRepo(path, imageRepo string, gpuSupport, addTrivy, addFalco bool)
 
 // InstallDependencies will run make dep-openstack so that any requirements such as packer, ansible
 // and goss will be installed.
-func InstallDependencies(repoPath string) {
+func InstallDependencies(repoPath string, verbose bool) {
 	log.Printf("fetching dependencies\n")
 
 	w, err := os.Create("/tmp/out-deps.txt")
@@ -78,7 +79,7 @@ func InstallDependencies(repoPath string) {
 	defer w.Close()
 
 	var wr io.Writer
-	if viper.GetBool("build.verbose") {
+	if verbose {
 		wr = io.MultiWriter(w, os.Stdout)
 	} else {
 		wr = w
@@ -99,7 +100,7 @@ func InstallDependencies(repoPath string) {
 
 // BuildImage will run make build-openstack-buildOS which will launch an instance in Openstack,
 // add any requirements as defined in the image-builder imageRepo and then create an image from that build.
-func BuildImage(capiPath string, buildOS string) error {
+func BuildImage(capiPath string, buildOS string, verbose bool) error {
 	log.Printf("building image\n")
 
 	w, err := os.Create("/tmp/out-build.txt")
@@ -109,7 +110,7 @@ func BuildImage(capiPath string, buildOS string) error {
 	defer w.Close()
 
 	var wr io.Writer
-	if viper.GetBool("build.verbose") {
+	if verbose {
 		wr = io.MultiWriter(w, os.Stdout)
 	} else {
 		wr = w

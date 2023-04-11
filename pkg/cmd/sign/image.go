@@ -17,44 +17,19 @@ limitations under the License.
 package sign
 
 import (
-	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/data"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/cmd/util/sign"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 )
 
-type signImageOptions struct {
-	flags.GlobalFlags
-	imageID     string
-	privateKey  string
-	vaultURL    string
-	vaultSecret string
-}
-
-func (o *signImageOptions) addFlags(cmd *cobra.Command) {
-	viperPrefix := "sign"
-	viperVaultPrefix := fmt.Sprintf("%s.vault", viperPrefix)
-
-	o.GlobalFlags.AddFlags(cmd)
-
-	flags.StringVarWithViper(cmd, &o.imageID, viperPrefix, "image-id", "", "The image ID of the image to sign")
-	flags.StringVarWithViper(cmd, &o.privateKey, viperPrefix, "private-key", "", "The path to the private key that will be used to sign the image")
-	flags.StringVarWithViper(cmd, &o.vaultURL, viperVaultPrefix, "url", "", "The Vault URL from which you will pull the private key")
-	flags.StringVarWithViper(cmd, &o.vaultSecret, viperVaultPrefix, "token", "", "The token used to log into vault")
-
-	cmd.MarkFlagsRequiredTogether("url", "token")
-	cmd.MarkFlagsMutuallyExclusive("url", "private-key")
-}
-
 // NewSignImageCommand creates a command that allows the signing of an image.
 func NewSignImageCommand() *cobra.Command {
 
-	o := &signImageOptions{}
+	o := &flags.SignImageOptions{}
 	cmd := &cobra.Command{
 		Use:   "image",
 		Short: "Sign image",
@@ -70,19 +45,21 @@ If using vault, the key should be stored as follows:
 * public-key
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			o.SetSignImageOptionsFromViper()
+
 			var key []byte
 			var err error
-			cloudsConfig := ostack.InitOpenstack()
-			cloudsConfig.SetOpenstackEnvs()
-			imgID := getImageID()
+			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
+			cloudsConfig.SetOpenstackEnvs(o.CloudName)
+			imgID := getImageID(o.ImageID)
 
-			if len(viper.GetString("sign.private-key")) != 0 {
-				key, err = os.ReadFile(viper.GetString("sign.private-key"))
+			if len(o.PrivateKey) != 0 {
+				key, err = os.ReadFile(o.PrivateKey)
 				if err != nil {
 					log.Fatalln(err)
 				}
-			} else if len(viper.GetString("sign.vault.url")) != 0 {
-				key, err = sign.FetchPrivateKeyFromVault(viper.GetString("sign.vault.url"), viper.GetString("sign.vault.token"))
+			} else if len(o.VaultURL) != 0 {
+				key, err = sign.FetchPrivateKeyFromVault(o.VaultURL, o.VaultToken)
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -94,26 +71,26 @@ If using vault, the key should be stored as follows:
 				log.Fatalln(err)
 			}
 
-			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[viper.GetString("cloud-name")])
+			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
 			_ = osClient.UpdateImageMetadata(imgID, digest)
 		},
 	}
-	o.addFlags(cmd)
+	o.AddFlags(cmd)
 
 	return cmd
 }
 
-func getImageID() string {
+func getImageID(imageID string) string {
 	var imgID string
 	var err error
 
-	if len(viper.GetString("sign.image-id")) == 0 {
+	if len(imageID) == 0 {
 		imgID, err = data.RetrieveNewImageID()
 		if err != nil {
 			log.Fatalln(err)
 		}
 	} else {
-		imgID = viper.GetString("sign.image-id")
+		imgID = imageID
 	}
 
 	return imgID

@@ -71,6 +71,8 @@ type ScanFailedReport struct {
 
 // Report and all its sub-structs is used to unmarshal the json reports into a usable format.
 type Report struct {
+	Name          string `json:"name"`
+	ShortName     string `json:"short_name"`
 	SchemaVersion int    `json:"SchemaVersion"`
 	ArtifactName  string `json:"ArtifactName"`
 	ArtifactType  string `json:"ArtifactType"`

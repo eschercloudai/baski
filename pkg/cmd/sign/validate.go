@@ -17,44 +17,18 @@ limitations under the License.
 package sign
 
 import (
-	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/cmd/util/sign"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 )
 
-type signValidateOptions struct {
-	flags.GlobalFlags
-	imageID    string
-	publicKey  string
-	vaultURL   string
-	vaultToken string
-	digest     string
-}
-
-func (o *signValidateOptions) addFlags(cmd *cobra.Command) {
-	viperPrefix := "sign"
-	viperVaultPrefix := fmt.Sprintf("%s.vault", viperPrefix)
-
-	o.GlobalFlags.AddFlags(cmd)
-
-	flags.StringVarWithViper(cmd, &o.imageID, viperPrefix, "image-id", "", "The image ID of the image to sign")
-	flags.StringVarWithViper(cmd, &o.publicKey, viperPrefix, "public-key", "", "The path to the private key that will be used to sign the image")
-	flags.StringVarWithViper(cmd, &o.digest, viperPrefix, "digest", "", "The digest to verify")
-	flags.StringVarWithViper(cmd, &o.vaultURL, viperVaultPrefix, "url", "", "The Vault URL from which you will pull the private key")
-	flags.StringVarWithViper(cmd, &o.vaultToken, viperVaultPrefix, "token", "", "The token used to log into vault")
-
-	cmd.MarkFlagsRequiredTogether("url", "token")
-	cmd.MarkFlagsMutuallyExclusive("url", "public-key")
-}
-
 // NewSignValidateCommand creates a command that allows the signing of an image.
 func NewSignValidateCommand() *cobra.Command {
 
-	o := &signValidateOptions{}
+	o := &flags.SignValidateOptions{}
+
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate digital signature",
@@ -63,24 +37,26 @@ func NewSignValidateCommand() *cobra.Command {
 This just validates a signature. It's useful for verifying a signed image.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			o.SetValidateImageOptionsFromViper()
+
 			var key []byte
 			var err error
-			imgID := getImageID()
+			imgID := getImageID(o.ImageID)
 
-			if len(viper.GetString("sign.public-key")) != 0 {
-				key, err = os.ReadFile(viper.GetString("sign.public-key"))
+			if len(o.PublicKey) != 0 {
+				key, err = os.ReadFile(o.PublicKey)
 				if err != nil {
 					log.Fatalln(err)
 				}
-			} else if len(viper.GetString("sign.vault.url")) != 0 {
-				key, err = sign.FetchPublicKeyFromVault(viper.GetString("sign.vault.url"), viper.GetString("sign.vault.token"))
+			} else if len(o.VaultURL) != 0 {
+				key, err = sign.FetchPublicKeyFromVault(o.VaultURL, o.VaultToken)
 				if err != nil {
 					log.Fatalln(err)
 				}
 			}
 			pubKey := sign.DecodePublicKey(key)
 
-			valid, err := sign.Validate(imgID, pubKey, viper.GetString("sign.digest"))
+			valid, err := sign.Validate(imgID, pubKey, o.Digest)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -88,7 +64,7 @@ This just validates a signature. It's useful for verifying a signed image.
 			log.Printf("The validation result was: %t", valid)
 		},
 	}
-	o.addFlags(cmd)
+	o.AddFlags(cmd)
 
 	return cmd
 }

@@ -18,30 +18,9 @@ package flags
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/cmd/util/completion"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-// GlobalFlags are not specific to a single command and can be included across many
-type GlobalFlags struct {
-	//BaskiConfigFlag string
-	CloudsPathFlag string
-	CloudNameFlag  string
-}
-
-func (o *GlobalFlags) AddFlags(cmd *cobra.Command) {
-	PersistentStringVarWithViper(cmd, &o.CloudsPathFlag, "", "clouds-file", "~/.config/openstack/clouds.yaml", "The location of the openstack clouds.yaml file to use")
-	PersistentStringVarWithViper(cmd, &o.CloudNameFlag, "", "cloud-name", "", "The name of the cloud profile to use from the clouds.yaml file")
-	//PersistentStringVarWithViper(cmd, &o.BaskiConfigFlag, "", "baski-config", "baski.yaml", "The location of a baski config file")
-
-	if err := cmd.RegisterFlagCompletionFunc("cloud-name", completion.CloudCompletionFunc); err != nil {
-		panic(err)
-	}
-
-	cmd.MarkFlagsRequiredTogether("clouds-file", "cloud-name")
-	//cmd.MarkFlagsMutuallyExclusive("clouds-file", "baski-config")
-}
 
 func StringVarWithViper(cmd *cobra.Command, p *string, viperPrefix, name, value, usage string) {
 	cmd.Flags().StringVar(p, name, value, usage)
