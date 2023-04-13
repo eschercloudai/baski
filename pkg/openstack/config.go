@@ -19,6 +19,7 @@ package ostack
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"io"
 	"log"
 	"os"
@@ -28,7 +29,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -82,29 +82,19 @@ type PackerBuildConfig struct {
 	ImageDiskFormat      string `json:"image_disk_format"`
 }
 
-// InitOpenstack translates the clouds.yaml file into a struct to be used in app.
-func InitOpenstack() (cloudsConfig *OpenstackClouds) {
-	return parseCloudsConfig(viper.GetString("clouds-file"))
-}
-
-// InitPackerConfig translates all the inputs into the global struct so that it can be utilised as required.
-func InitPackerConfig() (packerBuildConfig *PackerBuildConfig) {
-	return buildConfigFromInputs()
-}
-
-// parseCloudsConfig will read the contents of the clouds.yaml file for Openstack and parse it into a OpenstackClouds struct.
-func parseCloudsConfig(cloudsPath string) *OpenstackClouds {
+// InitOpenstack will read the contents of the clouds.yaml file for Openstack and parse it into a OpenstackClouds struct.
+func InitOpenstack(cloudsFile string) *OpenstackClouds {
 	var cloudsConfig *OpenstackClouds
 
-	if strings.Split(cloudsPath, "/")[0] == "~" {
+	if strings.Split(cloudsFile, "/")[0] == "~" {
 		prefix, err := os.UserHomeDir()
 		if err != nil {
 			log.Fatalln(err)
 		}
-		cloudsPath = filepath.Join(prefix, filepath.Join(strings.Split(cloudsPath, "/")[1:]...))
+		cloudsFile = filepath.Join(prefix, filepath.Join(strings.Split(cloudsFile, "/")[1:]...))
 	}
 
-	config, err := os.ReadFile(cloudsPath)
+	config, err := os.ReadFile(cloudsFile)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -118,50 +108,50 @@ func parseCloudsConfig(cloudsPath string) *OpenstackClouds {
 }
 
 // SetOpenstackEnvs sets the environment variables for the build command to be able to connect to Openstack.
-func (c *OpenstackClouds) SetOpenstackEnvs() {
-	err := os.Setenv("OS_CLOUD", viper.GetString("cloud-name"))
+func (c *OpenstackClouds) SetOpenstackEnvs(cloudName string) {
+	err := os.Setenv("OS_CLOUD", cloudName)
 	if err != nil {
 		log.Fatalln(err)
 	}
 }
 
-// buildConfigFromInputs takes the application inputs and converts it into a PackerBuildConfig.
-func buildConfigFromInputs() *PackerBuildConfig {
+// InitPackerConfig takes the application inputs and converts it into a PackerBuildConfig.
+func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 	buildConfig := &PackerBuildConfig{
-		SourceImage:          viper.GetString("build.source-image"),
-		Networks:             viper.GetString("build.network-id"),
-		Flavor:               viper.GetString("build.flavor-name"),
-		AttachConfigDrive:    strconv.FormatBool(viper.GetBool("build.attach-config-drive")),
-		UseFloatingIp:        strconv.FormatBool(viper.GetBool("build.use-floating-ip")),
-		FloatingIpNetwork:    viper.GetString("build.floating-ip-network-name"),
-		CniVersion:           "v" + viper.GetString("build.cni-version"),
-		CniDebVersion:        viper.GetString("build.cni-version") + "-00",
-		CrictlVersion:        viper.GetString("build.crictl-version"),
-		ImageVisibility:      viper.GetString("build.image-visibility"),
-		KubernetesSemver:     "v" + viper.GetString("build.kubernetes-version"),
-		KubernetesSeries:     "v" + viper.GetString("build.kubernetes-version"),
-		KubernetesRpmVersion: viper.GetString("build.kubernetes-version") + "-0",
-		KubernetesDebVersion: viper.GetString("build.kubernetes-version") + "-00",
-		ExtraDebs:            viper.GetString("build.extra-debs"),
-		ImageDiskFormat:      viper.GetString("build.image-disk-format"),
-		VolumeType:           viper.GetString("build.volume-type"),
+		SourceImage:          o.SourceImageID,
+		Networks:             o.NetworkID,
+		Flavor:               o.FlavorName,
+		AttachConfigDrive:    strconv.FormatBool(o.AttachConfigDrive),
+		UseFloatingIp:        strconv.FormatBool(o.UseFloatingIP),
+		FloatingIpNetwork:    o.FloatingIPNetworkName,
+		CniVersion:           "v" + o.CniVersion,
+		CniDebVersion:        o.CniVersion + "-00",
+		CrictlVersion:        o.CrictlVersion,
+		ImageVisibility:      o.ImageVisibility,
+		KubernetesSemver:     "v" + o.KubeVersion,
+		KubernetesSeries:     "v" + o.KubeVersion,
+		KubernetesRpmVersion: o.KubeVersion + "-0",
+		KubernetesDebVersion: o.KubeVersion + "-00",
+		ExtraDebs:            o.ExtraDebs,
+		ImageDiskFormat:      o.ImageDiskFormat,
+		VolumeType:           o.VolumeType,
 	}
 
 	var ansibleUserVars string
 	var customRoles string
-	if viper.GetBool("build.enable-nvidia-support") {
+	if o.AddNvidiaSupport {
 		customRoles = "nvidia"
-		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%s",
-			viper.GetString("build.nvidia-bucket-endpoint"),
-			viper.GetString("build.nvidia-bucket-name"),
-			viper.GetString("build.nvidia-bucket-access"),
-			viper.GetString("build.nvidia-bucket-secret"),
-			viper.GetString("build.nvidia-installer-location"),
-			viper.GetString("build.nvidia-tok-location"),
-			viper.GetString("build.gridd-feature-type"))
+		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%d",
+			o.NvidiaBucketEndpoint,
+			o.NvidiaBucketName,
+			o.NvidiaBucketAccessKey,
+			o.NvidiaBucketSecretKey,
+			o.NvidiaInstallerLocation,
+			o.NvidiaTOKLocation,
+			o.NvidiaGriddFeatureType)
 	}
 
-	if viper.GetBool("build.add-falco") {
+	if o.AddFalco {
 		customRoles = customRoles + " security"
 		if len(ansibleUserVars) == 0 {
 			ansibleUserVars = "install_falco=true"
@@ -170,7 +160,7 @@ func buildConfigFromInputs() *PackerBuildConfig {
 		}
 	}
 
-	if viper.GetBool("build.add-trivy") {
+	if o.AddTrivy {
 		if !strings.Contains(customRoles, "security") {
 			customRoles = customRoles + " security"
 		} else {
@@ -185,13 +175,13 @@ func buildConfigFromInputs() *PackerBuildConfig {
 
 	buildConfig.NodeCustomRolesPost = customRoles
 	buildConfig.AnsibleUserVars = ansibleUserVars
-	buildConfig.ImageName = generateImageName()
+	buildConfig.ImageName = generateImageName(o.ImagePrefix)
 
 	return buildConfig
 }
 
 // generateImageName creates a name for the image that will be built.
-func generateImageName() string {
+func generateImageName(imagePrefix string) string {
 	imageUUID, err := uuid.NewRandom()
 	if err != nil {
 		log.Fatalln(err)
@@ -200,21 +190,21 @@ func generateImageName() string {
 	shortDate := time.Now().Format("060102")
 	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
 
-	return viper.GetString("build.image-prefix") + "-" + shortDate + "-" + shortUUID
+	return imagePrefix + "-" + shortDate + "-" + shortUUID
 }
 
 // GenerateBuilderMetadata generates some glance metadata for the image.
-func GenerateBuilderMetadata() map[string]string {
+func GenerateBuilderMetadata(o *flags.BuildOptions) map[string]string {
 	gpu := "no_gpu"
-	if viper.GetBool("build.enable-nvidia-support") {
-		gpu = viper.GetString("build.nvidia-driver-version")
+	if o.AddNvidiaSupport {
+		gpu = o.NvidiaVersion
 	}
 	return map[string]string{
-		"os":          viper.GetString("build.build-os"),
-		"k8s":         viper.GetString("build.kubernetes-version"),
+		"os":          o.BuildOS,
+		"k8s":         o.KubeVersion,
 		"gpu":         gpu,
 		"date":        time.RFC3339,
-		"rootfs_uuid": viper.GetString("build.rootfs-uuid"),
+		"rootfs_uuid": o.RootfsUUID,
 	}
 }
 

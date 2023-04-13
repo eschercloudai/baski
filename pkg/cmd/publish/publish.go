@@ -17,48 +17,16 @@ limitations under the License.
 package publish
 
 import (
-	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 )
 
-type publishOptions struct {
-	flags.GlobalFlags
-	imageID       string
-	ghUser        string
-	ghAccount     string
-	ghProject     string
-	ghToken       string
-	ghPagesBranch string
-	ResultsFile   string
-}
-
-func (o *publishOptions) addFlags(cmd *cobra.Command) {
-	viperPrefix := "publish"
-	viperGithubPrefix := fmt.Sprintf("%s.github", viperPrefix)
-
-	o.GlobalFlags.AddFlags(cmd)
-
-	flags.StringVarWithViper(cmd, &o.ghUser, viperGithubPrefix, "user", "", "The user for the GitHub project to which the pages will be pushed")
-	flags.StringVarWithViper(cmd, &o.ghProject, viperGithubPrefix, "project", "", "The GitHub project to which the pages will be pushed")
-	flags.StringVarWithViper(cmd, &o.ghAccount, viperGithubPrefix, "account", "", "The account in which the project is stored. This will default to the user")
-	flags.StringVarWithViper(cmd, &o.ghToken, viperGithubPrefix, "token", "", "The token for the GitHub project to which the pages will be pushed")
-	flags.StringVarWithViper(cmd, &o.ghPagesBranch, viperGithubPrefix, "pages-branch", "gh-pages", "The branch name for GitHub project to which the pages will be pushed")
-	flags.StringVarWithViper(cmd, &o.imageID, viperPrefix, "image-id", "", "The ID of the image to scan")
-
-	//TODO: this is currently not used or implemented in any way
-	flags.StringVarWithViper(cmd, &o.ResultsFile, viperPrefix, "results-file", "", "The results file location")
-
-	cmd.MarkFlagsRequiredTogether("user", "project", "token")
-}
-
-// NewPublishCommand creates a command that publishes CVE data to GitHub Pages.
+// NewPublishCommand creates a command that publishes CVE data to GitHub Pages - this will be deprecated soon
 func NewPublishCommand() *cobra.Command {
-	o := &publishOptions{}
+	o := &flags.PublishOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "publish",
@@ -66,23 +34,25 @@ func NewPublishCommand() *cobra.Command {
 		Long: `Publish CVE data.
 
 Scanning and image produces a long report in json format. It's not pretty to read.
-Sure, you can get a nice json formatter and attempt to do it that way or you can have a website generated for you in your 
+Sure, you can get a nice json formatter and attempt to do it that way or you can have a website generated for you in your
 GitHub Pages and view the report there instead in a slightly nicer format.
 
 The website it generates isn't the prettiest right now but it will be improved on over time.`,
 
 		Run: func(cmd *cobra.Command, args []string) {
+			o.SetOptionsFromViper()
+
 			// just setting defaults for account if it's not provided. Presume it's the same as the username.
-			if viper.GetString("publish.github.account") == "" {
-				viper.Set("publish.github.account", viper.GetString("publish.github.user"))
+			if o.GithubAccount == "" {
+				o.GithubAccount = o.GithubUser
 			}
 
-			cloudsConfig := ostack.InitOpenstack()
-			cloudsConfig.SetOpenstackEnvs()
+			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
+			cloudsConfig.SetOpenstackEnvs(o.CloudName)
 
-			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[viper.GetString("cloud-name")])
+			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
 
-			pagesGitDir, pagesRepo, err := FetchPagesRepo(viper.GetString("publish.github.user"), viper.GetString("publish.github.token"), viper.GetString("publish.github.account"), viper.GetString("publish.github.project"), viper.GetString("publish.github.pages-branch"))
+			pagesGitDir, pagesRepo, err := FetchPagesRepo(o)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -94,7 +64,7 @@ The website it generates isn't the prettiest right now but it will be improved o
 
 			defer resultsFile.Close()
 
-			img := GetImageData(osClient, viper.GetString("publish.image-id"))
+			img := GetImageData(osClient, o.ImageID)
 			checkErrorPagesWithCleanup(err, pagesGitDir)
 
 			err = CopyResultsFileIntoPages(pagesGitDir, img.Name, resultsFile)
@@ -116,7 +86,7 @@ The website it generates isn't the prettiest right now but it will be improved o
 		},
 	}
 
-	o.addFlags(cmd)
+	o.AddFlags(cmd)
 
 	return cmd
 }

@@ -23,28 +23,15 @@ import (
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/cmd/util/sign"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"path"
 )
 
-type signGenerateOptions struct {
-	flags.GlobalFlags
-	path string
-}
-
-func (o *signGenerateOptions) addFlags(cmd *cobra.Command) {
-	viperPrefix := "sign.generate"
-
-	o.GlobalFlags.AddFlags(cmd)
-
-	flags.StringVarWithViper(cmd, &o.path, viperPrefix, "path", "/tmp/baski", "A directory location in which to output the generated keys")
-}
-
 // NewSignGenerateCommand creates a command that allows the signing of an image.
 func NewSignGenerateCommand() *cobra.Command {
-	o := &signGenerateOptions{}
+	o := &flags.SignGenerateOptions{}
+
 	cmd := &cobra.Command{
 		Use:   "generate",
 		Short: "Generate keys",
@@ -53,12 +40,14 @@ Using this command a user can generate the keys required to sign an image.
 It will generate a public and private key that can then be stored securely.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
+			o.SetSignGenerateOptionsFromViper()
+
 			pk, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 			if err != nil {
 				panic(err)
 			}
 
-			dir := viper.GetString("sign.generate.path")
+			dir := o.Path
 
 			err = os.MkdirAll(dir, os.ModeDir)
 			if err != nil {
@@ -90,7 +79,7 @@ It will generate a public and private key that can then be stored securely.
 		},
 	}
 
-	o.addFlags(cmd)
+	o.AddFlags(cmd)
 
 	return cmd
 }

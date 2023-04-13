@@ -1,0 +1,89 @@
+package flags
+
+import (
+	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"strings"
+)
+
+type BuildOptions struct {
+	OpenStackFlags
+
+	Verbose                 bool
+	BuildOS                 string
+	ImagePrefix             string
+	ImageRepo               string
+	CrictlVersion           string
+	CniVersion              string
+	KubeVersion             string
+	ExtraDebs               string
+	AddFalco                bool
+	AddTrivy                bool
+	AddNvidiaSupport        bool
+	NvidiaVersion           string
+	NvidiaBucketEndpoint    string
+	NvidiaBucketName        string
+	NvidiaBucketAccessKey   string
+	NvidiaBucketSecretKey   string
+	NvidiaInstallerLocation string
+	NvidiaTOKLocation       string
+	NvidiaGriddFeatureType  int
+}
+
+func (o *BuildOptions) SetOptionsFromViper() {
+	o.OpenStackFlags.SetSignOptionsFromViper()
+
+	// General Flags
+	o.Verbose = viper.GetBool(fmt.Sprintf("%s.verbose", viperBuildPrefix))
+	o.BuildOS = viper.GetString(fmt.Sprintf("%s.build-os", viperBuildPrefix))
+	o.ImagePrefix = viper.GetString(fmt.Sprintf("%s.image-prefix", viperBuildPrefix))
+	o.ImageRepo = viper.GetString(fmt.Sprintf("%s.image-repo", viperBuildPrefix))
+	o.CrictlVersion = viper.GetString(fmt.Sprintf("%s.crictl-version", viperBuildPrefix))
+	o.CniVersion = viper.GetString(fmt.Sprintf("%s.cni-version", viperBuildPrefix))
+	o.KubeVersion = viper.GetString(fmt.Sprintf("%s.kubernetes-version", viperBuildPrefix))
+	o.ExtraDebs = viper.GetString(fmt.Sprintf("%s.extra-debs", viperBuildPrefix))
+	o.AddFalco = viper.GetBool(fmt.Sprintf("%s.add-falco", viperBuildPrefix))
+	o.AddTrivy = viper.GetBool(fmt.Sprintf("%s.add-trivy", viperBuildPrefix))
+
+	// NVIDIA
+	o.AddNvidiaSupport = viper.GetBool(fmt.Sprintf("%s.enable-nvidia-support", viperBuildPrefix))
+	o.NvidiaVersion = viper.GetString(fmt.Sprintf("%s.nvidia-driver-version", viperBuildPrefix))
+	o.NvidiaBucketEndpoint = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-endpoint", viperBuildPrefix))
+	o.NvidiaBucketName = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-name", viperBuildPrefix))
+	o.NvidiaBucketAccessKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-access", viperBuildPrefix))
+	o.NvidiaBucketSecretKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-secret", viperBuildPrefix))
+	o.NvidiaInstallerLocation = viper.GetString(fmt.Sprintf("%s.nvidia-installer-location", viperBuildPrefix))
+	o.NvidiaTOKLocation = viper.GetString(fmt.Sprintf("%s.nvidia-tok-location", viperBuildPrefix))
+	o.NvidiaGriddFeatureType = viper.GetInt(fmt.Sprintf("%s.nvidia-gridd-feature-type", viperBuildPrefix))
+
+}
+
+func (o *BuildOptions) AddFlags(cmd *cobra.Command, imageBuilderRepo string) {
+	o.OpenStackFlags.AddFlags(cmd, viperOpenStackPrefix)
+	// Build flags
+	StringVarWithViper(cmd, &o.BuildOS, viperBuildPrefix, "build-os", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204")
+	StringVarWithViper(cmd, &o.ImagePrefix, viperBuildPrefix, "image-prefix", "kube", "This will prefix the image with the value provided. Defaults to 'kube' producing an image name of kube-yymmdd-xxxxxxxx")
+	StringVarWithViper(cmd, &o.ImageRepo, viperBuildPrefix, "image-repo", strings.Join([]string{imageBuilderRepo, "git"}, "."), "The imageRepo from which the image builder should be deployed")
+	StringVarWithViper(cmd, &o.CniVersion, viperBuildPrefix, "cni-version", "1.2.0", "The CNI plugins version to include to the built image")
+	StringVarWithViper(cmd, &o.CrictlVersion, viperBuildPrefix, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
+	StringVarWithViper(cmd, &o.KubeVersion, viperBuildPrefix, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
+	StringVarWithViper(cmd, &o.ExtraDebs, viperBuildPrefix, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
+	BoolVarWithViper(cmd, &o.AddFalco, viperBuildPrefix, "add-falco", false, "If enabled, will install Falco onto the image")
+	BoolVarWithViper(cmd, &o.AddTrivy, viperBuildPrefix, "add-trivy", false, "If enabled, will install Trivy onto the image")
+	BoolVarWithViper(cmd, &o.Verbose, viperBuildPrefix, "verbose", false, "Enable verbose output to see the information from packer. Not turning this on will mean the process appears to hang while the image build happens")
+
+	// NVIDIA flags
+	BoolVarWithViper(cmd, &o.AddNvidiaSupport, viperNvidiaPrefix, "enable-nvidia-support", false, "This will configure NVIDIA support in the image")
+	StringVarWithViper(cmd, &o.NvidiaVersion, viperNvidiaPrefix, "nvidia-driver-version", "525.85.05", "The NVIDIA driver version")
+	StringVarWithViper(cmd, &o.NvidiaBucketEndpoint, viperNvidiaPrefix, "nvidia-bucket-endpoint", "", "The endpoint of the bucket from which to download the NVIDIA components")
+	StringVarWithViper(cmd, &o.NvidiaBucketName, viperNvidiaPrefix, "nvidia-bucket-name", "", "The bucket name that the NVIDIA components are uploaded to")
+	StringVarWithViper(cmd, &o.NvidiaBucketAccessKey, viperNvidiaPrefix, "nvidia-bucket-access", "", "The access key used to access the bucket from which to download the NVIDIA components")
+	StringVarWithViper(cmd, &o.NvidiaBucketSecretKey, viperNvidiaPrefix, "nvidia-bucket-secret", "", "The secret key used to access the bucket from which to download the NVIDIA components")
+	StringVarWithViper(cmd, &o.NvidiaInstallerLocation, viperNvidiaPrefix, "nvidia-installer-location", "", "The NVIDIA installer location in the bucket - this must be acquired from NVIDIA and uploaded to your bucket")
+	StringVarWithViper(cmd, &o.NvidiaTOKLocation, viperNvidiaPrefix, "nvidia-tok-location", "", "The NVIDIA .tok file location in the bucket - this must be acquired from NVIDIA and uploaded to your bucket")
+	IntVarWithViper(cmd, &o.NvidiaGriddFeatureType, viperNvidiaPrefix, "nvidia-gridd-feature-type", 4, "The gridd feature type - See https://docs.nvidia.com/license-system/latest/nvidia-license-system-quick-start-guide/index.html#configuring-nls-licensed-client-on-linux for more information")
+
+	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "nvidia-driver-version", "nvidia-bucket-endpoint", "nvidia-bucket-name", "nvidia-bucket-access", "nvidia-bucket-secret", "nvidia-installer-location", "nvidia-tok-location", "nvidia-gridd-feature-type")
+	cmd.MarkFlagsRequiredTogether("cni-version", "crictl-version", "kubernetes-version")
+}

@@ -18,6 +18,7 @@ package ostack
 
 import (
 	"fmt"
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"log"
 	"strconv"
 	"strings"
@@ -135,31 +136,31 @@ func (c *Client) CreateKeypair(keyNamePrefix string) *keypairs.KeyPair {
 }
 
 // CreateServer creates a compute instance in Openstack.
-func (c *Client) CreateServer(keypair *keypairs.KeyPair, imageID, flavorName, networkID string, enableConfigDrive bool) (*servers.Server, string) {
-	trivyVersion := constants.TrivyVersion
+func (c *Client) CreateServer(keypair *keypairs.KeyPair, o *flags.ScanOptions) (*servers.Server, string) {
 	client := createComputeClient(c)
 
-	serverFlavorID := c.GetFlavorIDByName(flavorName)
+	serverFlavorID := c.GetFlavorIDByName(o.FlavorName)
 
 	serverOpts := servers.CreateOpts{
-		Name:           imageID + "-scanner",
+		Name:           o.ImageID + "-scanner",
 		FlavorRef:      serverFlavorID,
-		ImageRef:       imageID,
+		ImageRef:       o.ImageID,
 		SecurityGroups: []string{"default"},
 		UserData: []byte(fmt.Sprintf(`#!/bin/bash
 if ! command -v trivy &> /dev/null; then
 wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_Linux-64bit.tar.gz" | tar xzf -;
+wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_checksums.txt";
 chmod u+x trivy;
 fi
 sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /
-`, trivyVersion, trivyVersion)),
+`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion)),
 		AvailabilityZone: "",
 		Networks: []servers.Network{
 			{
-				UUID: networkID,
+				UUID: o.NetworkID,
 			},
 		},
-		ConfigDrive: &enableConfigDrive,
+		ConfigDrive: &o.AttachConfigDrive,
 		Min:         1,
 		Max:         1,
 	}

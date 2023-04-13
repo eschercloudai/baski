@@ -20,10 +20,12 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/eschercloudai/baski/pkg/file"
 	gitRepo "github.com/eschercloudai/baski/pkg/git"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/trivy"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -44,16 +46,16 @@ import (
 var content embed.FS
 
 // FetchPagesRepo pulls the GitHub pages repo locally for modification.
-func FetchPagesRepo(ghUser, ghToken, ghAccount, ghProject, ghBranch string) (string, *git.Repository, error) {
-	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", ghUser, ghToken, ghAccount, ghProject)
-	pagesDir := filepath.Join("/tmp", ghProject)
+func FetchPagesRepo(o *flags.PublishOptions) (string, *git.Repository, error) {
+	pagesRepo := fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", o.GithubUser, o.GithubToken, o.GithubAccount, o.GithubProject)
+	pagesDir := filepath.Join("/tmp", o.GithubProject)
 
 	err := os.MkdirAll(pagesDir, 0755)
 	if err != nil {
 		return "", nil, err
 	}
 
-	pagesBranch := plumbing.ReferenceName(filepath.Join("refs/heads", ghBranch))
+	pagesBranch := plumbing.ReferenceName(filepath.Join("refs/heads", o.GithubPagesBranch))
 	g, err := gitRepo.GitClone(pagesRepo, pagesDir, pagesBranch)
 	if err != nil {
 		return "", nil, fmt.Errorf("git clone error: %s\n", err)
@@ -136,8 +138,9 @@ func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 	allReports := make(map[int]constants.Year)
 
 	for _, v := range reports {
-		var r constants.ReportData
+		var r trivy.Report
 		file, err := os.ReadFile(v)
+
 		if err != nil {
 			return nil, err
 		}
@@ -177,7 +180,7 @@ func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 
 		if allReports[year].Months[monthName].Reports == nil {
 			m := allReports[year].Months[monthName]
-			m.Reports = make(map[string]constants.ReportData)
+			m.Reports = make(map[string]trivy.Report)
 			m.Reports[reportName] = r
 			allReports[year].Months[monthName] = m
 		} else {

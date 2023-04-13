@@ -12,97 +12,28 @@ flags/config file, and it will do the rest for you.
 
 ⚠️Currently in beta at the moment.
 
-# Prerequisites
+# Supported clouds
 
-### Openstack
+| Cloud Provider                 |
+|--------------------------------|
+| [Openstack](docs/openstack.md) |
 
-It is expected that you have a network and sufficient security groups in place to run this.<br>
-It will not create the network or security groups for you.
+*More clouds could be supported but may not be maintained by EscherCloudAI.*
 
-For example:
-
-```
-openstack network create image-builder
-openstack subnet create image-builder --network image-builder --dhcp --dns-nameserver 1.1.1.1 --subnet-range 10.10.10.0/24 --allocation-pool start=10.10.10.10,end=10.10.10.200
-openstack router create image-builder --external-gateway public1
-openstack router add subnet image-builder image-builder
-
-OS_SG=$(openstack security group list -c ID -c Name -f json | jq '.[]|select(.Name == "default") | .ID')
-openstack security group rule create "${OS_SG}" --ingress --ethertype IPv4 --protocol TCP --dst-port 22 --remote-ip 0.0.0.0/0 --description "Allows SSH access"
-openstack security group rule create "${OS_SG}" --egress --ethertype IPv4 --protocol TCP --dst-port -1 --remote-ip 0.0.0.0/0 --description "Allows TCP Egress"
-openstack security group rule create "${OS_SG}" --egress --ethertype IPv4 --protocol UDP --dst-port -1 --remote-ip 0.0.0.0/0 --description "Allows UDP Egress"
-```
+*EscherCloudAI will put the framework in place to the best of their availability/ability to facilitate more clouds being added.*
 
 # Usage
-Simply run the binary with the following flags (minimum required). See the example below.
-You will also require a source image to reference for the build to succeed.
-You must supply a clouds.yaml file for OpenStack connectivity.
 
-The following is an example of the `baski.yaml` config file. This can be stored in `/tmp/`, `/etc/baski`, `$HOME/.baski` or the "current" directory.
-```yaml
-clouds-file: "~/.config/openstack/clouds.yaml"
-cloud-name: "image-builder"
-build:
-  verbose: true
-  build-os: "ubuntu-2204"
-  image-prefix: "kube"
-  #image-repo: ""
-  network-id: "network-id"
-  source-image: "source-image"
-  flavor-name: "spicy-meatball"
-  use-floating-ip: true
-  floating-ip-network-name: "Internet"
-  attach-config-drive: false
-  image-visibility: "private"
-  crictl-version: "1.25.0"
-  cni-version: "1.2.0"
-  kubernetes-version: "1.25.3"
-  extra-debs: "nfs-common"
-  enable-nvidia-support: true
-  nvidia-driver-version: "525.85.05"
-  nvidia-bucket-endpoint: "S3_ENDPOINT_URL"
-  nvidia-bucket-name: "nvidia"
-  nvidia-bucket-access: "ACCESS_KEY"
-  nvidia-bucket-secret: "SECRET_KEY"
-  nvidia-installer-location: "NVIDIA-Linux-x86_64-525.85.05-grid.run"
-  nvidia-tok-location: "client_configuration_token.tok"
-  gridd-feature-type: "4"
-  image-disk-format: "raw"
-  rootfs-uuid: "ROOT_FS_UUID" # The image in Openstack will be tagged with this. Useful for bare-metal in some use cases.
-scan:
-  image-id: "" # Used for existing images
-  flavor-name: "spicy-meatball"
-  network-id: "network-id"
-  attach-config-drive: false
-  skip-cve-check: false
-  max-severity-score: 7.0 # Minimum severity score to check for
-  max-severity-type: MEDIUM # Minimum severity to check for
-sign:
-  generate:
-    path: "." # Output path of any generated keys
-  vault:
-    url: "https://vault.ENDPOINT/"
-    token: "VAULT_TOKEN"
-  image-id: "" # Used for existing images
-  private-key: "" # Takes precedence over vault.
-  public-key: "" # Takes precedence over vault.
-  digest: "" # Used to verify a digest. Not required for image signing.
-publish:
-  image-id: "" # Used for existing images
-  github:
-    user: "some-user"
-    project: "some-project"
-    token: "123456789"
-    pages-branch: ""
-  results-file: "/tmp/results.json"
-
-```
+Run the binary with a config file or see the help for a list of flags.
+In the [example config](baski-example.yaml), not all fields are required and any fields that are not required are left
+blank - unless the fields are enabled by a bool, for example in the Nvidia options where none are required
+if `enable-nvidia-support` is set to false,
 
 ### More info
 
 For more flags and more info, run `baski --help`
 
-### GitHub Pages
+### GitHub Pages - Deprecated
 
 You will need to set up your target repo for the GitHub Pages in advanced.
 It only requires a `gh-pages` branch for this to work.
@@ -110,9 +41,11 @@ GitHub Pages should be configured to point to a `docs` directory as this is wher
 placed.
 
 # TODO
-* Make this work for more than just Openstack so that it's more useful to the community around the Kubernetes Image Builder?
+
+* Make this work for more than just Openstack so that it's more useful to the community around the Kubernetes Image
+  Builder?
 * Remove dependency on GitHub Pages in the publish section - have this generate an artifact instead
-* Fail on CVE critical discovery and remove any uploaded image
+* Add metrics/telemetry to the process
 * Create all option to allow whole process?
 
 # License

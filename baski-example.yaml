@@ -1,0 +1,60 @@
+cloud:
+  openstack:
+    clouds-file: "~/.config/openstack/clouds.yaml"
+    cloud-name: "image-builder"
+    network-id: "network-id"
+    source-image-id: "source-image"
+    flavor-name: "spicy-meatball"
+    attach-config-drive: false
+    use-floating-ip: true
+    floating-ip-network-name: "Internet"
+    image-visibility: "public"
+    image-disk-format: "raw"
+    volume-type: ""
+    rootfs-uuid: "ROOT_FS_UUID" # The image in Openstack will be tagged with this. Useful for bare-metal in some use cases.
+build:
+  verbose: true
+  build-os: "ubuntu-2204"
+  image-prefix: "kube"
+  image-repo: "https://github.com/kubernetes-sigs/image-builder.git"
+  crictl-version: "1.26.0"
+  cni-version: "1.2.0"
+  kubernetes-version: "1.26.3"
+  extra-debs: "nfs-common"
+  add-trivy: true
+  add-falco: true
+  nvidia:
+    enable-nvidia-support: true
+    nvidia-driver-version: "525.85.05" # Currently used for tagging metadata - may be removed in future in favor of parsing the filename.
+    nvidia-bucket-endpoint: "S3_ENDPOINT_URL"
+    nvidia-bucket-name: "nvidia"
+    nvidia-bucket-access: "ACCESS_KEY"
+    nvidia-bucket-secret: "SECRET_KEY"
+    nvidia-installer-location: "NVIDIA-Linux-x86_64-525.85.05-grid.run"
+    nvidia-tok-location: "client_configuration_token.tok"
+    nvidia-gridd-feature-type: "4"
+scan:
+  image-id: "" # Used for existing images
+  auto-delete-image: false
+  skip-cve-check: false
+  max-severity-score: 7.0 # Minimum severity score to check for
+  max-severity-type: MEDIUM # Minimum severity to check for
+sign:
+  generate:
+    path: "." # Output path of any generated keys
+  vault:
+    url: "https://vault.ENDPOINT/"
+    token: "VAULT_TOKEN"
+  image-id: "" # Used for existing images
+  private-key: "" # Takes precedence over vault.
+  public-key: "" # Takes precedence over vault.
+  digest: "" # Used to verify a digest. Not required for image signing.
+publish:
+  image-id: "" # Used for existing images
+  github:
+    user: "some-user"
+    account: "some-account" # Used for none personal accounts - leave blank if personal-account/project
+    project: "some-project"
+    token: "123456789"
+    pages-branch: ""
+  #results-file: "/tmp/results.json" # Not currently used
