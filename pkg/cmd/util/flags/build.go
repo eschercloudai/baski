@@ -47,15 +47,15 @@ func (o *BuildOptions) SetOptionsFromViper() {
 	o.AddTrivy = viper.GetBool(fmt.Sprintf("%s.add-trivy", viperBuildPrefix))
 
 	// NVIDIA
-	o.AddNvidiaSupport = viper.GetBool(fmt.Sprintf("%s.enable-nvidia-support", viperBuildPrefix))
-	o.NvidiaVersion = viper.GetString(fmt.Sprintf("%s.nvidia-driver-version", viperBuildPrefix))
-	o.NvidiaBucketEndpoint = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-endpoint", viperBuildPrefix))
-	o.NvidiaBucketName = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-name", viperBuildPrefix))
-	o.NvidiaBucketAccessKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-access", viperBuildPrefix))
-	o.NvidiaBucketSecretKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-secret", viperBuildPrefix))
-	o.NvidiaInstallerLocation = viper.GetString(fmt.Sprintf("%s.nvidia-installer-location", viperBuildPrefix))
-	o.NvidiaTOKLocation = viper.GetString(fmt.Sprintf("%s.nvidia-tok-location", viperBuildPrefix))
-	o.NvidiaGriddFeatureType = viper.GetInt(fmt.Sprintf("%s.nvidia-gridd-feature-type", viperBuildPrefix))
+	o.AddNvidiaSupport = viper.GetBool(fmt.Sprintf("%s.enable-nvidia-support", viperNvidiaPrefix))
+	o.NvidiaVersion = viper.GetString(fmt.Sprintf("%s.nvidia-driver-version", viperNvidiaPrefix))
+	o.NvidiaBucketEndpoint = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-endpoint", viperNvidiaPrefix))
+	o.NvidiaBucketName = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-name", viperNvidiaPrefix))
+	o.NvidiaBucketAccessKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-access", viperNvidiaPrefix))
+	o.NvidiaBucketSecretKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-secret", viperNvidiaPrefix))
+	o.NvidiaInstallerLocation = viper.GetString(fmt.Sprintf("%s.nvidia-installer-location", viperNvidiaPrefix))
+	o.NvidiaTOKLocation = viper.GetString(fmt.Sprintf("%s.nvidia-tok-location", viperNvidiaPrefix))
+	o.NvidiaGriddFeatureType = viper.GetInt(fmt.Sprintf("%s.nvidia-gridd-feature-type", viperNvidiaPrefix))
 
 }
 

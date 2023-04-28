@@ -75,6 +75,7 @@ type PackerBuildConfig struct {
 	KubernetesRpmVersion string `json:"kubernetes_rpm_version,omitempty"`
 	KubernetesSeries     string `json:"kubernetes_series,omitempty"`
 	KubernetesDebVersion string `json:"kubernetes_deb_version,omitempty"`
+	NodeCustomRolesPre   string `json:"node_custom_roles_pre,omitempty"`
 	NodeCustomRolesPost  string `json:"node_custom_roles_post,omitempty"`
 	AnsibleUserVars      string `json:"ansible_user_vars,omitempty"`
 	ExtraDebs            string `json:"extra_debs,omitempty"`
@@ -138,7 +139,9 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 	}
 
 	var ansibleUserVars string
+	var securityVars string
 	var customRoles string
+
 	if o.AddNvidiaSupport {
 		customRoles = "nvidia"
 		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%d",
@@ -151,29 +154,28 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 			o.NvidiaGriddFeatureType)
 	}
 
-	if o.AddFalco {
-		customRoles = customRoles + " security"
-		if len(ansibleUserVars) == 0 {
-			ansibleUserVars = "install_falco=true"
-		} else {
-			ansibleUserVars = ansibleUserVars + " install_falco=true"
-		}
-	}
-
-	if o.AddTrivy {
-		if !strings.Contains(customRoles, "security") {
-			customRoles = customRoles + " security"
-		} else {
+	if o.AddFalco || o.AddTrivy {
+		if len(customRoles) == 0 {
 			customRoles = "security"
+		} else {
+			customRoles = customRoles + " security"
+		}
+
+		if o.AddFalco && !o.AddTrivy {
+			securityVars = "install_falco=true"
+		} else if !o.AddFalco && o.AddTrivy {
+			securityVars = "install_trivy=true"
+		} else {
+			securityVars = "install_falco=true install_trivy=true"
 		}
 		if len(ansibleUserVars) == 0 {
-			ansibleUserVars = "install_trivy=true"
+			ansibleUserVars = securityVars
 		} else {
-			ansibleUserVars = ansibleUserVars + " install_trivy=true"
+			ansibleUserVars = ansibleUserVars + " " + securityVars
 		}
 	}
 
-	buildConfig.NodeCustomRolesPost = customRoles
+	buildConfig.NodeCustomRolesPre = customRoles
 	buildConfig.AnsibleUserVars = ansibleUserVars
 	buildConfig.ImageName = generateImageName(o.ImagePrefix)
 
