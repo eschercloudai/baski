@@ -7,8 +7,7 @@ import (
 )
 
 type ScanOptions struct {
-	OpenStackCoreFlags
-	OpenStackInstanceFlags
+	OpenStackFlags
 
 	ImageID          string
 	AutoDeleteImage  bool
@@ -18,8 +17,7 @@ type ScanOptions struct {
 }
 
 func (o *ScanOptions) SetOptionsFromViper() {
-	o.OpenStackCoreFlags.SetSignOptionsFromViper()
-	o.OpenStackInstanceFlags.SetSignOptionsFromViper()
+	o.OpenStackFlags.SetSignOptionsFromViper()
 
 	o.ImageID = viper.GetString(fmt.Sprintf("%s.image-id", viperScanPrefix))
 	o.AutoDeleteImage = viper.GetBool(fmt.Sprintf("%s.auto-delete-image", viperScanPrefix))
@@ -29,8 +27,7 @@ func (o *ScanOptions) SetOptionsFromViper() {
 }
 
 func (o *ScanOptions) AddFlags(cmd *cobra.Command) {
-	o.OpenStackCoreFlags.AddFlags(cmd, viperOpenStackPrefix)
-	o.OpenStackInstanceFlags.AddFlags(cmd, viperOpenStackPrefix)
+	o.OpenStackFlags.AddFlags(cmd, viperOpenStackPrefix)
 
 	StringVarWithViper(cmd, &o.ImageID, viperScanPrefix, "image-id", "", "The ID of the image to scan")
 	BoolVarWithViper(cmd, &o.AutoDeleteImage, viperScanPrefix, "auto-delete-image", false, "If true, the image will be deleted if a vulnerability check does not succeed - recommended when building new images.")

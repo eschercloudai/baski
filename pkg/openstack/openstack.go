@@ -19,11 +19,6 @@ package ostack
 import (
 	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	"log"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -32,6 +27,9 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/flavors"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"log"
+	"strconv"
+	"strings"
 )
 
 // Client contains the Env vars of the program as well as the Provider and any EndpointOptions.
@@ -120,7 +118,7 @@ func createComputeClient(client *Client) *gophercloud.ServiceClient {
 }
 
 // CreateKeypair creates a new KeyPair in Openstack.
-func (c *Client) CreateKeypair(keyNamePrefix string) *keypairs.KeyPair {
+func (c *Client) CreateKeypair(keyNamePrefix string) (*keypairs.KeyPair, error) {
 	client := createComputeClient(c)
 	client.Microversion = "2.2"
 
@@ -129,14 +127,24 @@ func (c *Client) CreateKeypair(keyNamePrefix string) *keypairs.KeyPair {
 		Type: "ssh",
 	}).Extract()
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
-	return kp
+	return kp, nil
+}
+
+// RemoveKeypair will delete a Keypair from Openstack.
+func (c *Client) RemoveKeypair(keyName string) {
+	log.Println("removing keypair.")
+	client := createComputeClient(c)
+	res := keypairs.Delete(client, keyName, keypairs.DeleteOpts{})
+	if res.Err != nil {
+		log.Println(res.Err)
+	}
 }
 
 // CreateServer creates a compute instance in Openstack.
-func (c *Client) CreateServer(keypair *keypairs.KeyPair, o *flags.ScanOptions) (*servers.Server, string) {
+func (c *Client) CreateServer(keypair *keypairs.KeyPair, o *flags.ScanOptions, fip string) (*servers.Server, error) {
 	client := createComputeClient(c)
 
 	serverFlavorID := c.GetFlavorIDByName(o.FlavorName)
@@ -172,14 +180,41 @@ sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /
 
 	server, err := servers.Create(client, createOpts).Extract()
 	if err != nil {
-		c.RemoveKeypair(keypair.Name)
-		panic(err)
+		return nil, err
 	}
 
-	//TODO: If no IP is available, allocate one and attach. If none available to allocate, fail.
-	freeIP := attachFloatingIP(client, server.ID)
+	return server, nil
+}
 
-	return server, freeIP
+// GetServerStatus gets the status of a server
+func (c *Client) GetServerStatus(sid string) bool {
+	client := createComputeClient(c)
+
+	state, err := servers.Get(client, sid).Extract()
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+	if state.Status != "ACTIVE" {
+		return false
+	}
+
+	return true
+}
+
+// AttachIP attaches the provided IP to the provided server.
+func (c *Client) AttachIP(serverID, fip string) error {
+	client := createComputeClient(c)
+
+	associateOpts := floatingips.AssociateOpts{
+		FloatingIP: fip,
+	}
+
+	err := floatingips.AssociateInstance(client, serverID, associateOpts).ExtractErr()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // RemoveServer will delete a Server from Openstack.
@@ -188,16 +223,6 @@ func (c *Client) RemoveServer(serverID string) {
 	client := createComputeClient(c)
 	res := servers.Delete(client, serverID)
 
-	if res.Err != nil {
-		log.Println(res.Err)
-	}
-}
-
-// RemoveKeypair will delete a Keypair from Openstack.
-func (c *Client) RemoveKeypair(keyName string) {
-	log.Println("removing keypair.")
-	client := createComputeClient(c)
-	res := keypairs.Delete(client, keyName, keypairs.DeleteOpts{})
 	if res.Err != nil {
 		log.Println(res.Err)
 	}
@@ -229,45 +254,27 @@ func (c *Client) GetFlavorIDByName(name string) string {
 	return ""
 }
 
-// attachFloatingIP will find the first free IP available and attach it to the instance.
-// If it cannot find one, it will error.
-func attachFloatingIP(client *gophercloud.ServiceClient, serverID string) string {
-	// Floating IP assignment
-	allIPsPages, err := floatingips.List(client).AllPages()
+// GetFloatingIP will create a new FIP.
+func (c *Client) GetFloatingIP(ipPool string) (*floatingips.FloatingIP, error) {
+	client := createComputeClient(c)
+	createOpts := floatingips.CreateOpts{
+		Pool: ipPool,
+	}
+
+	fip, err := floatingips.Create(client, createOpts).Extract()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	allFloatingIPs, err := floatingips.ExtractFloatingIPs(allIPsPages)
-	if err != nil {
-		panic(err)
+	return fip, nil
+}
+
+// RemoveFIP will delete a Floating IP from Openstack.
+func (c *Client) RemoveFIP(fip *floatingips.FloatingIP) {
+	log.Println("removing floating IP.")
+	client := createComputeClient(c)
+	res := floatingips.Delete(client, fip.ID)
+	if res.Err != nil {
+		log.Println(res.Err)
 	}
-
-	var freeIP string
-
-	for _, fip := range allFloatingIPs {
-		if fip.InstanceID == "" {
-			freeIP = fip.IP
-			break
-		}
-	}
-
-	if freeIP == "" {
-		panic("couldn't find a free IP")
-	}
-
-	log.Println("waiting for the instance to come up before attaching an IP")
-	time.Sleep(15 * time.Second)
-	log.Printf("attaching IP %s to the instance %s", freeIP, serverID)
-
-	associateOpts := floatingips.AssociateOpts{
-		FloatingIP: freeIP,
-	}
-
-	err = floatingips.AssociateInstance(client, serverID, associateOpts).ExtractErr()
-	if err != nil {
-		panic(err)
-	}
-
-	return freeIP
 }
