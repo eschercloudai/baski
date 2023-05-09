@@ -19,6 +19,7 @@ package scan
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"log"
 	"os"
@@ -69,10 +70,10 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 				panic(err)
 			}
 
-			fip, err := osClient.GetFloatingIP()
+			fmt.Println(strings.ToLower(o.FloatingIPNetworkName))
+			fip, err := osClient.GetFloatingIP(strings.ToLower(o.FloatingIPNetworkName))
 			if err != nil {
 				osClient.RemoveKeypair(kp.Name)
-				osClient.RemoveFIP(fip)
 				panic(err)
 			}
 

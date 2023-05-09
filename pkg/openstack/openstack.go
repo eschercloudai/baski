@@ -255,10 +255,10 @@ func (c *Client) GetFlavorIDByName(name string) string {
 }
 
 // GetFloatingIP will create a new FIP.
-func (c *Client) GetFloatingIP() (*floatingips.FloatingIP, error) {
+func (c *Client) GetFloatingIP(ipPool string) (*floatingips.FloatingIP, error) {
 	client := createComputeClient(c)
 	createOpts := floatingips.CreateOpts{
-		Pool: "internet", // TODO: This should be a variable really but for now let's just presume this because, you know...
+		Pool: ipPool,
 	}
 
 	fip, err := floatingips.Create(client, createOpts).Extract()
