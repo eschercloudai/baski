@@ -9,6 +9,7 @@ require (
 	github.com/gophercloud/utils v0.0.0-20230330070308-5bd5e1d608f8
 	github.com/hashicorp/vault/api v1.9.0
 	github.com/pkg/sftp v1.13.5
+	github.com/rhnvrm/simples3 v0.8.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	golang.org/x/crypto v0.8.0

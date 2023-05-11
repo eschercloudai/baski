@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/eschercloudai/baski/pkg/file"
 	gitRepo "github.com/eschercloudai/baski/pkg/git"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
@@ -133,9 +132,9 @@ func GetImageData(client *ostack.Client, imgID string) *Image {
 }
 
 // ParseReports turns all json files into structs to be used in templating for the static site.
-func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) {
+func ParseReports(reports []string, img *Image) (map[int]trivy.Year, error) {
 	log.Println("parsing reports")
-	allReports := make(map[int]constants.Year)
+	allReports := make(map[int]trivy.Year)
 
 	for _, v := range reports {
 		var r trivy.Report
@@ -163,13 +162,13 @@ func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 		monthName := time.Month(month).String()
 
 		if _, ok := allReports[year]; !ok {
-			allReports[year] = constants.Year{}
+			allReports[year] = trivy.Year{}
 		}
 
 		if _, ok := allReports[year].Months[monthName]; !ok {
 			y := allReports[year]
-			y.Months = make(map[string]constants.Month)
-			y.Months[monthName] = constants.Month{}
+			y.Months = make(map[string]trivy.Month)
+			y.Months[monthName] = trivy.Month{}
 			allReports[year] = y
 		}
 
@@ -191,7 +190,7 @@ func ParseReports(reports []string, img *Image) (map[int]constants.Year, error) 
 }
 
 // BuildPages will generate all the pages required for GitHub Pages.
-func BuildPages(projectDir string, allReports map[int]constants.Year) error {
+func BuildPages(projectDir string, allReports map[int]trivy.Year) error {
 	log.Println("building pages")
 	baseDir := strings.Join([]string{projectDir, "docs"}, "/")
 	err := GenerateHTMLTemplate(baseDir, allReports)
@@ -208,7 +207,7 @@ func BuildPages(projectDir string, allReports map[int]constants.Year) error {
 }
 
 // GenerateHTMLTemplate creates the index.html page for the frontend website which displays the CVE data.
-func GenerateHTMLTemplate(baseDir string, allReports map[int]constants.Year) error {
+func GenerateHTMLTemplate(baseDir string, allReports map[int]trivy.Year) error {
 	log.Println("generating index.html")
 	// HTML template
 	htmlTarget := strings.Join([]string{baseDir, "index.html"}, "/")
@@ -234,7 +233,7 @@ func GenerateHTMLTemplate(baseDir string, allReports map[int]constants.Year) err
 }
 
 // GenerateJSTemplates creates all the Javscript files for the frontend website.
-func GenerateJSTemplates(baseDir string, allReports map[int]constants.Year) error {
+func GenerateJSTemplates(baseDir string, allReports map[int]trivy.Year) error {
 	jsDir := filepath.Join(baseDir, "js")
 
 	err := os.MkdirAll(jsDir, 0755)

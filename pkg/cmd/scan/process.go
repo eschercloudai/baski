@@ -110,6 +110,7 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) []trivy.S
 			if checkSeverityThresholdPassed(v.Severity, v.Cvss, checkScore, checkSeverity) {
 				vuln := trivy.ScanFailedReport{
 					VulnerabilityID:  v.VulnerabilityID,
+					Description:      v.Description,
 					PkgName:          v.PkgName,
 					InstalledVersion: v.InstalledVersion,
 					FixedVersion:     v.FixedVersion,

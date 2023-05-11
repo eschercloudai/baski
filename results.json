@@ -1,0 +1,362 @@
+[
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-cloud-tools-5.15.0-52",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-cloud-tools-5.15.0-52-generic",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-cloud-tools-common",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-headers-5.15.0-52",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-headers-5.15.0-52-generic",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-libc-dev",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-modules-5.15.0-52-generic",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-tools-5.15.0-52",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-tools-5.15.0-52-generic",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-42896",
+    "Description": "There are use-after-free vulnerabilities in the Linux kernel's net/bluetooth/l2cap_core.c's l2cap_connect and l2cap_le_connect_req functions which may allow code execution and leaking kernel memory (respectively) remotely via Bluetooth. A remote attacker could execute code leaking kernel memory via Bluetooth if within proximity of the victim. We recommend upgrading past commit https://www.google.com/url https://github.com/torvalds/linux/commit/711f8c3fb3db61897080468586b970c87c61d9e4 https://www.google.com/url",
+    "PkgName": "linux-tools-common",
+    "InstalledVersion": "5.15.0-52.58",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.15.0-58.64"
+  },
+  {
+    "VulnerabilityID": "CVE-2020-14343",
+    "Description": "A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. This flaw allows an attacker to execute arbitrary code on the system by abusing the python/object/new constructor. This flaw is due to an incomplete fix for CVE-2020-1747.",
+    "PkgName": "PyYAML",
+    "InstalledVersion": "5.3.1",
+    "Severity": "CRITICAL",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 9.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.4"
+  },
+  {
+    "VulnerabilityID": "CVE-2020-14343",
+    "Description": "A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vulnerable to this flaw. This flaw allows an attacker to execute arbitrary code on the system by abusing the python/object/new constructor. This flaw is due to an incomplete fix for CVE-2020-1747.",
+    "PkgName": "PyYAML",
+    "InstalledVersion": "5.3.1",
+    "Severity": "CRITICAL",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 9.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "5.4"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-1996",
+    "Description": "Authorization Bypass Through User-Controlled Key in GitHub repository emicklei/go-restful prior to v3.8.0.",
+    "PkgName": "github.com/emicklei/go-restful",
+    "InstalledVersion": "v2.9.5+incompatible",
+    "Severity": "CRITICAL",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 9.1
+      },
+      "redhat": null
+    },
+    "FixedVersion": "2.16.0"
+  },
+  {
+    "VulnerabilityID": "CVE-2023-28840",
+    "Description": "Moby is an open source container framework developed by Docker Inc. that is distributed as Docker, Mirantis Container Runtime, and various other downstream projects/products. The Moby daemon component (`dockerd`), which is developed as moby/moby, is commonly referred to as *Docker*. Swarm Mode, which is compiled in and delivered by default in dockerd and is thus present in most major Moby downstreams, is a simple, built-in container orchestrator that is implemented through a combination of SwarmKit and supporting network code. The overlay network driver is a core feature of Swarm Mode, providing isolated virtual LANs that allow communication between containers and services across the cluster. This driver is an implementation/user of VXLAN, which encapsulates link-layer (Ethernet) frames in UDP datagrams that tag the frame with a VXLAN Network ID (VNI) that identifies the originating overlay network. In addition, the overlay network driver supports an optional, off-by-default encrypted mode, which is especially useful when VXLAN packets traverses an untrusted network between nodes. Encrypted overlay networks function by encapsulating the VXLAN datagrams through the use of the IPsec Encapsulating Security Payload protocol in Transport mode. By deploying IPSec encapsulation, encrypted overlay networks gain the additional properties of source authentication through cryptographic proof, data integrity through check-summing, and confidentiality through encryption. When setting an endpoint up on an encrypted overlay network, Moby installs three iptables (Linux kernel firewall) rules that enforce both incoming and outgoing IPSec. These rules rely on the u32 iptables extension provided by the xt_u32 kernel module to directly filter on a VXLAN packet's VNI field, so that IPSec guarantees can be enforced on encrypted overlay networks without interfering with other overlay networks or other users of VXLAN. Two iptables rules serve to filter incoming VXLAN datagrams with a VNI that corresponds to an encrypted network and discards unencrypted datagrams. The rules are appended to the end of the INPUT filter chain, following any rules that have been previously set by the system administrator. Administrator-set rules take precedence over the rules Moby sets to discard unencrypted VXLAN datagrams, which can potentially admit unencrypted datagrams that should have been discarded. The injection of arbitrary Ethernet frames can enable a Denial of Service attack. A sophisticated attacker may be able to establish a UDP or TCP connection by way of the container’s outbound gateway that would otherwise be blocked by a stateful firewall, or carry out other escalations beyond simple injection by smuggling packets into the overlay network. Patches are available in Moby releases 23.0.3 and 20.10.24. As Mirantis Container Runtime's 20.10 releases are numbered differently, users of that platform should update to 20.10.16. Some workarounds are available. Close the VXLAN port (by default, UDP port 4789) to incoming traffic at the Internet boundary to prevent all VXLAN packet injection, and/or ensure that the `xt_u32` kernel module is available on all nodes of the Swarm cluster.",
+    "PkgName": "github.com/docker/docker",
+    "InstalledVersion": "v20.10.0-beta1.0.20201108103107-c7109494fe65+incompatible",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.7
+      },
+      "redhat": null
+    },
+    "FixedVersion": "20.10.24, 23.0.3"
+  },
+  {
+    "VulnerabilityID": "CVE-2021-3121",
+    "Description": "An issue was discovered in GoGo Protobuf before 1.3.2. plugin/unmarshal/unmarshal.go lacks certain index validation, aka the \"skippy peanut butter\" issue.",
+    "PkgName": "github.com/gogo/protobuf",
+    "InstalledVersion": "v1.3.1",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.6
+      },
+      "redhat": null
+    },
+    "FixedVersion": "1.3.2"
+  },
+  {
+    "VulnerabilityID": "CVE-2021-25741",
+    "Description": "A security issue was discovered in Kubernetes where a user may be able to create a container with subpath volume mounts to access files \u0026 directories outside of the volume, including on the host filesystem.",
+    "PkgName": "k8s.io/kubernetes",
+    "InstalledVersion": "v1.20.0",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.1
+      },
+      "redhat": null
+    },
+    "FixedVersion": "1.19.15, 1.20.11, 1.21.5, 1.22.2"
+  },
+  {
+    "VulnerabilityID": "CVE-2022-3294",
+    "Description": "Users may have access to secure endpoints in the control plane network. Kubernetes clusters are only affected if an untrusted user can modify Node objects and send proxy requests to them. Kubernetes supports node proxying, which allows clients of kube-apiserver to access endpoints of a Kubelet to establish connections to Pods, retrieve container logs, and more. While Kubernetes already validates the proxying address for Nodes, a bug in kube-apiserver made it possible to bypass this validation. Bypassing this validation could allow authenticated requests destined for Nodes to to the API server's private network.",
+    "PkgName": "k8s.io/kubernetes",
+    "InstalledVersion": "v1.20.0",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.8
+      },
+      "redhat": null
+    },
+    "FixedVersion": "1.22.16, 1.23.14, 1.24.8, 1.25.4"
+  },
+  {
+    "VulnerabilityID": "CVE-2021-43816",
+    "Description": "containerd is an open source container runtime. On installations using SELinux, such as EL8 (CentOS, RHEL), Fedora, or SUSE MicroOS, with containerd since v1.5.0-beta.0 as the backing container runtime interface (CRI), an unprivileged pod scheduled to the node may bind mount, via hostPath volume, any privileged, regular file on disk for complete read/write access (sans delete). Such is achieved by placing the in-container location of the hostPath volume mount at either `/etc/hosts`, `/etc/hostname`, or `/etc/resolv.conf`. These locations are being relabeled indiscriminately to match the container process-label which effectively elevates permissions for savvy containers that would not normally be able to access privileged host files. This issue has been resolved in version 1.5.9. Users are advised to upgrade as soon as possible.",
+    "PkgName": "github.com/containerd/containerd",
+    "InstalledVersion": "v1.5.0",
+    "Severity": "CRITICAL",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 9.1
+      },
+      "redhat": null
+    },
+    "FixedVersion": "1.5.9"
+  },
+  {
+    "VulnerabilityID": "CVE-2021-30465",
+    "Description": "runc before 1.0.0-rc95 allows a Container Filesystem Breakout via Directory Traversal. To exploit the vulnerability, an attacker must be able to create multiple containers with a fairly specific mount configuration. The problem occurs via a symlink-exchange attack that relies on a race condition.",
+    "PkgName": "github.com/opencontainers/runc",
+    "InstalledVersion": "v1.0.0-rc94",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.5
+      },
+      "redhat": null
+    },
+    "FixedVersion": "1.0.0-rc95"
+  },
+  {
+    "VulnerabilityID": "CVE-2023-28840",
+    "Description": "Moby is an open source container framework developed by Docker Inc. that is distributed as Docker, Mirantis Container Runtime, and various other downstream projects/products. The Moby daemon component (`dockerd`), which is developed as moby/moby, is commonly referred to as *Docker*. Swarm Mode, which is compiled in and delivered by default in dockerd and is thus present in most major Moby downstreams, is a simple, built-in container orchestrator that is implemented through a combination of SwarmKit and supporting network code. The overlay network driver is a core feature of Swarm Mode, providing isolated virtual LANs that allow communication between containers and services across the cluster. This driver is an implementation/user of VXLAN, which encapsulates link-layer (Ethernet) frames in UDP datagrams that tag the frame with a VXLAN Network ID (VNI) that identifies the originating overlay network. In addition, the overlay network driver supports an optional, off-by-default encrypted mode, which is especially useful when VXLAN packets traverses an untrusted network between nodes. Encrypted overlay networks function by encapsulating the VXLAN datagrams through the use of the IPsec Encapsulating Security Payload protocol in Transport mode. By deploying IPSec encapsulation, encrypted overlay networks gain the additional properties of source authentication through cryptographic proof, data integrity through check-summing, and confidentiality through encryption. When setting an endpoint up on an encrypted overlay network, Moby installs three iptables (Linux kernel firewall) rules that enforce both incoming and outgoing IPSec. These rules rely on the u32 iptables extension provided by the xt_u32 kernel module to directly filter on a VXLAN packet's VNI field, so that IPSec guarantees can be enforced on encrypted overlay networks without interfering with other overlay networks or other users of VXLAN. Two iptables rules serve to filter incoming VXLAN datagrams with a VNI that corresponds to an encrypted network and discards unencrypted datagrams. The rules are appended to the end of the INPUT filter chain, following any rules that have been previously set by the system administrator. Administrator-set rules take precedence over the rules Moby sets to discard unencrypted VXLAN datagrams, which can potentially admit unencrypted datagrams that should have been discarded. The injection of arbitrary Ethernet frames can enable a Denial of Service attack. A sophisticated attacker may be able to establish a UDP or TCP connection by way of the container’s outbound gateway that would otherwise be blocked by a stateful firewall, or carry out other escalations beyond simple injection by smuggling packets into the overlay network. Patches are available in Moby releases 23.0.3 and 20.10.24. As Mirantis Container Runtime's 20.10 releases are numbered differently, users of that platform should update to 20.10.16. Some workarounds are available. Close the VXLAN port (by default, UDP port 4789) to incoming traffic at the Internet boundary to prevent all VXLAN packet injection, and/or ensure that the `xt_u32` kernel module is available on all nodes of the Swarm cluster.",
+    "PkgName": "github.com/docker/docker",
+    "InstalledVersion": "v23.0.1+incompatible",
+    "Severity": "HIGH",
+    "CVSS": {
+      "ghsa": null,
+      "nvd": {
+        "V2Vector": "",
+        "V3Vector": "",
+        "V2Score": 0,
+        "V3Score": 8.7
+      },
+      "redhat": null
+    },
+    "FixedVersion": "20.10.24, 23.0.3"
+  }
+]

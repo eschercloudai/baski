@@ -16,10 +16,6 @@ limitations under the License.
 
 package constants
 
-import (
-	"github.com/eschercloudai/baski/pkg/trivy"
-)
-
 var (
 	Version     = "v0.1.0-beta.1"
 	SupportedOS = []string{
@@ -28,13 +24,3 @@ var (
 	}
 	TrivyVersion = "0.38.3"
 )
-
-// Year is used in reports parsing. It is the top level and contains multiple Month(s).
-type Year struct {
-	Months map[string]Month
-}
-
-// Month is used in reports parsing. It is contained within a Year and contains multiple trivy.Report(s).
-type Month struct {
-	Reports map[string]trivy.Report
-}

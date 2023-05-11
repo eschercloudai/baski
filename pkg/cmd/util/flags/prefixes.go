@@ -4,10 +4,11 @@ import "fmt"
 
 const (
 	viperCloudPrefix   = "cloud"
+	viperS3Prefix      = "s3"
 	viperBuildPrefix   = "build"
 	viperScanPrefix    = "scan"
-	viperPublishPrefix = "publish"
 	viperSignPrefix    = "sign"
+	viperPublishPrefix = "publish"
 )
 
 var (

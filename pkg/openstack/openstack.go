@@ -17,9 +17,7 @@ limitations under the License.
 package ostack
 
 import (
-	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
@@ -144,24 +142,17 @@ func (c *Client) RemoveKeypair(keyName string) {
 }
 
 // CreateServer creates a compute instance in Openstack.
-func (c *Client) CreateServer(keypair *keypairs.KeyPair, o *flags.ScanOptions, fip string) (*servers.Server, error) {
+func (c *Client) CreateServer(keypair *keypairs.KeyPair, o *flags.ScanOptions, userData []byte) (*servers.Server, error) {
 	client := createComputeClient(c)
 
 	serverFlavorID := c.GetFlavorIDByName(o.FlavorName)
 
 	serverOpts := servers.CreateOpts{
-		Name:           o.ImageID + "-scanner",
-		FlavorRef:      serverFlavorID,
-		ImageRef:       o.ImageID,
-		SecurityGroups: []string{"default"},
-		UserData: []byte(fmt.Sprintf(`#!/bin/bash
-if ! command -v trivy &> /dev/null; then
-wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_Linux-64bit.tar.gz" | tar xzf -;
-wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_checksums.txt";
-chmod u+x trivy;
-fi
-sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /
-`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion)),
+		Name:             o.ImageID + "-scanner",
+		FlavorRef:        serverFlavorID,
+		ImageRef:         o.ImageID,
+		SecurityGroups:   []string{"default"},
+		UserData:         userData,
 		AvailabilityZone: "",
 		Networks: []servers.Network{
 			{

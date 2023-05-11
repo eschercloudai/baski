@@ -19,16 +19,14 @@ package scan
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
+	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/trivy"
+	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"strings"
 	"time"
-
-	ostack "github.com/eschercloudai/baski/pkg/openstack"
-	"github.com/eschercloudai/baski/pkg/trivy"
-	"github.com/spf13/cobra"
 )
 
 // NewScanCommand creates a command that allows the scanning of an image.
@@ -70,14 +68,17 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 				panic(err)
 			}
 
-			fmt.Println(strings.ToLower(o.FloatingIPNetworkName))
 			fip, err := osClient.GetFloatingIP(strings.ToLower(o.FloatingIPNetworkName))
 			if err != nil {
 				osClient.RemoveKeypair(kp.Name)
 				panic(err)
 			}
 
-			server, err := osClient.CreateServer(kp, o, fip.IP)
+			trivyIgnoreFile := trivy.GenerateTrivyFile(o)
+
+			userData := trivy.GenerateUserData(trivyIgnoreFile)
+
+			server, err := osClient.CreateServer(kp, o, userData)
 			if err != nil {
 				osClient.RemoveKeypair(kp.Name)
 				osClient.RemoveFIP(fip)
@@ -120,7 +121,7 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 					var j []byte
 					j, err = json.Marshal(scoreCheck)
 					if err != nil {
-						log.Fatalln("couldn't marshall vulnerability data")
+						log.Fatalln("couldn't marshall vulnerability trivyIgnoreFile")
 					}
 
 					// empty out the results json - we don't need the original since threshold vulnerabilities were found.
@@ -132,7 +133,7 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 					// write the vulnerabilities into the results file
 					err = os.WriteFile("/tmp/results.json", j, os.FileMode(0644))
 					if err != nil {
-						log.Fatalln("couldn't write vulnerability data to file")
+						log.Fatalln("couldn't write vulnerability trivyIgnoreFile to file")
 					}
 
 					log.Fatalln("Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/results.json' for further information on this.")

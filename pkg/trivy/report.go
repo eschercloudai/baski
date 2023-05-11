@@ -62,6 +62,7 @@ func parseSeverity(val Severity) int {
 
 type ScanFailedReport struct {
 	VulnerabilityID  string `json:"VulnerabilityID"`
+	Description      string `json:"Description"`
 	PkgName          string `json:"PkgName"`
 	InstalledVersion string `json:"InstalledVersion"`
 	Severity         string `json:"Severity"`
@@ -170,4 +171,14 @@ type Secrets struct {
 		Digest string `json:"Digest"`
 		DiffID string `json:"DiffID"`
 	} `json:"Layer"`
+}
+
+// Month is used in reports parsing. It is contained within a Year and contains multiple trivy.Report(s).
+type Month struct {
+	Reports map[string]Report
+}
+
+// Year is used in reports parsing. It is the top level and contains multiple Month(s).
+type Year struct {
+	Months map[string]Month
 }

@@ -40,7 +40,7 @@ Using this command a user can generate the keys required to sign an image.
 It will generate a public and private key that can then be stored securely.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			o.SetSignGenerateOptionsFromViper()
+			o.SetOptionsFromViper()
 
 			pk, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 			if err != nil {
