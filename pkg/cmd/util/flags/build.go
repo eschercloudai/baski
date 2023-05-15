@@ -9,6 +9,7 @@ import (
 
 type BuildOptions struct {
 	OpenStackFlags
+	S3Flags
 
 	Verbose                 bool
 	BuildOS                 string
@@ -22,17 +23,14 @@ type BuildOptions struct {
 	AddTrivy                bool
 	AddNvidiaSupport        bool
 	NvidiaVersion           string
-	NvidiaBucketEndpoint    string
-	NvidiaBucketName        string
-	NvidiaBucketAccessKey   string
-	NvidiaBucketSecretKey   string
+	NvidiaBucket            string
 	NvidiaInstallerLocation string
 	NvidiaTOKLocation       string
 	NvidiaGriddFeatureType  int
 }
 
 func (o *BuildOptions) SetOptionsFromViper() {
-	o.OpenStackFlags.SetSignOptionsFromViper()
+	o.OpenStackFlags.SetOptionsFromViper()
 
 	// General Flags
 	o.Verbose = viper.GetBool(fmt.Sprintf("%s.verbose", viperBuildPrefix))
@@ -49,10 +47,7 @@ func (o *BuildOptions) SetOptionsFromViper() {
 	// NVIDIA
 	o.AddNvidiaSupport = viper.GetBool(fmt.Sprintf("%s.enable-nvidia-support", viperNvidiaPrefix))
 	o.NvidiaVersion = viper.GetString(fmt.Sprintf("%s.nvidia-driver-version", viperNvidiaPrefix))
-	o.NvidiaBucketEndpoint = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-endpoint", viperNvidiaPrefix))
-	o.NvidiaBucketName = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-name", viperNvidiaPrefix))
-	o.NvidiaBucketAccessKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-access", viperNvidiaPrefix))
-	o.NvidiaBucketSecretKey = viper.GetString(fmt.Sprintf("%s.nvidia-bucket-secret", viperNvidiaPrefix))
+	o.NvidiaBucket = viper.GetString(fmt.Sprintf("%s.nvidia-bucket", viperNvidiaPrefix))
 	o.NvidiaInstallerLocation = viper.GetString(fmt.Sprintf("%s.nvidia-installer-location", viperNvidiaPrefix))
 	o.NvidiaTOKLocation = viper.GetString(fmt.Sprintf("%s.nvidia-tok-location", viperNvidiaPrefix))
 	o.NvidiaGriddFeatureType = viper.GetInt(fmt.Sprintf("%s.nvidia-gridd-feature-type", viperNvidiaPrefix))
@@ -76,14 +71,11 @@ func (o *BuildOptions) AddFlags(cmd *cobra.Command, imageBuilderRepo string) {
 	// NVIDIA flags
 	BoolVarWithViper(cmd, &o.AddNvidiaSupport, viperNvidiaPrefix, "enable-nvidia-support", false, "This will configure NVIDIA support in the image")
 	StringVarWithViper(cmd, &o.NvidiaVersion, viperNvidiaPrefix, "nvidia-driver-version", "525.85.05", "The NVIDIA driver version")
-	StringVarWithViper(cmd, &o.NvidiaBucketEndpoint, viperNvidiaPrefix, "nvidia-bucket-endpoint", "", "The endpoint of the bucket from which to download the NVIDIA components")
-	StringVarWithViper(cmd, &o.NvidiaBucketName, viperNvidiaPrefix, "nvidia-bucket-name", "", "The bucket name that the NVIDIA components are uploaded to")
-	StringVarWithViper(cmd, &o.NvidiaBucketAccessKey, viperNvidiaPrefix, "nvidia-bucket-access", "", "The access key used to access the bucket from which to download the NVIDIA components")
-	StringVarWithViper(cmd, &o.NvidiaBucketSecretKey, viperNvidiaPrefix, "nvidia-bucket-secret", "", "The secret key used to access the bucket from which to download the NVIDIA components")
+	StringVarWithViper(cmd, &o.NvidiaBucket, viperNvidiaPrefix, "nvidia-bucket", "", "The bucket name in which the NVIDIA components are stored")
 	StringVarWithViper(cmd, &o.NvidiaInstallerLocation, viperNvidiaPrefix, "nvidia-installer-location", "", "The NVIDIA installer location in the bucket - this must be acquired from NVIDIA and uploaded to your bucket")
 	StringVarWithViper(cmd, &o.NvidiaTOKLocation, viperNvidiaPrefix, "nvidia-tok-location", "", "The NVIDIA .tok file location in the bucket - this must be acquired from NVIDIA and uploaded to your bucket")
 	IntVarWithViper(cmd, &o.NvidiaGriddFeatureType, viperNvidiaPrefix, "nvidia-gridd-feature-type", 4, "The gridd feature type - See https://docs.nvidia.com/license-system/latest/nvidia-license-system-quick-start-guide/index.html#configuring-nls-licensed-client-on-linux for more information")
 
-	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "nvidia-driver-version", "nvidia-bucket-endpoint", "nvidia-bucket-name", "nvidia-bucket-access", "nvidia-bucket-secret", "nvidia-installer-location", "nvidia-tok-location", "nvidia-gridd-feature-type")
+	cmd.MarkFlagsRequiredTogether("enable-nvidia-support", "nvidia-driver-version", "nvidia-bucket", "nvidia-installer-location", "nvidia-tok-location", "nvidia-gridd-feature-type")
 	cmd.MarkFlagsRequiredTogether("cni-version", "crictl-version", "kubernetes-version")
 }

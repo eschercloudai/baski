@@ -35,7 +35,7 @@ func NewSignImageCommand() *cobra.Command {
 		Short: "Sign image",
 		Long: `Sign image.
 Signing an image allows a user or system to validate that any images being used were indeed built by Baski.
-Signing is achieved by taking an image ID and using the hash of that to generate the digest which is then 
+Signing is achieved by taking an image ID and using the hash of that to generate the digest which is then
 added as metadata to the image. A Public Key can then be used to validate the metadata.
 
 If using vault, the key should be stored as follows:
@@ -45,7 +45,7 @@ If using vault, the key should be stored as follows:
 * public-key
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			o.SetSignImageOptionsFromViper()
+			o.SetOptionsFromViper()
 
 			var key []byte
 			var err error
