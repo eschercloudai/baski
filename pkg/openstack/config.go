@@ -152,6 +152,7 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 			o.NvidiaInstallerLocation,
 			o.NvidiaTOKLocation,
 			o.NvidiaGriddFeatureType)
+		fmt.Println(ansibleUserVars)
 	}
 
 	if o.AddFalco || o.AddTrivy {
