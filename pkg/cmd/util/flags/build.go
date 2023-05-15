@@ -31,6 +31,7 @@ type BuildOptions struct {
 
 func (o *BuildOptions) SetOptionsFromViper() {
 	o.OpenStackFlags.SetOptionsFromViper()
+	o.S3Flags.SetOptionsFromViper()
 
 	// General Flags
 	o.Verbose = viper.GetBool(fmt.Sprintf("%s.verbose", viperBuildPrefix))
@@ -56,6 +57,7 @@ func (o *BuildOptions) SetOptionsFromViper() {
 
 func (o *BuildOptions) AddFlags(cmd *cobra.Command, imageBuilderRepo string) {
 	o.OpenStackFlags.AddFlags(cmd, viperOpenStackPrefix)
+	o.S3Flags.AddFlags(cmd, viperS3Prefix)
 	// Build flags
 	StringVarWithViper(cmd, &o.BuildOS, viperBuildPrefix, "build-os", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204")
 	StringVarWithViper(cmd, &o.ImagePrefix, viperBuildPrefix, "image-prefix", "kube", "This will prefix the image with the value provided. Defaults to 'kube' producing an image name of kube-yymmdd-xxxxxxxx")

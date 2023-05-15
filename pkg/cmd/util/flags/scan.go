@@ -36,6 +36,7 @@ func (o *ScanOptions) SetOptionsFromViper() {
 
 func (o *ScanOptions) AddFlags(cmd *cobra.Command) {
 	o.OpenStackFlags.AddFlags(cmd, viperOpenStackPrefix)
+	o.S3Flags.AddFlags(cmd, viperS3Prefix)
 
 	StringVarWithViper(cmd, &o.ImageID, viperScanPrefix, "image-id", "", "The ID of the image to scan")
 	BoolVarWithViper(cmd, &o.AutoDeleteImage, viperScanPrefix, "auto-delete-image", false, "If true, the image will be deleted if a vulnerability check does not succeed - recommended when building new images.")
