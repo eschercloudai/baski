@@ -144,15 +144,15 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 
 	if o.AddNvidiaSupport {
 		customRoles = "nvidia"
-		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%d",
+		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_ceph=%t nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%d",
 			o.Endpoint,
 			o.NvidiaBucket,
 			o.AccessKey,
 			o.SecretKey,
+			o.IsCeph,
 			o.NvidiaInstallerLocation,
 			o.NvidiaTOKLocation,
 			o.NvidiaGriddFeatureType)
-		fmt.Println(ansibleUserVars)
 	}
 
 	if o.AddFalco || o.AddTrivy {
