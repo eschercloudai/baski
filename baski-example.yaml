@@ -28,12 +28,14 @@ cloud:
     # The rootfs-UUID. In testing this has only been required for bare-metal instances as the bare-metal instance needs know about the rootfs, so it knows what to boot.
     rootfs-uuid: "ROOT_FS_UUID"
 
-# Baski presumes there is an S3 endpoint available for the pulling of any items such as the ..trivyignore and nvidia files.
+# Baski presumes there is an S3 endpoint available for the pulling of any items such as the .trivyignore and nvidia files.
 # This is because the image builder defaults to this for the Nvidia support, and it is presumed that most if not all people can have/can set up an S3 endpoint for authenticated storage.
 s3:
   endpoint: "S3_ENDPOINT_URL"
   access-key: "ACCESS_KEY"
   secret-key: "SECRET_KEY"
+  # If the S3 endpoint is being used, set this to true to instruct the aws ansible role to do the same.
+  is-ceph: true
 
 # Build stage options.
 build:
