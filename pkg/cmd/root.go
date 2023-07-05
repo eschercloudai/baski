@@ -35,10 +35,10 @@ func init() {
 
 	cmd = &cobra.Command{
 		Use:   "baski",
-		Short: "Baski is a tools for building and scanning Kubernetes images within Openstack.",
-		Long: `Build And Scan Kubernetes Images on Openstack
-This tool has been designed to automatically build images for the Openstack potion of the Kubernetes Image Builder.
-It could be extended out to provide images for a variety of other builders however for now it's main goal is to work with Openstack.`,
+		Short: "Baski is a tools for building and scanning Kubernetes images.",
+		Long: `Build And Scan Kubernetes Images.
+This tool has been designed to automatically build images by leveraging the Kubernetes Image Builder.
+As well as building the Kubernetes image it can also be used to scan them once built.`,
 	}
 
 	commands := []*cobra.Command{

@@ -42,10 +42,7 @@ func NewBuildCommand() *cobra.Command {
 Building images requires a set of commands to be run on the terminal however this is tedious and time consuming.
 By using this, the time is reduced and automation can be enabled.
 
-Overtime this will become more dynamic to allow for build customised
-images such as ones with GPU/HPC drivers/tools.
-
-To use baski to build an image, an Openstack cluster is required.`,
+To use baski to build an image, a supported cloud is required.`,
 		TraverseChildren: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			o.SetOptionsFromViper()
@@ -60,6 +57,7 @@ To use baski to build an image, an Openstack cluster is required.`,
 			FetchBuildRepo(buildGitDir, o)
 
 			metadata := ostack.GenerateBuilderMetadata(o)
+
 			err := ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
 			if err != nil {
 				log.Fatalln(err)

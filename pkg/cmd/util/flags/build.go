@@ -11,22 +11,38 @@ type BuildOptions struct {
 	OpenStackFlags
 	S3Flags
 
-	Verbose                 bool
-	BuildOS                 string
-	ImagePrefix             string
-	ImageRepo               string
-	CrictlVersion           string
-	CniVersion              string
-	KubeVersion             string
-	ExtraDebs               string
-	AddFalco                bool
-	AddTrivy                bool
-	AddNvidiaSupport        bool
-	NvidiaVersion           string
-	NvidiaBucket            string
+	// Verbose will output all output from the make command if set to true.
+	Verbose bool
+	// BuildOS is used to denote which Operating system to use. See the image builder for valid values for the cloud being used.
+	BuildOS string
+	// ImagePrefix is a string that is prepended onto the name of the image.
+	ImagePrefix string
+	// ImageRepo is used to override the repo used for the image build. It defaults to the kubernetes-sigs/image-builder repo.
+	ImageRepo string
+	// CrictlVersion denotes the version of cri-tools to install.
+	CrictlVersion string
+	// CNIVersion denotes the CNI version to install.
+	CniVersion string
+	// KubeVersion denotes the version of Kubernetes to install.
+	KubeVersion string
+	// ExtraDebs enables the installation of extra packages to be installed via the package manager - currently apt only.
+	ExtraDebs string
+	// AddFalco installs Falco onto the target image. This enables security features provided by Falco.
+	AddFalco bool
+	// AddTrivy installs Trivy onto the target image. This enables scanning to be performed using Trivy.
+	AddTrivy bool
+	// AddNvidiaSupport enables the installation of the NVidia driver - this must be used alongside all other NVida options as the driver is not publically available.
+	AddNvidiaSupport bool
+	// NvidiaVersion the version of NVidia being installed. This may be Deprecated soon as it's just used for tagging the image with metadata and could be pulled from the file name of the installer.
+	NvidiaVersion string
+	// NvidiaBucketName is the name of the bucket in the S3 storage from which the Nvidia installer and TOK file would be downloaded.
+	NvidiaBucket string
+	// NvidiaInstallerLocation contains the location in the bucket from which the .run file can be downloaded
 	NvidiaInstallerLocation string
-	NvidiaTOKLocation       string
-	NvidiaGriddFeatureType  int
+	// NvidiaTOKLocation contains the location in the bucket from which the .tok file can be downloaded.
+	NvidiaTOKLocation string
+	// NvidiaGriddFeatureType denotes the GRIDD FeatureType - https://docs.nvidia.com/grid/13.0/grid-licensing-user-guide/index.html#configuring-nls-licensed-client-on-linux
+	NvidiaGriddFeatureType int
 }
 
 func (o *BuildOptions) SetOptionsFromViper() {

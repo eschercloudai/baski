@@ -25,8 +25,10 @@ import (
 
 // OpenStackCoreFlags are the core requirements for any interaction with the openstack cloud.
 type OpenStackCoreFlags struct {
+	// CloudsPath is the path to the clouds.yaml file which contains the required cloud definition.
 	CloudsPath string
-	CloudName  string
+	// CloudsName is the name of the cloud within the file into which the build process will be deployed.
+	CloudName string
 }
 
 // SetOptionsFromViper configures additional options passed in via viper for the struct.
@@ -46,8 +48,11 @@ func (o *OpenStackCoreFlags) AddFlags(cmd *cobra.Command, viperPrefix string) {
 
 // OpenStackInstanceFlags are Additional flags that can would be required for other steps such as scan, sign and publish.
 type OpenStackInstanceFlags struct {
+	// AttachConfigDrive if set to true will attach a config drive to the isntance.
 	AttachConfigDrive bool
+	// NetworkID is the ID of the network that will be used to enable networking for the instance while the build is ongoing.
 	NetworkID         string
+	// FlavorName is the name of the flavor in OpenStack which will be used for the image build.
 	FlavorName        string
 }
 
@@ -69,12 +74,19 @@ type OpenStackFlags struct {
 	OpenStackCoreFlags
 	OpenStackInstanceFlags
 
+	// SourceImageID is the source image in OpenStack that will be used as a base image for the build.
 	SourceImageID         string
+	// UseFloatingIP dictates whether a floating IP will be attached to the instance.
 	UseFloatingIP         bool
+	// FloatingIPNetworkName is the name of the network to which the FloatingIP will be associated.
 	FloatingIPNetworkName string
+	// ImageVisibility can be used to set the visibility of the image in OpenStack
 	ImageVisibility       string
+	// ImageDiskFormat denotes the format of the image in OpenStack
 	ImageDiskFormat       string
+	// VolumeType denotes the type of the Volume in OpenStack
 	VolumeType            string
+	// RootfsUUID this can be acquired from the Source image and should be the UUID of the root filesystem.
 	RootfsUUID            string
 }
 

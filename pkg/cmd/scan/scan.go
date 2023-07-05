@@ -136,7 +136,13 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 						log.Fatalln("couldn't write vulnerability trivyIgnoreFile to file")
 					}
 
-					log.Fatalln("Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/results.json' for further information on this.")
+					var scanMsg string
+					if o.AutoDeleteImage {
+						scanMsg = "Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/results.json' for further information on this."
+					} else {
+						scanMsg = "Vulnerabilities detected above threshold - the image has not been removed from infra. Please see the possible fixes located at '/tmp/results.json' for further information on this."
+					}
+					log.Fatalln(scanMsg)
 				}
 			}
 

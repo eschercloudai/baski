@@ -31,4 +31,4 @@ ENV PATH=${PATH}:/home/baski/.local/bin/
 
 USER 1000
 
-ENTRYPOINT ["bash"]
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]
