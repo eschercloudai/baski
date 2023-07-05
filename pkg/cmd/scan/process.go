@@ -21,6 +21,7 @@ import (
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	sshconnect "github.com/eschercloudai/baski/pkg/ssh"
 	"github.com/eschercloudai/baski/pkg/trivy"
+	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/pkg/sftp"
 	"log"
@@ -78,9 +79,10 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) error {
 }
 
 // RemoveScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
-func RemoveScanningResources(serverID, keyName string, os *ostack.Client) {
+func RemoveScanningResources(serverID, keyName string, fip *floatingips.FloatingIP, os *ostack.Client) {
 	os.RemoveServer(serverID)
 	os.RemoveKeypair(keyName)
+	os.RemoveFIP(fip)
 }
 
 // CheckForVulnerabilities will scan the results file for any 7+ CVE scores and if so will delete the image from Openstack and bail out here.
@@ -108,6 +110,7 @@ func CheckForVulnerabilities(checkScore float64, checkSeverity string) []trivy.S
 			if checkSeverityThresholdPassed(v.Severity, v.Cvss, checkScore, checkSeverity) {
 				vuln := trivy.ScanFailedReport{
 					VulnerabilityID:  v.VulnerabilityID,
+					Description:      v.Description,
 					PkgName:          v.PkgName,
 					InstalledVersion: v.InstalledVersion,
 					FixedVersion:     v.FixedVersion,

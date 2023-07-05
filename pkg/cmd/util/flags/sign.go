@@ -15,9 +15,9 @@ type SignOptions struct {
 	ImageID    string
 }
 
-// SetSignOptionsFromViper configures additional options passed in via viper for the struct from any subcommands.
-func (o *SignOptions) SetSignOptionsFromViper() {
-	o.OpenStackCoreFlags.SetSignOptionsFromViper()
+// SetOptionsFromViper configures additional options passed in via viper for the struct from any subcommands.
+func (o *SignOptions) SetOptionsFromViper() {
+	o.OpenStackCoreFlags.SetOptionsFromViper()
 
 	o.ImageID = viper.GetString(fmt.Sprintf("%s.image-id", viperSignPrefix))
 	o.VaultURL = viper.GetString(fmt.Sprintf("%s.url", viperVaultPrefix))
@@ -40,8 +40,8 @@ type SignGenerateOptions struct {
 	Path string
 }
 
-// SetSignGenerateOptionsFromViper configures options passed in via viper for the struct.
-func (o *SignGenerateOptions) SetSignGenerateOptionsFromViper() {
+// SetOptionsFromViper configures options passed in via viper for the struct.
+func (o *SignGenerateOptions) SetOptionsFromViper() {
 	o.Path = viper.GetString(fmt.Sprintf("%s.path", viperGeneratePrefix))
 }
 
@@ -57,9 +57,9 @@ type SignImageOptions struct {
 	PrivateKey string
 }
 
-// SetSignImageOptionsFromViper configures options passed in via viper for the struct.
-func (o *SignImageOptions) SetSignImageOptionsFromViper() {
-	o.SignOptions.SetSignOptionsFromViper()
+// SetOptionsFromViper configures options passed in via viper for the struct.
+func (o *SignImageOptions) SetOptionsFromViper() {
+	o.SignOptions.SetOptionsFromViper()
 
 	o.PrivateKey = viper.GetString(fmt.Sprintf("%s.private-key", viperSignPrefix))
 }
@@ -82,9 +82,9 @@ type SignValidateOptions struct {
 	Digest    string
 }
 
-// SetValidateImageOptionsFromViper configures options passed in via viper for the struct.
-func (o *SignValidateOptions) SetValidateImageOptionsFromViper() {
-	o.SignOptions.SetSignOptionsFromViper()
+// SetOptionsFromViper configures options passed in via viper for the struct.
+func (o *SignValidateOptions) SetOptionsFromViper() {
+	o.SignOptions.SetOptionsFromViper()
 
 	o.PublicKey = viper.GetString(fmt.Sprintf("%s.public-key", viperSignPrefix))
 	o.Digest = viper.GetString(fmt.Sprintf("%s.digest", viperSignPrefix))

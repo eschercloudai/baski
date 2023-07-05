@@ -31,8 +31,8 @@ type OpenStackCoreFlags struct {
 	CloudName string
 }
 
-// SetSignOptionsFromViper configures additional options passed in via viper for the struct.
-func (o *OpenStackCoreFlags) SetSignOptionsFromViper() {
+// SetOptionsFromViper configures additional options passed in via viper for the struct.
+func (o *OpenStackCoreFlags) SetOptionsFromViper() {
 	o.CloudsPath = viper.GetString(fmt.Sprintf("%s.clouds-file", viperOpenStackPrefix))
 	o.CloudName = viper.GetString(fmt.Sprintf("%s.cloud-name", viperOpenStackPrefix))
 }
@@ -56,8 +56,8 @@ type OpenStackInstanceFlags struct {
 	FlavorName        string
 }
 
-// SetSignOptionsFromViper configures additional options passed in via viper for the struct.
-func (o *OpenStackInstanceFlags) SetSignOptionsFromViper() {
+// SetOptionsFromViper configures additional options passed in via viper for the struct.
+func (o *OpenStackInstanceFlags) SetOptionsFromViper() {
 	o.NetworkID = viper.GetString(fmt.Sprintf("%s.network-id", viperOpenStackPrefix))
 	o.FlavorName = viper.GetString(fmt.Sprintf("%s.flavor-name", viperOpenStackPrefix))
 	o.AttachConfigDrive = viper.GetBool(fmt.Sprintf("%s.attach-config-drive", viperOpenStackPrefix))
@@ -90,10 +90,10 @@ type OpenStackFlags struct {
 	RootfsUUID            string
 }
 
-// SetSignOptionsFromViper configures additional options passed in via viper for the struct.
-func (o *OpenStackFlags) SetSignOptionsFromViper() {
-	o.OpenStackCoreFlags.SetSignOptionsFromViper()
-	o.OpenStackInstanceFlags.SetSignOptionsFromViper()
+// SetOptionsFromViper configures additional options passed in via viper for the struct.
+func (o *OpenStackFlags) SetOptionsFromViper() {
+	o.OpenStackCoreFlags.SetOptionsFromViper()
+	o.OpenStackInstanceFlags.SetOptionsFromViper()
 
 	o.SourceImageID = viper.GetString(fmt.Sprintf("%s.source-image", viperOpenStackPrefix))
 	o.UseFloatingIP = viper.GetBool(fmt.Sprintf("%s.use-floating-ip", viperOpenStackPrefix))

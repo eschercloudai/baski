@@ -18,14 +18,15 @@ package scan
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	"log"
-	"os"
-	"strings"
-
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/eschercloudai/baski/pkg/trivy"
 	"github.com/spf13/cobra"
+	"log"
+	"os"
+	"strings"
+	"time"
 )
 
 // NewScanCommand creates a command that allows the scanning of an image.
@@ -62,19 +63,56 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 
 			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
 
-			kp := osClient.CreateKeypair(o.ImageID)
-			server, freeIP := osClient.CreateServer(kp, o)
-
-			err := FetchResultsFromServer(freeIP, kp)
+			kp, err := osClient.CreateKeypair(o.ImageID)
 			if err != nil {
-				RemoveScanningResources(server.ID, kp.Name, osClient)
+				panic(err)
+			}
+
+			fip, err := osClient.GetFloatingIP(strings.ToLower(o.FloatingIPNetworkName))
+			if err != nil {
+				osClient.RemoveKeypair(kp.Name)
+				panic(err)
+			}
+
+			trivyIgnoreFile := trivy.GenerateTrivyFile(o)
+
+			userData := trivy.GenerateUserData(trivyIgnoreFile)
+
+			server, err := osClient.CreateServer(kp, o, userData)
+			if err != nil {
+				osClient.RemoveKeypair(kp.Name)
+				osClient.RemoveFIP(fip)
+				panic(err)
+			}
+
+			state := osClient.GetServerStatus(server.ID)
+			checkLimit := 0
+			for !state {
+				if checkLimit > 100 {
+					panic(errors.New("server failed to com online after 500 seconds"))
+				}
+				log.Println("server not active, waiting 5 seconds and then checking again")
+				time.Sleep(5 * time.Second)
+				state = osClient.GetServerStatus(server.ID)
+				checkLimit++
+			}
+
+			err = osClient.AttachIP(server.ID, fip.IP)
+			if err != nil {
+				RemoveScanningResources(server.ID, kp.Name, fip, osClient)
+				panic(err)
+			}
+
+			err = FetchResultsFromServer(fip.IP, kp)
+			if err != nil {
+				RemoveScanningResources(server.ID, kp.Name, fip, osClient)
 				log.Fatalln(err.Error())
 			}
 			if !o.SkipCVECheck {
 				scoreCheck := CheckForVulnerabilities(o.MaxSeverityScore, strings.ToUpper(o.MaxSeverityType))
 				if len(scoreCheck) != 0 {
 					// Cleanup the scanning resources
-					RemoveScanningResources(server.ID, kp.Name, osClient)
+					RemoveScanningResources(server.ID, kp.Name, fip, osClient)
 
 					if o.AutoDeleteImage {
 						osClient.RemoveImage(o.ImageID)
@@ -83,7 +121,7 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 					var j []byte
 					j, err = json.Marshal(scoreCheck)
 					if err != nil {
-						log.Fatalln("couldn't marshall vulnerability data")
+						log.Fatalln("couldn't marshall vulnerability trivyIgnoreFile")
 					}
 
 					// empty out the results json - we don't need the original since threshold vulnerabilities were found.
@@ -95,7 +133,7 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 					// write the vulnerabilities into the results file
 					err = os.WriteFile("/tmp/results.json", j, os.FileMode(0644))
 					if err != nil {
-						log.Fatalln("couldn't write vulnerability data to file")
+						log.Fatalln("couldn't write vulnerability trivyIgnoreFile to file")
 					}
 
 					var scanMsg string
@@ -109,7 +147,7 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 			}
 
 			// Cleanup the scanning resources
-			RemoveScanningResources(server.ID, kp.Name, osClient)
+			RemoveScanningResources(server.ID, kp.Name, fip, osClient)
 		},
 	}
 

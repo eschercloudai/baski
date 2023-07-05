@@ -18,7 +18,7 @@ type PublishOptions struct {
 }
 
 func (o *PublishOptions) SetOptionsFromViper() {
-	o.OpenStackCoreFlags.SetSignOptionsFromViper()
+	o.OpenStackCoreFlags.SetOptionsFromViper()
 
 	o.ImageID = viper.GetString(fmt.Sprintf("%s.image-id", viperPublishPrefix))
 	o.GithubUser = viper.GetString(fmt.Sprintf("%s.user", viperGithubPrefix))

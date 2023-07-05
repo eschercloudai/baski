@@ -37,7 +37,7 @@ func NewSignValidateCommand() *cobra.Command {
 This just validates a signature. It's useful for verifying a signed image.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			o.SetValidateImageOptionsFromViper()
+			o.SetOptionsFromViper()
 
 			var key []byte
 			var err error
