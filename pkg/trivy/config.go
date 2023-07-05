@@ -80,19 +80,19 @@ func fetchTrivyFileFromS3(endpoint string, accessKey string, secretKey string, b
 	s3 := simples3.New("us-east-1", accessKey, secretKey)
 	s3.SetEndpoint(endpoint)
 
-	// You can also download the file.
-	file, _ := s3.FileDownload(simples3.DownloadInput{
+	// Download the file.
+	file, err := s3.FileDownload(simples3.DownloadInput{
 		Bucket:    bucket,
 		ObjectKey: key,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to download file from S3: %v", err)
+	}
+	defer file.Close()
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		return nil, err
-	}
-	err = file.Close()
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read file contents: %v", err)
 	}
 
 	return data, nil

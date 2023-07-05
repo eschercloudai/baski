@@ -38,7 +38,7 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - name: Build Local Container
+      - name: Build Local Image
         uses: eschercloudai/container-security-action@v0.0.1-beta.2
         if: github.event_name != 'pull_request'
         id: build-and-scan

@@ -29,6 +29,13 @@ In the [example config](baski-example.yaml), not all fields are required and any
 blank - unless the fields are enabled by a bool, for example in the Nvidia options where none are required
 if `enable-nvidia-support` is set to false,
 
+The following are valid locations for the `baski.yaml` config file are:
+```shell
+/tmp/
+/etc/baski/
+$HOME/.baski/
+```
+
 ### More info
 
 For more flags and more info, run `baski --help`
