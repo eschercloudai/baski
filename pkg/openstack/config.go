@@ -206,7 +206,7 @@ func GenerateBuilderMetadata(o *flags.BuildOptions) map[string]string {
 		"os":          o.BuildOS,
 		"k8s":         o.KubeVersion,
 		"gpu":         gpu,
-		"date":        time.RFC3339,
+		"date":        time.Now().Format(time.RFC3339),
 		"rootfs_uuid": o.RootfsUUID,
 	}
 }
