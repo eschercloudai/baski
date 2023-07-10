@@ -56,6 +56,7 @@ func DecodePublicKey(pubPEM []byte) *ecdsa.PublicKey {
 }
 
 func Sign(imgID string, privKey *ecdsa.PrivateKey) (string, error) {
+	log.Println("generating digest and signing image")
 	hash := sha256.Sum256([]byte(imgID))
 	sign, err := ecdsa.SignASN1(rand.Reader, privKey, hash[:])
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-func FetchPrivateKeyFromVault(endpoint, token string) ([]byte, error) {
+func FetchPrivateKeyFromVault(endpoint, token, mountPath, secretPath string) ([]byte, error) {
 	config := api.DefaultConfig()
 	config.Address = endpoint
 
@@ -17,7 +17,7 @@ func FetchPrivateKeyFromVault(endpoint, token string) ([]byte, error) {
 
 	client.SetToken(token)
 
-	secret, err := client.KVv2("kv/baski").Get(context.Background(), "signing-keys")
+	secret, err := client.KVv2(mountPath).Get(context.Background(), secretPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read secret: %w", err)
 	}

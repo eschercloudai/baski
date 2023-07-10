@@ -40,6 +40,17 @@ $HOME/.baski/
 
 For more flags and more info, run `baski --help`
 
+### Running locally
+If you wish to run it locally then you can either build the binary and run it, or you can run it in docker by doing the following:
+```shell
+docker build -t baski:v0.0.0 -f docker/Dockerfile .
+
+docker run --name baski -it --rm --env OS_CLOUD=some-cloud -v /path/to/openstack/clouds.yaml:/home/baski/.config/openstack/clouds.yaml -v /path/to/baski.yaml:/tmp/baski.yaml baski:v0.0.0
+
+#Then from in here
+baski build / scan / sign
+```
+
 ### GitHub Pages - Deprecated
 
 You will need to set up your target repo for the GitHub Pages in advanced.

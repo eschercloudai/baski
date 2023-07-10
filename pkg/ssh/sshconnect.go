@@ -80,7 +80,7 @@ func keyString(k ssh.PublicKey) string {
 func trustedHostKeyCallback(key string) ssh.HostKeyCallback {
 	if key == "" {
 		return func(_ string, _ net.Addr, k ssh.PublicKey) error {
-			log.Printf("WARNING: SSH-key verification is not in effect - first time connecting? If this server is staying online, add this trustedKey: %q", keyString(k))
+			log.Println("WARNING: SSH-key verification is not in effect")
 			return nil
 		}
 	}

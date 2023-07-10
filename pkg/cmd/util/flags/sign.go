@@ -10,9 +10,11 @@ import (
 type SignOptions struct {
 	OpenStackCoreFlags
 
-	VaultURL   string
-	VaultToken string
-	ImageID    string
+	VaultURL        string
+	VaultToken      string
+	VaultMountPath  string
+	VaultSecretPath string
+	ImageID         string
 }
 
 // SetOptionsFromViper configures additional options passed in via viper for the struct from any subcommands.
@@ -22,6 +24,8 @@ func (o *SignOptions) SetOptionsFromViper() {
 	o.ImageID = viper.GetString(fmt.Sprintf("%s.image-id", viperSignPrefix))
 	o.VaultURL = viper.GetString(fmt.Sprintf("%s.url", viperVaultPrefix))
 	o.VaultToken = viper.GetString(fmt.Sprintf("%s.token", viperVaultPrefix))
+	o.VaultMountPath = viper.GetString(fmt.Sprintf("%s.mount-path", viperVaultPrefix))
+	o.VaultSecretPath = viper.GetString(fmt.Sprintf("%s.secret-name", viperVaultPrefix))
 }
 
 // AddFlags adds additional flags to the subcommands that call this.
@@ -31,8 +35,10 @@ func (o *SignOptions) AddFlags(cmd *cobra.Command) {
 	StringVarWithViper(cmd, &o.ImageID, viperSignPrefix, "image-id", "", "The image ID of the image to sign")
 	StringVarWithViper(cmd, &o.VaultURL, viperVaultPrefix, "url", "", "The Vault URL from which you will pull the private key")
 	StringVarWithViper(cmd, &o.VaultToken, viperVaultPrefix, "token", "", "The token used to log into vault")
+	StringVarWithViper(cmd, &o.VaultMountPath, viperVaultPrefix, "mount-path", "", "The mount path to the secret vault")
+	StringVarWithViper(cmd, &o.VaultSecretPath, viperVaultPrefix, "secret-name", "", "The name of the secret within the mount path")
 
-	cmd.MarkFlagsRequiredTogether("url", "token")
+	cmd.MarkFlagsRequiredTogether("url", "token", "mount-path", "secret-name")
 }
 
 // SignGenerateOptions contains additional options for the 'generate' subcommand.
@@ -70,7 +76,6 @@ func (o *SignImageOptions) AddFlags(cmd *cobra.Command) {
 
 	StringVarWithViper(cmd, &o.PrivateKey, viperSignPrefix, "private-key", "", "The path to the private key that will be used to sign the image")
 
-	cmd.MarkFlagsRequiredTogether("url", "token")
 	cmd.MarkFlagsMutuallyExclusive("url", "private-key")
 }
 
@@ -97,6 +102,5 @@ func (o *SignValidateOptions) AddFlags(cmd *cobra.Command) {
 	StringVarWithViper(cmd, &o.PublicKey, viperSignPrefix, "public-key", "", "The path to the private key that will be used to sign the image")
 	StringVarWithViper(cmd, &o.Digest, viperSignPrefix, "digest", "", "The digest to verify")
 
-	cmd.MarkFlagsRequiredTogether("url", "token")
 	cmd.MarkFlagsMutuallyExclusive("url", "public-key")
 }

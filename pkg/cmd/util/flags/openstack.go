@@ -75,6 +75,7 @@ type OpenStackFlags struct {
 	ImageVisibility       string
 	ImageDiskFormat       string
 	VolumeType            string
+	VolumeSize            int
 	RootfsUUID            string
 }
 
@@ -89,6 +90,7 @@ func (o *OpenStackFlags) SetOptionsFromViper() {
 	o.ImageVisibility = viper.GetString(fmt.Sprintf("%s.image-visibility", viperOpenStackPrefix))
 	o.ImageDiskFormat = viper.GetString(fmt.Sprintf("%s.image-disk-format", viperOpenStackPrefix))
 	o.VolumeType = viper.GetString(fmt.Sprintf("%s.volume-type", viperOpenStackPrefix))
+	o.VolumeSize = viper.GetInt(fmt.Sprintf("%s.volume-size", viperOpenStackPrefix))
 	o.RootfsUUID = viper.GetString(fmt.Sprintf("%s.rootfs-uuid", viperOpenStackPrefix))
 }
 
@@ -102,6 +104,7 @@ func (o *OpenStackFlags) AddFlags(cmd *cobra.Command, viperPrefix string) {
 	StringVarWithViper(cmd, &o.ImageVisibility, viperPrefix, "image-visibility", "private", "Change the image visibility in Openstack - you need to ensure the use you're authenticating with has permissions to do so or this will fail")
 	StringVarWithViper(cmd, &o.ImageDiskFormat, viperPrefix, "image-disk-format", "raw", "The image disk format in Openstack")
 	StringVarWithViper(cmd, &o.VolumeType, viperPrefix, "volume-type", "", "The volume type in Openstack")
+	IntVarWithViper(cmd, &o.VolumeSize, viperPrefix, "volume-size", 10, "Size of the Block Storage service volume in GB")
 	StringVarWithViper(cmd, &o.RootfsUUID, viperPrefix, "rootfs-uuid", "", "The UUID of the root filesystem. This can be acquired from the source image that the resulting image will be built from - (this will be automated soon™)")
 
 	cmd.MarkFlagsRequiredTogether("use-floating-ip", "floating-ip-network-name")

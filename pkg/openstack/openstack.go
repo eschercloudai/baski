@@ -117,6 +117,7 @@ func createComputeClient(client *Client) *gophercloud.ServiceClient {
 
 // CreateKeypair creates a new KeyPair in Openstack.
 func (c *Client) CreateKeypair(keyNamePrefix string) (*keypairs.KeyPair, error) {
+	log.Println("creating keypair")
 	client := createComputeClient(c)
 	client.Microversion = "2.2"
 
@@ -143,6 +144,7 @@ func (c *Client) RemoveKeypair(keyName string) {
 
 // CreateServer creates a compute instance in Openstack.
 func (c *Client) CreateServer(keypair *keypairs.KeyPair, o *flags.ScanOptions, userData []byte) (*servers.Server, error) {
+	log.Println("creating server")
 	client := createComputeClient(c)
 
 	serverFlavorID := c.GetFlavorIDByName(o.FlavorName)
@@ -195,6 +197,7 @@ func (c *Client) GetServerStatus(sid string) bool {
 
 // AttachIP attaches the provided IP to the provided server.
 func (c *Client) AttachIP(serverID, fip string) error {
+	log.Println("attaching IP to server")
 	client := createComputeClient(c)
 
 	associateOpts := floatingips.AssociateOpts{
@@ -247,6 +250,7 @@ func (c *Client) GetFlavorIDByName(name string) string {
 
 // GetFloatingIP will create a new FIP.
 func (c *Client) GetFloatingIP(ipPool string) (*floatingips.FloatingIP, error) {
+	log.Println("fetching floating IP")
 	client := createComputeClient(c)
 	createOpts := floatingips.CreateOpts{
 		Pool: ipPool,
