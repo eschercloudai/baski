@@ -53,12 +53,12 @@ func FetchBuildRepo(path string, o *flags.BuildOptions) {
 	branch = plumbing.Master
 	imageRepo := o.ImageRepo
 
-	//FIXME: This check is in place until the nvidia branch and security branch in this repo go upstream.
+	//FIXME: This check is in place until the security branch in this repo go upstream.
 	// Until it has been added, we must force users over to this repo as it's the only one that has these new additions.
-	if o.AddNvidiaSupport || o.AddTrivy || o.AddFalco {
-		log.Println("the kubernetes sigs project doesn't currently support nvidia, falco or trivy. Using https://github.com/eschercloudai/image-builder.git until it's pushed upstream")
+	if o.AddTrivy || o.AddFalco {
+		log.Println("the kubernetes sigs project doesn't currently support falco or trivy. Using https://github.com/eschercloudai/image-builder.git until it's pushed upstream")
 		imageRepo = "https://github.com/eschercloudai/image-builder.git"
-		branch = "refs/heads/nvidia-security"
+		branch = "refs/heads/security-updates"
 	}
 
 	_, err := gitRepo.GitClone(imageRepo, path, branch)
