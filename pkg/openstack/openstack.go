@@ -52,7 +52,7 @@ func NewOpenstackClient(cloud OpenstackCloud) *Client {
 	}
 	provider, err := openstack.AuthenticatedClient(opts)
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	epOpts := &gophercloud.EndpointOpts{
 		Region: client.Cloud.RegionName,
