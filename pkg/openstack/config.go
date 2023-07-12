@@ -148,8 +148,10 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 	// Little workaround for people leaving an empty field or not having the field in the yaml.
 	// viper likes to replace a non-existent entry with the string "[]" even when the default is nil.
 	if o.AdditionalImages != nil {
-		if o.AdditionalImages[0] == "[]" {
-			o.AdditionalImages = nil
+		if len(o.AdditionalImages) > 0 {
+			if o.AdditionalImages[0] == "[]" {
+				o.AdditionalImages = nil
+			}
 		}
 	}
 
