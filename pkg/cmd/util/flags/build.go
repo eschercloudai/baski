@@ -19,6 +19,7 @@ type BuildOptions struct {
 	CniVersion              string
 	KubeVersion             string
 	ExtraDebs               string
+	AdditionalImages        []string
 	AddFalco                bool
 	AddTrivy                bool
 	AddNvidiaSupport        bool
@@ -42,6 +43,7 @@ func (o *BuildOptions) SetOptionsFromViper() {
 	o.CniVersion = viper.GetString(fmt.Sprintf("%s.cni-version", viperBuildPrefix))
 	o.KubeVersion = viper.GetString(fmt.Sprintf("%s.kubernetes-version", viperBuildPrefix))
 	o.ExtraDebs = viper.GetString(fmt.Sprintf("%s.extra-debs", viperBuildPrefix))
+	o.AdditionalImages = viper.GetStringSlice(fmt.Sprintf("%s.additional-images", viperBuildPrefix))
 	o.AddFalco = viper.GetBool(fmt.Sprintf("%s.add-falco", viperBuildPrefix))
 	o.AddTrivy = viper.GetBool(fmt.Sprintf("%s.add-trivy", viperBuildPrefix))
 
@@ -66,6 +68,7 @@ func (o *BuildOptions) AddFlags(cmd *cobra.Command, imageBuilderRepo string) {
 	StringVarWithViper(cmd, &o.CrictlVersion, viperBuildPrefix, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
 	StringVarWithViper(cmd, &o.KubeVersion, viperBuildPrefix, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")
 	StringVarWithViper(cmd, &o.ExtraDebs, viperBuildPrefix, "extra-debs", "", "A space-seperated list of any extra (Debian / Ubuntu) packages that should be installed")
+	StringSliceVarWithViper(cmd, &o.AdditionalImages, viperBuildPrefix, "additional-images", nil, "Add any additional container images which should be baked into the image")
 	BoolVarWithViper(cmd, &o.AddFalco, viperBuildPrefix, "add-falco", false, "If enabled, will install Falco onto the image")
 	BoolVarWithViper(cmd, &o.AddTrivy, viperBuildPrefix, "add-trivy", false, "If enabled, will install Trivy onto the image")
 	BoolVarWithViper(cmd, &o.Verbose, viperBuildPrefix, "verbose", false, "Enable verbose output to see the information from packer. Not turning this on will mean the process appears to hang while the image build happens")

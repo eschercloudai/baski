@@ -79,8 +79,9 @@ type PackerBuildConfig struct {
 	NodeCustomRolesPost  string `json:"node_custom_roles_post,omitempty"`
 	AnsibleUserVars      string `json:"ansible_user_vars,omitempty"`
 	ExtraDebs            string `json:"extra_debs,omitempty"`
-	VolumeType           string `json:"volume_type"`
 	ImageDiskFormat      string `json:"image_disk_format"`
+	VolumeType           string `json:"volume_type"`
+	VolumeSize           string `json:"volume_size"`
 }
 
 // InitOpenstack will read the contents of the clouds.yaml file for Openstack and parse it into a OpenstackClouds struct.
@@ -136,14 +137,25 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 		ExtraDebs:            o.ExtraDebs,
 		ImageDiskFormat:      o.ImageDiskFormat,
 		VolumeType:           o.VolumeType,
+		VolumeSize:           strconv.Itoa(o.VolumeSize),
 	}
 
 	var ansibleUserVars string
+	var additionalImages string
 	var securityVars string
 	var customRoles string
 
+	// Little workaround for people leaving an empty field or not having the field in the yaml.
+	// viper likes to replace a non-existent entry with the string "[]" even when the default is nil.
+	if o.AdditionalImages != nil {
+		if o.AdditionalImages[0] == "[]" {
+			o.AdditionalImages = nil
+		}
+	}
+
 	if o.AddNvidiaSupport {
 		customRoles = "nvidia"
+
 		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_ceph=%t nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%d",
 			o.Endpoint,
 			o.NvidiaBucket,
@@ -153,6 +165,21 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 			o.NvidiaInstallerLocation,
 			o.NvidiaTOKLocation,
 			o.NvidiaGriddFeatureType)
+	}
+
+	if o.AdditionalImages != nil {
+		for k, v := range o.AdditionalImages {
+			if k == 0 {
+				additionalImages = additionalImages + v
+			} else {
+				additionalImages = additionalImages + "," + v
+			}
+		}
+		if len(ansibleUserVars) == 0 {
+			ansibleUserVars = "load_additional_components=true additional_registry_images=true additional_registry_images_list=" + additionalImages
+		} else {
+			ansibleUserVars = ansibleUserVars + " load_additional_components=true additional_registry_images=true additional_registry_images_list=" + additionalImages
+		}
 	}
 
 	if o.AddFalco || o.AddTrivy {

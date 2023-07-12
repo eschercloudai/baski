@@ -31,6 +31,7 @@ func GenerateTrivyFile(o *flags.ScanOptions) []byte {
 
 // GenerateUserData Creates the user data that will be passed to the server being created so that a .trivyignore can be added and the scan can be run as per the users wishes.
 func GenerateUserData(trivyIgnoreData []byte) []byte {
+	log.Println("generating userdata")
 
 	var trivyIgnoreFile string
 
@@ -39,10 +40,10 @@ func GenerateUserData(trivyIgnoreData []byte) []byte {
 	wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_Linux-64bit.tar.gz" | tar xzf -;
 	wget -q -O- "https://github.com/aquasecurity/trivy/releases/download/v%s/trivy_%s_checksums.txt";
 	chmod u+x ./trivy;
-	mv ./trivy /usr/local/bin/trivy
+	mv ./trivy /usr/local/bin/trivy;
 fi`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion)
 
-	runScanData := "sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /"
+	runScanData := "sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /;"
 
 	// Prepare .trivyignore file
 	if len(trivyIgnoreData) > 0 {
@@ -52,14 +53,16 @@ cat << EOF > /tmp/.trivyignore
 EOF
 `, string(trivyIgnoreData))
 
-		runScanData = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /"
+		runScanData = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
 	}
 
 	// Put it all together
 	return []byte(fmt.Sprintf(`#!/bin/bash
+touch /tmp/finished;
 %s
 %s
 %s
+echo done > /tmp/finished;
 `, trivyIgnoreFile, trivyUserData, runScanData))
 
 }

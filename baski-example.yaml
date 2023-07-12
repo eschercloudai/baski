@@ -21,10 +21,12 @@ cloud:
     floating-ip-network-name: "Internet"
     # Sets the image visibility once it has been created. The cloud account being used must have permission to do this.
     image-visibility: "public"
-    # The disk format.
+    # The disk format
     image-disk-format: "raw"
     # the volume type
     volume-type: ""
+    # The size of the storage volume
+    volume-size: 0
     # The rootfs-UUID. In testing this has only been required for bare-metal instances as the bare-metal instance needs know about the rootfs, so it knows what to boot.
     rootfs-uuid: "ROOT_FS_UUID"
 
@@ -76,6 +78,8 @@ build:
     nvidia-tok-location: "client_configuration_token.tok"
     # The feature type to configure the GRIDD service with -  see NVIDIA docs for more information on this.
     nvidia-gridd-feature-type: "4"
+  # The additional-images section should be a list of container images to bake into the image.
+  additional-images: [ ]
 
 # Scan stage options
 scan:
@@ -97,7 +101,7 @@ scan:
   trivyignore-filename: ".trivyignore"
   # A list of CVEs to add to the ignore list. If a file is also provided, this list will be appended to the list within the file.
   # If no file exists, then the file will be created with the list contents
-  trivyignore-list: []
+  trivyignore-list: [ ]
 
 # Sign stage options
 sign:
@@ -112,6 +116,10 @@ sign:
     url: "https://vault.ENDPOINT/"
     # The Vault token.
     token: "VAULT_TOKEN"
+    # The mount path within vault.
+    mount-path: "kv/baski"
+    # The name of the secret in the mount path.
+    secret-name: "signing-keys"
   # The ID of the image to sign.
   image-id: "" # Used for existing images
   # The private key to use in the signing process - this takes precedence over vault.

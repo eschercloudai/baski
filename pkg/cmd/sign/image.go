@@ -39,10 +39,9 @@ Signing is achieved by taking an image ID and using the hash of that to generate
 added as metadata to the image. A Public Key can then be used to validate the metadata.
 
 If using vault, the key should be stored as follows:
-
-* kv/baski/signing-keys
-* private-key
-* public-key
+* kv/path/to/secret
+  * private-key: VALUE
+  * public-key: VALUE
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			o.SetOptionsFromViper()
@@ -59,7 +58,7 @@ If using vault, the key should be stored as follows:
 					log.Fatalln(err)
 				}
 			} else if len(o.VaultURL) != 0 {
-				key, err = sign.FetchPrivateKeyFromVault(o.VaultURL, o.VaultToken)
+				key, err = sign.FetchPrivateKeyFromVault(o.VaultURL, o.VaultToken, o.VaultMountPath, o.VaultSecretPath)
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -72,6 +71,7 @@ If using vault, the key should be stored as follows:
 			}
 
 			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
+			log.Println("attaching digest to image metadata")
 			_ = osClient.UpdateImageMetadata(imgID, digest)
 		},
 	}

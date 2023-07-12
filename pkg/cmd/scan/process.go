@@ -18,6 +18,7 @@ package scan
 
 import (
 	"encoding/json"
+	"errors"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	sshconnect "github.com/eschercloudai/baski/pkg/ssh"
 	"github.com/eschercloudai/baski/pkg/trivy"
@@ -37,45 +38,56 @@ func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) error {
 	}
 	defer client.Close()
 
-	log.Println("Successfully connected to ssh server.")
-	log.Println("waiting 4 minutes for Trivy to update and the results of the scan to become available.")
-	time.Sleep(4 * time.Minute)
+	log.Println("Successfully connected to ssh server")
+	log.Println("waiting 4 minutes for Trivy to update and the results of the scan to become available")
 
 	// open an SFTP session over an existing ssh connection.
-	log.Println("pulling results.")
 	sftpConnection, err := sftp.NewClient(client)
 	if err != nil {
 		return err
 	}
 	defer sftpConnection.Close()
 
-	resultsFile, err := sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
-	if err != nil {
-		log.Println(err.Error())
-	}
-
-	//Check there is data in the file
-	fi, err := os.Stat(resultsFile.Name())
-	if err != nil {
-		log.Println(err.Error())
-	}
-
-	for fi.Size() == 0 {
-		resultsFile, err = sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
-
-		if err != nil {
-			log.Println(err.Error())
+	log.Println("checking for scan completion")
+	retries := 20
+	for !hasScanCompleted(sftpConnection) {
+		if retries <= 0 {
+			return errors.New("couldn't fetch the results - timed out waiting for condition")
 		}
-
-		fi, err = resultsFile.Stat()
-		if err != nil {
-			log.Println(err.Error())
-		}
+		log.Printf("scan still running... %d retries left\n", retries)
 		time.Sleep(10 * time.Second)
+		retries -= 1
+	}
+	log.Println("scan completed, fetching results")
+	if err != nil {
+		return err
+	}
+	defer sftpConnection.Close()
+
+	_, err = sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "results.json")
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func hasScanCompleted(sftpConnection *sftp.Client) bool {
+	status, err := sshconnect.CopyFromRemoteServer(sftpConnection, "/tmp/", "/tmp/", "finished")
+	if err != nil {
+		return false
 	}
 
-	resultsFile.Close()
-	return err
+	fi, err := os.Stat(status.Name())
+	if err != nil {
+		log.Println(err.Error())
+		return false
+	}
+
+	if fi.Size() == 0 {
+		return false
+	}
+	return true
 }
 
 // RemoveScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
