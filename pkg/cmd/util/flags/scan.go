@@ -10,6 +10,7 @@ type ScanOptions struct {
 	OpenStackFlags
 	S3Flags
 
+	AddPause            bool
 	ImageID             string
 	AutoDeleteImage     bool
 	SkipCVECheck        bool
@@ -24,6 +25,7 @@ func (o *ScanOptions) SetOptionsFromViper() {
 	o.OpenStackFlags.SetOptionsFromViper()
 	o.S3Flags.SetOptionsFromViper()
 
+	o.AddPause = viper.GetBool(fmt.Sprintf("%s.add-pause", viperOpenStackPrefix))
 	o.ImageID = viper.GetString(fmt.Sprintf("%s.image-id", viperScanPrefix))
 	o.AutoDeleteImage = viper.GetBool(fmt.Sprintf("%s.auto-delete-image", viperScanPrefix))
 	o.SkipCVECheck = viper.GetBool(fmt.Sprintf("%s.skip-cve-check", viperScanPrefix))
@@ -38,6 +40,7 @@ func (o *ScanOptions) AddFlags(cmd *cobra.Command) {
 	o.OpenStackFlags.AddFlags(cmd, viperOpenStackPrefix)
 	o.S3Flags.AddFlags(cmd, viperS3Prefix)
 
+	BoolVarWithViper(cmd, &o.AddPause, viperOpenStackPrefix, "add-pause", false, "Adds a pause to the scan step once the server has been created. Only really required for a bug in OpenStack.")
 	StringVarWithViper(cmd, &o.ImageID, viperScanPrefix, "image-id", "", "The ID of the image to scan")
 	BoolVarWithViper(cmd, &o.AutoDeleteImage, viperScanPrefix, "auto-delete-image", false, "If true, the image will be deleted if a vulnerability check does not succeed - recommended when building new images.")
 	BoolVarWithViper(cmd, &o.SkipCVECheck, viperScanPrefix, "skip-cve-check", false, "If true, the image will be allowed even if a vulnerability is detected.")
