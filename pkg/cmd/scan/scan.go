@@ -97,6 +97,9 @@ If the checks for CVE flags/config values are set then it will bail out and gene
 				checkLimit++
 			}
 
+			if o.AddPause {
+				time.Sleep(5 * time.Minute)
+			}
 			err = osClient.AttachIP(server.ID, fip.IP)
 			if err != nil {
 				RemoveScanningResources(server.ID, kp.Name, fip, osClient)
