@@ -17,16 +17,17 @@ limitations under the License.
 package build
 
 import (
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	gitRepo "github.com/eschercloudai/baski/pkg/git"
-	systemUtils "github.com/eschercloudai/baski/pkg/system"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
+	gitRepo "github.com/eschercloudai/baski/pkg/git"
+	systemUtils "github.com/eschercloudai/baski/pkg/system"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/google/uuid"
 )
 
 // CreateRepoDirectory create the random directory where the Image repo will be cloned into.
@@ -49,8 +50,7 @@ func CreateRepoDirectory() string {
 
 // FetchBuildRepo simply pulls the contents of the imageRepo to the specified path
 func FetchBuildRepo(path string, o *flags.BuildOptions) {
-	var branch plumbing.ReferenceName
-	branch = plumbing.Master
+	branch := plumbing.ReferenceName("refs/heads/" + o.ImageRepoBranch)
 	imageRepo := o.ImageRepo
 
 	//FIXME: This check is in place until the security branch in this repo go upstream.
@@ -63,7 +63,7 @@ func FetchBuildRepo(path string, o *flags.BuildOptions) {
 
 	_, err := gitRepo.GitClone(imageRepo, path, branch)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Error cloning repo: %s", err)
 	}
 }
 
