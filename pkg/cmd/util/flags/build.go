@@ -2,9 +2,10 @@ package flags
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"strings"
 )
 
 type BuildOptions struct {
@@ -15,6 +16,7 @@ type BuildOptions struct {
 	BuildOS                 string
 	ImagePrefix             string
 	ImageRepo               string
+	ImageRepoBranch         string
 	CrictlVersion           string
 	CniVersion              string
 	KubeVersion             string
@@ -39,6 +41,7 @@ func (o *BuildOptions) SetOptionsFromViper() {
 	o.BuildOS = viper.GetString(fmt.Sprintf("%s.build-os", viperBuildPrefix))
 	o.ImagePrefix = viper.GetString(fmt.Sprintf("%s.image-prefix", viperBuildPrefix))
 	o.ImageRepo = viper.GetString(fmt.Sprintf("%s.image-repo", viperBuildPrefix))
+	o.ImageRepoBranch = viper.GetString(fmt.Sprintf("%s.image-repo-branch", viperBuildPrefix))
 	o.CrictlVersion = viper.GetString(fmt.Sprintf("%s.crictl-version", viperBuildPrefix))
 	o.CniVersion = viper.GetString(fmt.Sprintf("%s.cni-version", viperBuildPrefix))
 	o.KubeVersion = viper.GetString(fmt.Sprintf("%s.kubernetes-version", viperBuildPrefix))
@@ -64,6 +67,7 @@ func (o *BuildOptions) AddFlags(cmd *cobra.Command, imageBuilderRepo string) {
 	StringVarWithViper(cmd, &o.BuildOS, viperBuildPrefix, "build-os", "ubuntu-2204", "This is the target os to build. Valid values are currently: ubuntu-2004 and ubuntu-2204")
 	StringVarWithViper(cmd, &o.ImagePrefix, viperBuildPrefix, "image-prefix", "kube", "This will prefix the image with the value provided. Defaults to 'kube' producing an image name of kube-yymmdd-xxxxxxxx")
 	StringVarWithViper(cmd, &o.ImageRepo, viperBuildPrefix, "image-repo", strings.Join([]string{imageBuilderRepo, "git"}, "."), "The imageRepo from which the image builder should be deployed")
+	StringVarWithViper(cmd, &o.ImageRepoBranch, viperBuildPrefix, "image-repo-branch", "main", "The branch to checkout from the cloned imageRepo")
 	StringVarWithViper(cmd, &o.CniVersion, viperBuildPrefix, "cni-version", "1.2.0", "The CNI plugins version to include to the built image")
 	StringVarWithViper(cmd, &o.CrictlVersion, viperBuildPrefix, "crictl-version", "1.25.0", "The crictl-tools version to add to the built image")
 	StringVarWithViper(cmd, &o.KubeVersion, viperBuildPrefix, "kubernetes-version", "1.25.3", "The Kubernetes version to add to the built image")

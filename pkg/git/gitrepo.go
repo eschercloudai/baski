@@ -18,11 +18,12 @@ package gitRepo
 
 import (
 	"context"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 // GitClone will clone a designated repo.

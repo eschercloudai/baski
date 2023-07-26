@@ -53,6 +53,8 @@ build:
   image-prefix: "kube"
   # The repo to use for image building. This will default to the main image builder repo but can be updated if additional functionality is required in a fork.
   image-repo: "https://github.com/kubernetes-sigs/image-builder.git"
+  # The branch to checkout from the image repo
+  image-repo-branch: "main"
   # The crictl version.
   crictl-version: "1.26.0"
   # The CNI version.
