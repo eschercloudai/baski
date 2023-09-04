@@ -58,7 +58,7 @@ func FetchBuildRepo(path string, o *flags.BuildOptions) {
 	if o.AddTrivy || o.AddFalco {
 		log.Println("the kubernetes sigs project doesn't currently support falco or trivy. Using https://github.com/eschercloudai/image-builder.git until it's pushed upstream")
 		imageRepo = "https://github.com/eschercloudai/image-builder.git"
-		branch = "refs/heads/security-updates"
+		branch = plumbing.ReferenceName("refs/heads/security-updates")
 	}
 
 	_, err := gitRepo.GitClone(imageRepo, path, branch)
