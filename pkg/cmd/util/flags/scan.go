@@ -25,6 +25,12 @@ func (o *ScanOptions) SetOptionsFromViper() {
 	o.OpenStackFlags.SetOptionsFromViper()
 	o.S3Flags.SetOptionsFromViper()
 
+	// We can override the value of the instance at the scan level
+	// This isn't available in the flags as it's already a flag that's available. This is viper only.
+	instance := viper.GetString(fmt.Sprintf("%s.flavor-name", viperScanPrefix))
+	if instance != "" {
+		o.FlavorName = instance
+	}
 	o.AddPause = viper.GetBool(fmt.Sprintf("%s.add-pause", viperOpenStackPrefix))
 	o.ImageID = viper.GetString(fmt.Sprintf("%s.image-id", viperScanPrefix))
 	o.AutoDeleteImage = viper.GetBool(fmt.Sprintf("%s.auto-delete-image", viperScanPrefix))
