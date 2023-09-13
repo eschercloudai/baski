@@ -51,19 +51,11 @@ docker run --name baski -it --rm --env OS_CLOUD=some-cloud -v /path/to/openstack
 baski build / scan / sign
 ```
 
-### GitHub Pages - Deprecated
-
-You will need to set up your target repo for the GitHub Pages in advanced.
-It only requires a `gh-pages` branch for this to work.
-GitHub Pages should be configured to point to a `docs` directory as this is where the resulting static site will be
-placed.
-
 # TODO
-
+* Automatically clear up resources when ctrl-c is pressed.
 * Make this work for more than just Openstack so that it's more useful to the community around the Kubernetes Image
   Builder?
-* Remove dependency on GitHub Pages in the publish section - have this generate an artifact instead
-* Add metrics/telemetry to the process
+* Add metrics/telemetry to the process.
 * Create all option to allow whole process?
 
 # License

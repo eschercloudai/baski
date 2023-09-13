@@ -21,6 +21,7 @@ import (
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/cmd/util/sign"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -43,7 +44,7 @@ If using vault, the key should be stored as follows:
   * private-key: VALUE
   * public-key: VALUE
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
 			var key []byte
@@ -55,24 +56,43 @@ If using vault, the key should be stored as follows:
 			if len(o.PrivateKey) != 0 {
 				key, err = os.ReadFile(o.PrivateKey)
 				if err != nil {
-					log.Fatalln(err)
+					return err
 				}
 			} else if len(o.VaultURL) != 0 {
 				key, err = sign.FetchPrivateKeyFromVault(o.VaultURL, o.VaultToken, o.VaultMountPath, o.VaultSecretPath)
 				if err != nil {
-					log.Fatalln(err)
+					return err
 				}
 			}
 			privKey := sign.DecodePrivateKey(key)
 
 			digest, err := sign.Sign(imgID, privKey)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 
 			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
+			img, err := osClient.FetchImage(imgID)
+			if err != nil {
+				return err
+			}
+
+			// Default to replace unless the field isn't found below
+			operation := images.ReplaceOp
+
+			_, err = data.GetNestedField(img.Properties, "image", "metadata", "digest")
+			if err != nil {
+				operation = images.AddOp
+			}
+
 			log.Println("attaching digest to image metadata")
-			_ = osClient.UpdateImageMetadata(imgID, digest)
+			_, err = osClient.ModifyImageMetadata(imgID, "digest", digest, operation)
+
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 	o.AddFlags(cmd)

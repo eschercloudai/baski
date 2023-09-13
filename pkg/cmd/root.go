@@ -18,7 +18,6 @@ package cmd
 
 import (
 	"github.com/eschercloudai/baski/pkg/cmd/build"
-	"github.com/eschercloudai/baski/pkg/cmd/publish"
 	"github.com/eschercloudai/baski/pkg/cmd/scan"
 	"github.com/eschercloudai/baski/pkg/cmd/sign"
 	"github.com/eschercloudai/baski/pkg/cmd/util/config"
@@ -46,7 +45,6 @@ It could be extended out to provide images for a variety of other builders howev
 		build.NewBuildCommand(),
 		sign.NewSignCommand(),
 		scan.NewScanCommand(),
-		publish.NewPublishCommand(),
 	}
 	cmd.AddCommand(commands...)
 

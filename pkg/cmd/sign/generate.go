@@ -23,7 +23,6 @@ import (
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/cmd/util/sign"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 	"path"
 )
@@ -39,43 +38,45 @@ func NewSignGenerateCommand() *cobra.Command {
 Using this command a user can generate the keys required to sign an image.
 It will generate a public and private key that can then be stored securely.
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
 			pk, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			dir := o.Path
 
 			err = os.MkdirAll(dir, os.ModeDir)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			fPriv, err := os.Create(path.Join(dir, "baski.key"))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			defer fPriv.Close()
 
 			fPub, err := os.Create(path.Join(dir, "baski.pub"))
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 			defer fPub.Close()
 
 			priv, pub := sign.EncodeKeys(pk)
 			_, err = fPriv.Write(priv)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			_, err = fPub.Write(pub)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
+
+			return nil
 		},
 	}
 

@@ -17,12 +17,12 @@ limitations under the License.
 package build
 
 import (
+	"fmt"
 	"github.com/eschercloudai/baski/pkg/cmd/util/data"
 	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/constants"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
 	"github.com/spf13/cobra"
-	"log"
 	"path/filepath"
 )
 
@@ -47,13 +47,13 @@ images such as ones with GPU/HPC drivers/tools.
 
 To use baski to build an image, an Openstack cluster is required.`,
 		TraverseChildren: true,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
 			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
 			packerBuildConfig := ostack.InitPackerConfig(o)
 			if !checkValidOSSelected(o.BuildOS) {
-				log.Fatalf("an unsupported OS has been entered. Please select a valid OS: %s\n", constants.SupportedOS)
+				return fmt.Errorf("an unsupported OS has been entered. Please select a valid OS: %s\n", constants.SupportedOS)
 			}
 
 			buildGitDir := CreateRepoDirectory()
@@ -62,7 +62,7 @@ To use baski to build an image, an Openstack cluster is required.`,
 			metadata := ostack.GenerateBuilderMetadata(o)
 			err := ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			capiPath := filepath.Join(buildGitDir, "images", "capi")
 			packerBuildConfig.GenerateVariablesFile(capiPath)
@@ -73,18 +73,19 @@ To use baski to build an image, an Openstack cluster is required.`,
 
 			err = BuildImage(capiPath, o.BuildOS, o.Verbose)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 
 			imgID, err := data.RetrieveNewImageID()
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 
 			err = SaveImageIDToFile(imgID)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
+			return nil
 		},
 	}
 
