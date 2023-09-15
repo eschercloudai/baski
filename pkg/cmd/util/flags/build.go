@@ -19,7 +19,10 @@ type BuildOptions struct {
 	ImageRepoBranch         string
 	CrictlVersion           string
 	CniVersion              string
+	CniDebVersion           string
 	KubeVersion             string
+	KubeRpmVersion          string
+	KubeDebVersion          string
 	ExtraDebs               string
 	AdditionalImages        []string
 	AddFalco                bool
@@ -44,7 +47,10 @@ func (o *BuildOptions) SetOptionsFromViper() {
 	o.ImageRepoBranch = viper.GetString(fmt.Sprintf("%s.image-repo-branch", viperBuildPrefix))
 	o.CrictlVersion = viper.GetString(fmt.Sprintf("%s.crictl-version", viperBuildPrefix))
 	o.CniVersion = viper.GetString(fmt.Sprintf("%s.cni-version", viperBuildPrefix))
+	o.CniDebVersion = viper.GetString(fmt.Sprintf("%s.cni-deb-version", viperBuildPrefix))
 	o.KubeVersion = viper.GetString(fmt.Sprintf("%s.kubernetes-version", viperBuildPrefix))
+	o.KubeDebVersion = viper.GetString(fmt.Sprintf("%s.kubernetes-deb-version", viperBuildPrefix))
+	o.KubeRpmVersion = viper.GetString(fmt.Sprintf("%s.kubernetes-rpm-version", viperBuildPrefix))
 	o.ExtraDebs = viper.GetString(fmt.Sprintf("%s.extra-debs", viperBuildPrefix))
 	o.AdditionalImages = viper.GetStringSlice(fmt.Sprintf("%s.additional-images", viperBuildPrefix))
 	o.AddFalco = viper.GetBool(fmt.Sprintf("%s.add-falco", viperBuildPrefix))
