@@ -59,8 +59,12 @@ build:
   crictl-version: "1.26.0"
   # The CNI version.
   cni-version: "1.2.0"
+  # The specific version of the CNI Debian package ('kubernetes-cni') to install
+  cni-deb-version: "1.2.0-2.1"
   # The Kubernetes version.
-  kubernetes-version: "1.26.3"
+  kubernetes-version: "1.28.2"
+  # The specific version of the Kubernetes Debian packages ('kubeadm', 'kubelet') to install  
+  kubernetes-deb-version: "1.28.2-1.1"
   # Any additional debs to install. Currently, Baski only supports ubuntu and flatcar and this will only work with Ubuntu
   extra-debs: "nfs-common"
   # Whether to add Trivy into the image.

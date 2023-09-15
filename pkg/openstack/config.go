@@ -19,14 +19,16 @@ package ostack
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
@@ -117,6 +119,12 @@ func (c *OpenstackClouds) SetOpenstackEnvs(cloudName string) {
 	}
 }
 
+// Extract Kubernetes series with the assumption we want vX.XX
+func truncateVersion(version string) string {
+	re := regexp.MustCompile(`v\d+\.\d+`)
+	return re.FindString(version)
+}
+
 // InitPackerConfig takes the application inputs and converts it into a PackerBuildConfig.
 func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 	buildConfig := &PackerBuildConfig{
@@ -127,13 +135,13 @@ func InitPackerConfig(o *flags.BuildOptions) *PackerBuildConfig {
 		UseFloatingIp:        strconv.FormatBool(o.UseFloatingIP),
 		FloatingIpNetwork:    o.FloatingIPNetworkName,
 		CniVersion:           "v" + o.CniVersion,
-		CniDebVersion:        o.CniVersion + "-00",
+		CniDebVersion:        o.CniDebVersion,
 		CrictlVersion:        o.CrictlVersion,
 		ImageVisibility:      o.ImageVisibility,
 		KubernetesSemver:     "v" + o.KubeVersion,
-		KubernetesSeries:     "v" + o.KubeVersion,
-		KubernetesRpmVersion: o.KubeVersion + "-0",
-		KubernetesDebVersion: o.KubeVersion + "-00",
+		KubernetesSeries:     truncateVersion("v" + o.KubeVersion),
+		KubernetesRpmVersion: o.KubeRpmVersion,
+		KubernetesDebVersion: o.KubeDebVersion,
 		ExtraDebs:            o.ExtraDebs,
 		ImageDiskFormat:      o.ImageDiskFormat,
 		VolumeType:           o.VolumeType,
