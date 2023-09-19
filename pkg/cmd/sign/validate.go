@@ -36,7 +36,7 @@ func NewSignValidateCommand() *cobra.Command {
 
 This just validates a signature. It's useful for verifying a signed image.
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
 			var key []byte
@@ -46,22 +46,23 @@ This just validates a signature. It's useful for verifying a signed image.
 			if len(o.PublicKey) != 0 {
 				key, err = os.ReadFile(o.PublicKey)
 				if err != nil {
-					log.Fatalln(err)
+					return err
 				}
 			} else if len(o.VaultURL) != 0 {
 				key, err = sign.FetchPublicKeyFromVault(o.VaultURL, o.VaultToken)
 				if err != nil {
-					log.Fatalln(err)
+					return err
 				}
 			}
 			pubKey := sign.DecodePublicKey(key)
 
 			valid, err := sign.Validate(imgID, pubKey, o.Digest)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 
 			log.Printf("The validation result was: %t", valid)
+			return nil
 		},
 	}
 	o.AddFlags(cmd)

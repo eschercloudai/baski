@@ -29,7 +29,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gophercloud/gophercloud/openstack"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/images"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"html/template"
 	"log"
 	"os"
@@ -104,7 +104,7 @@ func FetchExistingReports(gitDir string) ([]string, error) {
 	return reportPaths, nil
 }
 
-// Image represents an Image returned by the Compute API.
+// Image represents an Image returned by the API.
 type Image struct {
 	ID        string `json:"id"`
 	CreatedAt string `json:"created_at"`

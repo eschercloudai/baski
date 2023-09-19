@@ -19,19 +19,25 @@ package scan
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/eschercloudai/baski/pkg/cmd/util/data"
+	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/s3"
 	sshconnect "github.com/eschercloudai/baski/pkg/ssh"
 	"github.com/eschercloudai/baski/pkg/trivy"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/pkg/sftp"
 	"log"
 	"os"
+	"strings"
 	"time"
 )
 
-// FetchResultsFromServer pulls the results.json from the remote scanning server.
-func FetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) error {
+// fetchResultsFromServer pulls the results.json from the remote scanning server.
+func fetchResultsFromServer(freeIP string, kp *keypairs.KeyPair) error {
 	client, err := sshconnect.NewClient(kp, freeIP)
 	if err != nil {
 		return err
@@ -90,15 +96,15 @@ func hasScanCompleted(sftpConnection *sftp.Client) bool {
 	return true
 }
 
-// RemoveScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
-func RemoveScanningResources(serverID, keyName string, fip *floatingips.FloatingIP, os *ostack.Client) {
+// removeScanningResources cleans up the server and keypair from Openstack to ensure nothing is left lying around.
+func removeScanningResources(serverID, keyName string, fip *floatingips.FloatingIP, os *ostack.Client) {
 	os.RemoveServer(serverID)
 	os.RemoveKeypair(keyName)
 	os.RemoveFIP(fip)
 }
 
-// CheckForVulnerabilities will scan the results file for any 7+ CVE scores and if so will delete the image from Openstack and bail out here.
-func CheckForVulnerabilities(checkScore float64, checkSeverity string) []trivy.ScanFailedReport {
+// checkForVulnerabilities will scan the results file for any 7+ CVE scores and if so will delete the image from Openstack and bail out here.
+func checkForVulnerabilities(checkScore float64, checkSeverity string) []trivy.ScanFailedReport {
 	log.Println("checking results for failures")
 	rf, err := os.ReadFile("/tmp/results.json")
 	if err != nil {
@@ -176,4 +182,119 @@ func checkSeverityThresholdPassed(severity string, cvss trivy.CVSS, checkScore f
 		}
 	}
 	return false
+}
+
+func runScan(osClient *ostack.Client, o *flags.ScanOptions, img *images.Image) error {
+
+	//TODO: We need to capture-ctl c and cleanup resources if it's hit.
+
+	kp, err := osClient.CreateKeypair(img.ID)
+	if err != nil {
+		return err
+	}
+
+	fip, err := osClient.GetFloatingIP(strings.ToLower(o.FloatingIPNetworkName))
+	if err != nil {
+		osClient.RemoveKeypair(kp.Name)
+		return err
+	}
+
+	s3Connection := &s3.S3{
+		Endpoint:  o.Endpoint,
+		AccessKey: o.AccessKey,
+		SecretKey: o.SecretKey,
+		Bucket:    o.ScanBucket,
+	}
+
+	s3Path := fmt.Sprintf("%s/%s", o.TrivyignorePath, o.TrivyignoreFilename)
+	if o.TrivyignorePath == "" {
+		s3Path = o.TrivyignoreFilename
+	}
+
+	userData := trivy.GenerateUserData(s3Connection, s3Path, o.TrivyignoreList)
+
+	server, err := osClient.CreateServer(kp, o, userData, img.ID)
+	if err != nil {
+		osClient.RemoveKeypair(kp.Name)
+		osClient.RemoveFIP(fip)
+		return err
+	}
+
+	state := osClient.GetServerStatus(server.ID)
+	checkLimit := 0
+	for !state {
+		if checkLimit > 100 {
+			panic(errors.New("server failed to com online after 500 seconds"))
+		}
+		log.Println("server not active, waiting 5 seconds and then checking again")
+		time.Sleep(5 * time.Second)
+		state = osClient.GetServerStatus(server.ID)
+		checkLimit++
+	}
+
+	err = osClient.AttachIP(server.ID, fip.IP)
+	if err != nil {
+		removeScanningResources(server.ID, kp.Name, fip, osClient)
+		return err
+	}
+
+	err = fetchResultsFromServer(fip.IP, kp)
+	if err != nil {
+		removeScanningResources(server.ID, kp.Name, fip, osClient)
+		return err
+	}
+
+	// Cleanup the scanning resources
+	removeScanningResources(server.ID, kp.Name, fip, osClient)
+
+	// Default to replace unless the field isn't found below
+	operation := images.ReplaceOp
+
+	field, err := data.GetNestedField(img.Properties, "image", "metadata", "security_scan")
+	if err != nil || field == nil {
+		operation = images.AddOp
+	}
+	metaValue := "passed"
+	resultsFile := fmt.Sprintf("/tmp/%s.json", img.ID)
+
+	scoreCheck := checkForVulnerabilities(o.MaxSeverityScore, strings.ToUpper(o.MaxSeverityType))
+	if len(scoreCheck) != 0 {
+		if o.AutoDeleteImage {
+			osClient.RemoveImage(img.ID)
+		}
+		var j []byte
+		j, err = json.Marshal(scoreCheck)
+		if err != nil {
+			return errors.New("couldn't marshall vulnerability trivyIgnoreFile: " + err.Error())
+		}
+
+		// write the vulnerabilities into the results file
+		err = os.WriteFile(resultsFile, j, os.FileMode(0644))
+		if err != nil {
+			return errors.New("couldn't write vulnerability trivyIgnoreFile to file: " + err.Error())
+		}
+
+		metaValue = "failed"
+	}
+	_, err = osClient.ModifyImageMetadata(img.ID, "security_scan", metaValue, operation)
+	if err != nil {
+		return err
+	}
+
+	//Upload results to S3
+	f, err := os.Open(resultsFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = s3Connection.PutToS3("text/plain", fmt.Sprintf("scans/%s/%s", img.ID, "results.json"), "results.json", f)
+	if err != nil {
+		return err
+	}
+
+	if !o.SkipCVECheck {
+		return errors.New("vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/results.json' for further information on this")
+	}
+	return nil
 }

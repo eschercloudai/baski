@@ -1,36 +1,32 @@
+/*
+Copyright 2023 EscherCloud.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package trivy
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/constants"
-	"github.com/rhnvrm/simples3"
-	"io"
+	"github.com/eschercloudai/baski/pkg/s3"
 	"log"
 )
 
-// GenerateTrivyFile generates the trivyignore file to be used during the scan.
-func GenerateTrivyFile(o *flags.ScanOptions) []byte {
-	var ignoreListData, trivyIgnoreFile []byte
-	var err error
-
-	// Check if a list of CVEs was passed in before checking for a trivyIgnore file
-	if len(o.TrivyignoreList) != 0 {
-		ignoreListData = parseIgnoreList(o.TrivyignoreList)
-	}
-
-	if len(o.TrivyignoreFilename) != 0 {
-		trivyIgnoreFile, err = fetchTrivyFileFromS3(o.Endpoint, o.AccessKey, o.SecretKey, o.TrivyignoreBucket, o.TrivyignoreFilename)
-		if err != nil {
-			log.Printf("error: %s\n", err)
-		}
-	}
-
-	return []byte(fmt.Sprintf("%s %s", string(trivyIgnoreFile), string(ignoreListData)))
-}
-
 // GenerateUserData Creates the user data that will be passed to the server being created so that a .trivyignore can be added and the scan can be run as per the users wishes.
-func GenerateUserData(trivyIgnoreData []byte) []byte {
+func GenerateUserData(s3 *s3.S3, ignoreFileName string, ignoreList []string) []byte {
+	trivyIgnoreData := generateTrivyFile(s3, ignoreFileName, ignoreList)
+
 	log.Println("generating userdata")
 
 	var trivyIgnoreFile string
@@ -67,6 +63,26 @@ echo done > /tmp/finished;
 
 }
 
+// generateTrivyFile generates the trivyignore file to be used during the scan.
+func generateTrivyFile(s3 *s3.S3, ignoreFileName string, ignoreList []string) []byte {
+	var ignoreListData, trivyIgnoreFile []byte
+	var err error
+
+	// Check if a list of CVEs was passed in before checking for a trivyIgnore file
+	if len(ignoreList) != 0 {
+		ignoreListData = parseIgnoreList(ignoreList)
+	}
+
+	if len(ignoreFileName) != 0 {
+		trivyIgnoreFile, err = s3.FetchFromS3(ignoreFileName)
+		if err != nil {
+			log.Printf("error: %s\n", err)
+		}
+	}
+
+	return []byte(fmt.Sprintf("%s %s", string(trivyIgnoreFile), string(ignoreListData)))
+}
+
 // parseIgnoreList turns the ignore list passed into a format that can be used in the trivyignore file.
 func parseIgnoreList(ignoreList []string) []byte {
 	var list string
@@ -76,27 +92,4 @@ func parseIgnoreList(ignoreList []string) []byte {
 	}
 
 	return []byte(list)
-}
-
-// fetchTrivyFileFromS3 Downloads the trivyignore file from an S3 bucket and returns its contents as a byte array.
-func fetchTrivyFileFromS3(endpoint string, accessKey string, secretKey string, bucket string, key string) ([]byte, error) {
-	s3 := simples3.New("us-east-1", accessKey, secretKey)
-	s3.SetEndpoint(endpoint)
-
-	// Download the file.
-	file, err := s3.FileDownload(simples3.DownloadInput{
-		Bucket:    bucket,
-		ObjectKey: key,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to download file from S3: %v", err)
-	}
-	defer file.Close()
-
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file contents: %v", err)
-	}
-
-	return data, nil
 }

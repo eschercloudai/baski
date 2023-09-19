@@ -17,21 +17,11 @@ limitations under the License.
 package scan
 
 import (
-	"encoding/json"
-	"errors"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	ostack "github.com/eschercloudai/baski/pkg/openstack"
-	"github.com/eschercloudai/baski/pkg/trivy"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
-	"strings"
-	"time"
 )
 
 // NewScanCommand creates a command that allows the scanning of an image.
 func NewScanCommand() *cobra.Command {
-	o := &flags.ScanOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "scan",
@@ -51,104 +41,13 @@ It does the following:
 
 If the checks for CVE flags/config values are set then it will bail out and generate a report with the CVEs that caused it to do so.
 `,
-		Run: func(cmd *cobra.Command, args []string) {
-			o.SetOptionsFromViper()
-
-			if !trivy.ValidSeverity(strings.ToUpper(o.MaxSeverityType)) {
-				log.Fatalln("severity value passed is invalid. Allowed values are: NONE, LOW, MEDIUM, HIGH, CRITICAL")
-			}
-
-			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
-			cloudsConfig.SetOpenstackEnvs(o.CloudName)
-
-			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
-
-			kp, err := osClient.CreateKeypair(o.ImageID)
-			if err != nil {
-				panic(err)
-			}
-
-			fip, err := osClient.GetFloatingIP(strings.ToLower(o.FloatingIPNetworkName))
-			if err != nil {
-				osClient.RemoveKeypair(kp.Name)
-				panic(err)
-			}
-
-			trivyIgnoreFile := trivy.GenerateTrivyFile(o)
-
-			userData := trivy.GenerateUserData(trivyIgnoreFile)
-
-			server, err := osClient.CreateServer(kp, o, userData)
-			if err != nil {
-				osClient.RemoveKeypair(kp.Name)
-				osClient.RemoveFIP(fip)
-				panic(err)
-			}
-
-			state := osClient.GetServerStatus(server.ID)
-			checkLimit := 0
-			for !state {
-				if checkLimit > 100 {
-					panic(errors.New("server failed to com online after 500 seconds"))
-				}
-				log.Println("server not active, waiting 5 seconds and then checking again")
-				time.Sleep(5 * time.Second)
-				state = osClient.GetServerStatus(server.ID)
-				checkLimit++
-			}
-
-			if o.AddPause {
-				time.Sleep(5 * time.Minute)
-			}
-			err = osClient.AttachIP(server.ID, fip.IP)
-			if err != nil {
-				RemoveScanningResources(server.ID, kp.Name, fip, osClient)
-				panic(err)
-			}
-
-			err = FetchResultsFromServer(fip.IP, kp)
-			if err != nil {
-				RemoveScanningResources(server.ID, kp.Name, fip, osClient)
-				log.Fatalln(err.Error())
-			}
-			if !o.SkipCVECheck {
-				scoreCheck := CheckForVulnerabilities(o.MaxSeverityScore, strings.ToUpper(o.MaxSeverityType))
-				if len(scoreCheck) != 0 {
-					// Cleanup the scanning resources
-					RemoveScanningResources(server.ID, kp.Name, fip, osClient)
-
-					if o.AutoDeleteImage {
-						osClient.RemoveImage(o.ImageID)
-					}
-
-					var j []byte
-					j, err = json.Marshal(scoreCheck)
-					if err != nil {
-						log.Fatalln("couldn't marshall vulnerability trivyIgnoreFile")
-					}
-
-					// empty out the results json - we don't need the original since threshold vulnerabilities were found.
-					err = os.Truncate("/tmp/results.json", 0)
-					if err != nil {
-						log.Fatalln("couldn't empty the results file")
-					}
-
-					// write the vulnerabilities into the results file
-					err = os.WriteFile("/tmp/results.json", j, os.FileMode(0644))
-					if err != nil {
-						log.Fatalln("couldn't write vulnerability trivyIgnoreFile to file")
-					}
-
-					log.Fatalln("Vulnerabilities detected above threshold - removed image from infra. Please see the possible fixes located at '/tmp/results.json' for further information on this.")
-				}
-			}
-
-			// Cleanup the scanning resources
-			RemoveScanningResources(server.ID, kp.Name, fip, osClient)
-		},
 	}
 
-	o.AddFlags(cmd)
+	commands := []*cobra.Command{
+		NewScanSingleCommand(),
+		NewScanExistingCommand(),
+	}
+	cmd.AddCommand(commands...)
 
 	return cmd
 }

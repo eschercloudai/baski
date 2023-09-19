@@ -29,10 +29,6 @@ cloud:
     volume-size: 0
     # The rootfs-UUID. In testing this has only been required for bare-metal instances as the bare-metal instance needs know about the rootfs, so it knows what to boot.
     rootfs-uuid: "ROOT_FS_UUID"
-    # This exists because sometimes a race condition happens in OpenStack where an instance is created and removed too quickly for it to happen. It's rare, but it occurs.
-    # The scan step has been identified as something that essentially runs too fast for OpenStack so this temporary measure has been put in place.
-    # If this is true a 5 minutes pause is placed on the scan step to prevent the server spinning up and down too quickly.
-    add-pause: true
 
 # Baski presumes there is an S3 endpoint available for the pulling of any items such as the .trivyignore and nvidia files.
 # This is because the image builder defaults to this for the Nvidia support, and it is presumed that most if not all people can have/can set up an S3 endpoint for authenticated storage.
@@ -93,8 +89,18 @@ build:
 
 # Scan stage options
 scan:
-  # The ID of the image to be scanned.
-  image-id: ""
+  # Used to scan a single image - takes an image ID and scans it.
+  single:
+    # The ID of the image to be scanned.
+    image-id: ""
+  # Used in the `existing` command - takes a wildcard and scans all images that match it.
+  multiple:
+    # The image-search is used to filter images. If this string is within the name of the image, it'll be selected for scanning.
+    image-search: "kube-"
+    # How many concurrent scans to perform.
+    concurrency: 2
+  # Override the cloud.[provider].flavor for the scan. This can help avoid using a large or gpu enabled node just for scanning.
+  flavor-name: "not-so-spicy-meatball"
   # Whether to auto-delete the image. This has been added for automation purposes in the scenario where the image is built then scanned right away.
   # Should the scan fail then the image shouldn't be available publicly and so can be automatically deleted from the infrastructure to make sure a vulnerable image is not deployed.
   auto-delete-image: false
