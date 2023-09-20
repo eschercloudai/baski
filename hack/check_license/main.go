@@ -24,6 +24,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -134,6 +135,9 @@ func checkGoLicense() error {
 	var hasErrors bool
 
 	for _, path := range paths {
+		if strings.Contains(path, "generated") {
+			continue
+		}
 		if err := checkGoLicenseFile(path); err != nil {
 			fmt.Println(err)
 
