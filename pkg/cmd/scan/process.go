@@ -206,12 +206,16 @@ func runScan(osClient *ostack.Client, o *flags.ScanOptions, img *images.Image) e
 		Bucket:    o.ScanBucket,
 	}
 
-	s3Path := fmt.Sprintf("%s/%s", o.TrivyignorePath, o.TrivyignoreFilename)
-	if o.TrivyignorePath == "" {
-		s3Path = o.TrivyignoreFilename
+	trivyIgnoreFile := ""
+
+	if o.TrivyignoreFilename != "" {
+		trivyIgnoreFile = fmt.Sprintf("%s/%s", o.TrivyignorePath, o.TrivyignoreFilename)
+		if o.TrivyignorePath == "" {
+			trivyIgnoreFile = o.TrivyignoreFilename
+		}
 	}
 
-	userData := trivy.GenerateUserData(s3Connection, s3Path, o.TrivyignoreList)
+	userData := trivy.GenerateUserData(s3Connection, trivyIgnoreFile, o.TrivyignoreList)
 
 	server, err := osClient.CreateServer(kp, o, userData, img.ID)
 	if err != nil {

@@ -29,6 +29,11 @@ type S3 struct {
 	Bucket    string
 }
 
+type InterfaceS3 interface {
+	FetchFromS3(string) ([]byte, error)
+	PutToS3(string, string, string, io.ReadSeeker) error
+}
+
 // FetchFromS3 Downloads a file from an S3 bucket and returns its contents as a byte array.
 func (s *S3) FetchFromS3(fileName string) ([]byte, error) {
 	s3Conn := simples3.New("us-east-1", s.AccessKey, s.SecretKey)

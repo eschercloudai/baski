@@ -112,7 +112,9 @@ scan:
   # Minimum severity to check for during the scan.
   max-severity-type: MEDIUM
   # The bucket name in which the trivyignore file can be located.
-  trivyignore-bucket: "trivy"
+  scan-bucket: "baski"
+  # The file path in the bucket to the trivyignore file.
+  trivyignore-path: ""
   # The name of the trivyignore file in the bucket.
   trivyignore-filename: ".trivyignore"
   # A list of CVEs to add to the ignore list. If a file is also provided, this list will be appended to the list within the file.
