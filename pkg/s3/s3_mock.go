@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package trivy
+package s3
 
 import (
 	"errors"
@@ -36,7 +36,7 @@ func (s *S3Mocked) FetchFromS3(filename string) ([]byte, error) {
 	if filename != "results_test.json" {
 		return nil, errors.New("expected results_test.json for a filename")
 	}
-	return []byte("CVE-1234-56789"), nil
+	return []byte("CVE-1234-56789\nCVE-A1B2-56789"), nil
 }
 
 // PutToS3 checks the values that are being inputted to ensure it can run the actual command as it should

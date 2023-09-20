@@ -19,12 +19,13 @@ package trivy
 import (
 	"fmt"
 	"github.com/eschercloudai/baski/pkg/constants"
+	"github.com/eschercloudai/baski/pkg/s3"
 	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
 func TestGenerateUserData(t *testing.T) {
-	s3Mock := &S3Mocked{
+	s3Mock := &s3.S3Mocked{
 		Mock:      mock.Mock{},
 		Endpoint:  "endpoint",
 		AccessKey: "access-key",
@@ -38,7 +39,7 @@ func TestGenerateUserData(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name           string
-		s3             *S3Mocked
+		s3             *s3.S3Mocked
 		ignoreFile     string
 		ignoreList     []string
 		expectedResult []byte
@@ -65,7 +66,7 @@ func TestGenerateUserData(t *testing.T) {
 			expectedResult: generateTestCase(false, true),
 		},
 		{
-			name:           "Test case 4: ignore file and ignore list",
+			name:           "Test case 4: With ignore file and with ignore list",
 			s3:             s3Mock,
 			ignoreFile:     ignoreFile,
 			ignoreList:     ignoreList,
@@ -104,12 +105,15 @@ fi`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, con
 		trivyIgnoreFile = `
 cat << EOF > /tmp/.trivyignore
 CVE-1234-56789
+CVE-A1B2-56789
+
 EOF
 `
 		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
 	} else if !ignoreFile && ignoreList {
 		trivyIgnoreFile = `
 cat << EOF > /tmp/.trivyignore
+
 CVE-ABC-56789
 CVE-DEF-56789
 CVE-GHI-56789
@@ -120,6 +124,7 @@ EOF
 		trivyIgnoreFile = `
 cat << EOF > /tmp/.trivyignore
 CVE-1234-56789
+CVE-A1B2-56789
 CVE-ABC-56789
 CVE-DEF-56789
 CVE-GHI-56789

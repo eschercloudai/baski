@@ -15,6 +15,7 @@ require (
 	github.com/rhnvrm/simples3 v0.8.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.13.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -110,6 +111,7 @@ require (
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/tdewolff/minify/v2 v2.12.9 // indirect
 	github.com/tdewolff/parse/v2 v2.6.8 // indirect

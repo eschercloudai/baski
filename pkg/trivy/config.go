@@ -21,6 +21,7 @@ import (
 	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/eschercloudai/baski/pkg/s3"
 	"log"
+	"strings"
 )
 
 // GenerateUserData Creates the user data that will be passed to the server being created so that a .trivyignore can be added and the scan can be run as per the users wishes.
@@ -87,16 +88,12 @@ func generateTrivyFile(s3 s3.InterfaceS3, ignoreFileName string, ignoreList []st
 		}
 	}
 
-	return []byte(fmt.Sprintf("%s %s", string(trivyIgnoreFile), string(ignoreListData)))
+	return []byte(fmt.Sprintf("%s\n%s", string(trivyIgnoreFile), string(ignoreListData)))
 }
 
 // parseIgnoreList turns the ignore list passed into a format that can be used in the trivyignore file.
 func parseIgnoreList(ignoreList []string) []byte {
-	var list string
-
-	for i := 0; i < len(ignoreList); i++ {
-		list = fmt.Sprintf("\n%s\n%s\n", list, ignoreList[i])
-	}
+	list := strings.Join(ignoreList, "\n")
 
 	return []byte(list)
 }
