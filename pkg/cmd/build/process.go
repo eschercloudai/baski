@@ -23,15 +23,15 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	gitRepo "github.com/eschercloudai/baski/pkg/git"
 	systemUtils "github.com/eschercloudai/baski/pkg/system"
+	"github.com/eschercloudai/baski/pkg/util/flags"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
 )
 
-// CreateRepoDirectory create the random directory where the Image repo will be cloned into.
-func CreateRepoDirectory() string {
+// createRepoDirectory create the random directory where the Image repo will be cloned into.
+func createRepoDirectory() string {
 	var tmpDir string
 	uuidDir, err := uuid.NewRandom()
 	if err != nil {
@@ -48,8 +48,8 @@ func CreateRepoDirectory() string {
 	return dir
 }
 
-// FetchBuildRepo simply pulls the contents of the imageRepo to the specified path
-func FetchBuildRepo(path string, o *flags.BuildOptions) {
+// fetchBuildRepo simply pulls the contents of the imageRepo to the specified path
+func fetchBuildRepo(path string, o *flags.BuildOptions) {
 	branch := plumbing.ReferenceName("refs/heads/" + o.ImageRepoBranch)
 	imageRepo := o.ImageRepo
 
@@ -67,9 +67,9 @@ func FetchBuildRepo(path string, o *flags.BuildOptions) {
 	}
 }
 
-// InstallDependencies will run make dep-openstack so that any requirements such as packer, ansible
+// installDependencies will run make dep-openstack so that any requirements such as packer, ansible
 // and goss will be installed.
-func InstallDependencies(repoPath string, verbose bool) {
+func installDependencies(repoPath string, verbose bool) {
 	log.Printf("fetching dependencies\n")
 
 	w, err := os.Create("/tmp/out-deps.txt")
@@ -98,9 +98,9 @@ func InstallDependencies(repoPath string, verbose bool) {
 	}
 }
 
-// BuildImage will run make build-openstack-buildOS which will launch an instance in Openstack,
+// buildImage will run make build-openstack-buildOS which will launch an instance in Openstack,
 // add any requirements as defined in the image-builder imageRepo and then create an image from that build.
-func BuildImage(capiPath string, buildOS string, verbose bool) error {
+func buildImage(capiPath string, buildOS string, verbose bool) error {
 	log.Printf("building image\n")
 
 	w, err := os.Create("/tmp/out-build.txt")
@@ -128,8 +128,8 @@ func BuildImage(capiPath string, buildOS string, verbose bool) error {
 	return nil
 }
 
-// SaveImageIDToFile exports the image ID to a file so that it can be read later by the scan system - this will generally be used by the gitHub action.
-func SaveImageIDToFile(imgID string) error {
+// saveImageIDToFile exports the image ID to a file so that it can be read later by the scan system - this will generally be used by the gitHub action.
+func saveImageIDToFile(imgID string) error {
 	f, err := os.Create("/tmp/imgid.out")
 	if err != nil {
 		return err

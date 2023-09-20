@@ -17,69 +17,72 @@ limitations under the License.
 package trivy
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/eschercloudai/baski/pkg/constants"
-	"github.com/eschercloudai/baski/pkg/s3"
-	"github.com/stretchr/testify/mock"
+	"github.com/eschercloudai/baski/pkg/mock"
+	"go.uber.org/mock/gomock"
 	"testing"
 )
 
 func TestGenerateUserData(t *testing.T) {
-	s3Mock := &s3.S3Mocked{
-		Mock:      mock.Mock{},
-		Endpoint:  "endpoint",
-		AccessKey: "access-key",
-		SecretKey: "secret-key",
-		Bucket:    "bucket",
-	}
+	c := gomock.NewController(t)
+	defer c.Finish()
 
-	ignoreFile := "results_test.json"
+	m := mock.NewMockS3Interface(c)
+	// Set expectations for FetchFromS3.
+
+	ignoreFile := ".trivyignore"
+	fileBytes := []byte("CVE-1234-56789\nCVE-A1B2-56789")
 	ignoreList := []string{"CVE-ABC-56789", "CVE-DEF-56789", "CVE-GHI-56789"}
+
+	m.EXPECT().FetchFromS3(ignoreFile).Return(fileBytes, nil).AnyTimes()
 
 	// Define test cases
 	testCases := []struct {
 		name           string
-		s3             *s3.S3Mocked
+		s3             *mock.MockS3Interface
 		ignoreFile     string
 		ignoreList     []string
 		expectedResult []byte
 	}{
 		{
 			name:           "Test case 1: No ignore file and empty ignore list",
-			s3:             s3Mock,
+			s3:             m,
 			ignoreFile:     "",
 			ignoreList:     nil,
 			expectedResult: generateTestCase(false, false),
 		},
 		{
 			name:           "Test case 2: With ignore file and empty ignore list",
-			s3:             s3Mock,
+			s3:             m,
 			ignoreFile:     ignoreFile,
 			ignoreList:     nil,
 			expectedResult: generateTestCase(true, false),
 		},
 		{
 			name:           "Test case 3: No ignore file and with ignore list",
-			s3:             s3Mock,
+			s3:             m,
 			ignoreFile:     "",
 			ignoreList:     ignoreList,
 			expectedResult: generateTestCase(false, true),
 		},
 		{
 			name:           "Test case 4: With ignore file and with ignore list",
-			s3:             s3Mock,
+			s3:             m,
 			ignoreFile:     ignoreFile,
 			ignoreList:     ignoreList,
 			expectedResult: generateTestCase(true, true),
 		},
 	}
 
-	// Run the test cases
+	// RunScan the test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := GenerateUserData(tc.s3, tc.ignoreFile, tc.ignoreList)
-			if string(result) != string(tc.expectedResult) {
-				t.Errorf("Test case %s failed. Expected:\n%s\nGot:\n%s", tc.name, string(tc.expectedResult), string(result))
+
+			if !bytes.Equal(result, tc.expectedResult) {
+				t.Errorf("Expected data %s, got: %s\n", string(tc.expectedResult), string(result))
 			}
 		})
 	}

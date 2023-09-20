@@ -27,34 +27,37 @@ type S3 struct {
 	AccessKey string
 	SecretKey string
 	Bucket    string
-}
-
-type InterfaceS3 interface {
-	FetchFromS3(string) ([]byte, error)
-	PutToS3(string, string, string, io.ReadSeeker) error
+	s3Conn    *simples3.S3
 }
 
 // FetchFromS3 Downloads a file from an S3 bucket and returns its contents as a byte array.
 func (s *S3) FetchFromS3(fileName string) ([]byte, error) {
-	s3Conn := simples3.New("us-east-1", s.AccessKey, s.SecretKey)
-	s3Conn.SetEndpoint(s.Endpoint)
+	s.s3Conn = simples3.New("us-east-1", s.AccessKey, s.SecretKey)
+	s.s3Conn.SetEndpoint(s.Endpoint)
 
-	// Download the file.
-	file, err := s3Conn.FileDownload(simples3.DownloadInput{
+	input := simples3.DownloadInput{
 		Bucket:    s.Bucket,
 		ObjectKey: fileName,
-	})
+	}
+	// Download the file.
+	file, err := s.download(input)
+
 	if err != nil {
-		return nil, fmt.Errorf("failed to download file from S3: %v", err)
+		return nil, fmt.Errorf("failed to download file from S3: %v\n", err)
 	}
 	defer file.Close()
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file contents: %v", err)
+		return nil, fmt.Errorf("failed to read file contents: %v\n", err)
 	}
 
 	return data, nil
+}
+
+// fileDownload Downloads the file from an S3 bucket
+func (s *S3) download(input simples3.DownloadInput) (io.ReadCloser, error) {
+	return s.s3Conn.FileDownload(input)
 }
 
 // PutToS3 Pushes a file to an S3 bucket.
@@ -63,17 +66,22 @@ func (s *S3) PutToS3(contentType, key, fileName string, body io.ReadSeeker) erro
 	s3Conn.SetEndpoint(s.Endpoint)
 
 	// Put the file into S3.
-	opts := simples3.UploadInput{
+	input := simples3.UploadInput{
 		Bucket:      s.Bucket,
 		ObjectKey:   key,
 		ContentType: contentType,
 		FileName:    fileName,
 		Body:        body,
 	}
-	_, err := s3Conn.FilePut(opts)
+	_, err := s.upload(input)
 	if err != nil {
-		return fmt.Errorf("failed to push file to S3: %v", err)
+		return fmt.Errorf("failed to push file to S3: %v\n", err)
 	}
 
 	return nil
+}
+
+// PutToS3 Pushes a file to an S3 bucket.
+func (s *S3) upload(input simples3.UploadInput) (simples3.PutResponse, error) {
+	return s.s3Conn.FilePut(input)
 }

@@ -19,8 +19,8 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/server/server"
+	"github.com/eschercloudai/baski/pkg/util/flags"
 	"github.com/spf13/cobra"
 	"log"
 	"net/http"
