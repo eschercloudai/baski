@@ -1,0 +1,159 @@
+openapi: "3.0.3"
+info:
+  version: 0.0.1
+  title: Baski Server
+  description: |-
+    Baski Server is a tool to enable Baski to have an api that can be queried to pull data out of it. It begun as a 
+    tool from which the scan results can be pulled from and has grown since then.
+paths:
+  /api/v1/scan/{image-id}:
+    get:
+      operationId: apiV1GetScan
+      summary: Get a scan result
+      parameters:
+        - $ref: '#/components/parameters/imageID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/scanResult'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+components:
+  parameters:
+    imageID:
+      name: image-id
+      in: path
+      required: true
+      schema:
+        description: The ID of an image for which to get the scan results for.
+        type: string
+  responses:
+    scanResult:
+      description: A scan result.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/scanResult'
+    updatedResponse:
+      description: Update request processed.
+    deletedResponse:
+      description: Deletion request processed.
+    badRequestResponse:
+      description: Request body failed schema validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseError'
+    unauthorizedResponse:
+      description: Authentication failed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseError'
+    internalServerErrorResponse:
+      description: An unexpected error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/responseError'
+    notFoundResponse:
+      description: Unable to find a resource.
+  schemas:
+    responseError:
+      description: Generic error message.
+      type: object
+      required:
+        - error
+        - error_description
+      properties:
+        error:
+          description: An error string expanding on the HTTP error code.
+          type: string
+          enum:
+            - not_found
+            - method_not_allowed
+            - unsupported_media_type
+        error_description:
+          description: Message describing the error.
+          type: string
+
+    cvss:
+      description: The name of the package
+      type: object
+      items:
+        properties:
+          ghsa:
+            $ref: '#/components/schemas/cvssType'
+          nvd:
+            $ref: '#/components/schemas/cvssType'
+          redhat:
+            $ref: '#/components/schemas/cvssType'
+
+    cvssType:
+      description: The name of the package
+      type: object
+      items:
+        properties:
+          v2Vector:
+            description: The name of the package
+            type: string
+          v3Vector:
+            description: The name of the package
+            type: string
+          v2Score:
+            description: The name of the package
+            type: string
+          v3Score:
+            description: The name of the package
+            type: string
+
+    scanResult:
+      description: A scan result.
+      type: object
+      example:
+        - vulnerabilityID: string
+          description: string
+          pkgName: string
+          installedVersion: string
+          severity: string
+          cvss:
+            ghsa:
+              v2Vector: string
+              v3Vector: string
+              v2Score: string
+              v3Score: string
+            nvd:
+              v2Vector: string
+              v3Vector: string
+              v2Score: string
+              v3Score: string
+            redhat:
+              v2Vector: string
+              v3Vector: string
+              v2Score: string
+              v3Score: string
+          fixedVersion: string
+      properties:
+        vulnerabilityID:
+          description: The name of the package
+          type: string
+        description:
+          description: The name of the package
+          type: string
+        pkgName:
+          description: The name of the package
+          type: string
+        installedVersion:
+          description: The name of the package
+          type: string
+        severity:
+          description: The name of the package
+          type: string
+        cvss:
+          $ref: '#/components/schemas/cvss'
+        fixedVersion:
+          description: The name of the package
+          type: string

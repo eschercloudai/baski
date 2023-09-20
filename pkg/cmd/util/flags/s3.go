@@ -37,7 +37,7 @@ func (o *S3Flags) SetOptionsFromViper() {
 
 }
 
-func (o *S3Flags) AddFlags(cmd *cobra.Command, imageBuilderRepo string) {
+func (o *S3Flags) AddFlags(cmd *cobra.Command) {
 	StringVarWithViper(cmd, &o.Endpoint, viperS3Prefix, "endpoint", "", "The endpoint of the bucket from which to download resources")
 	StringVarWithViper(cmd, &o.AccessKey, viperS3Prefix, "access-key", "", "The access key used to access the bucket from which to download resources")
 	StringVarWithViper(cmd, &o.SecretKey, viperS3Prefix, "secret-key", "", "The secret key used to access the bucket from which to download resources")
