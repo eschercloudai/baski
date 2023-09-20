@@ -24,7 +24,7 @@ import (
 )
 
 // GenerateUserData Creates the user data that will be passed to the server being created so that a .trivyignore can be added and the scan can be run as per the users wishes.
-func GenerateUserData(s3 *s3.S3, ignoreFileName string, ignoreList []string) []byte {
+func GenerateUserData(s3 s3.InterfaceS3, ignoreFileName string, ignoreList []string) []byte {
 	trivyIgnoreData := generateTrivyFile(s3, ignoreFileName, ignoreList)
 
 	log.Println("generating userdata")
@@ -39,7 +39,8 @@ func GenerateUserData(s3 *s3.S3, ignoreFileName string, ignoreList []string) []b
 	mv ./trivy /usr/local/bin/trivy;
 fi`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion)
 
-	runScanData := "sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /;"
+	// Set the default command to run here - it may get overridden later.
+	runScanCommand := "sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /;"
 
 	// Prepare .trivyignore file
 	if len(trivyIgnoreData) > 0 {
@@ -49,7 +50,8 @@ cat << EOF > /tmp/.trivyignore
 EOF
 `, string(trivyIgnoreData))
 
-		runScanData = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
+		//Override the command to run as we now have a .trivyignore to add
+		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
 	}
 
 	// Put it all together
@@ -59,14 +61,19 @@ touch /tmp/finished;
 %s
 %s
 echo done > /tmp/finished;
-`, trivyIgnoreFile, trivyUserData, runScanData))
+`, trivyIgnoreFile, trivyUserData, runScanCommand))
 
 }
 
 // generateTrivyFile generates the trivyignore file to be used during the scan.
-func generateTrivyFile(s3 *s3.S3, ignoreFileName string, ignoreList []string) []byte {
+func generateTrivyFile(s3 s3.InterfaceS3, ignoreFileName string, ignoreList []string) []byte {
 	var ignoreListData, trivyIgnoreFile []byte
 	var err error
+
+	//We return nothing if there are no checks required
+	if len(ignoreList) == 0 && len(ignoreFileName) == 0 {
+		return nil
+	}
 
 	// Check if a list of CVEs was passed in before checking for a trivyIgnore file
 	if len(ignoreList) != 0 {

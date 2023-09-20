@@ -44,10 +44,13 @@ func (o *Options) AddFlags(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&o.dev, "dev", "d", false, "Set to true to allow all in cors world")
 	o.S3Flags.AddFlags(cmd)
 	cmd.Flags().StringVar(&o.bucket, "bucket", "baski", "The S3 bucket")
+
+	for _, flag := range []string{"endpoint", "access-key", "secret-key", "bucket"} {
+		requireFlag(cmd, flag)
+	}
 }
 
 func requireFlag(cmd *cobra.Command, name string) {
-
 	err := cmd.MarkFlagRequired(name)
 	if err != nil {
 		log.Fatalln(err)
