@@ -35,9 +35,12 @@ func TestCreateKeypair(t *testing.T) {
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/os-keypairs", func(w http.ResponseWriter, r *http.Request) {
-
 		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, CreateKeyPairOutput)
+		_, err := fmt.Fprint(w, CreateKeyPairOutput)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	})
 
 	cc := &ComputeClient{
@@ -79,16 +82,24 @@ func TestCreateServer(t *testing.T) {
 	th.Mux.HandleFunc("/servers", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, SingleServerBody)
+		_, err := fmt.Fprint(w, SingleServerBody)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	})
 
 	th.Mux.HandleFunc("/images/detail", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
-		r.ParseForm()
+		err := r.ParseForm()
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		marker := r.Form.Get("marker")
 		switch marker {
 		case "":
-			fmt.Fprintf(w, `
+			_, err = fmt.Fprint(w, `
 				{
 					"images": [
 						{
@@ -116,8 +127,16 @@ func TestCreateServer(t *testing.T) {
 					]
 				}
 			`)
+			if err != nil {
+				t.Error(err)
+				return
+			}
 		case "2":
-			fmt.Fprintf(w, `{ "images": [] }`)
+			_, err = fmt.Fprint(w, `{ "images": [] }`)
+			if err != nil {
+				t.Error(err)
+				return
+			}
 		default:
 			t.Fatalf("Unexpected marker: [%s]", marker)
 		}
@@ -125,7 +144,11 @@ func TestCreateServer(t *testing.T) {
 
 	th.Mux.HandleFunc("/flavors/detail", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
-		r.ParseForm()
+		err := r.ParseForm()
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		marker := r.Form.Get("marker")
 		switch marker {
 		case "":
@@ -185,7 +208,11 @@ func TestGetServerStatus(t *testing.T) {
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/servers/9e5476bd-a4ec-4653-93d6-72c93aa682ba", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, SingleServerBody)
+		_, err := fmt.Fprint(w, SingleServerBody)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	})
 
 	cc := &ComputeClient{
@@ -246,7 +273,11 @@ func TestGetFlavorIDByName(t *testing.T) {
 
 	th.Mux.HandleFunc("/flavors/detail", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
-		r.ParseForm()
+		err := r.ParseForm()
+		if err != nil {
+			t.Error(err)
+			return
+		}
 		marker := r.Form.Get("marker")
 		switch marker {
 		case "":

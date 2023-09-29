@@ -30,11 +30,15 @@ func TestRunMake(t *testing.T) {
 		return
 	}
 	defer w.Close()
-	w.WriteString(`
+	_, err = w.WriteString(`
 # Define the target to echo the environment variable
 echo-env-var:
 	@echo "The value of $(TEST) is: $$(echo $$$(TEST))"
 `)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	o, err := os.Create("/tmp/output")
 	if err != nil {

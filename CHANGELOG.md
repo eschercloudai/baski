@@ -1,12 +1,18 @@
 # Changelog
 
-## [ Upcoming Release - v0.1.0-beta.9 ]
+## [ Upcoming Release - v0.1.0-beta.10 ]
+### Changed/Added
+### Fixed
+### Deprecated
+
+## [ 02/08/2023 - v0.1.0-beta.9 ]
 
 ### Changed/Added
 * Added a server so baski can serve up scans via an API
-* Added initial tests
+* Added unit-tests
 * Updated builds to include server as a separate binary and docker image
 * Updated golang version in pipeline
+* Removed the publish command and all related code.
 
 ### Fixed
 

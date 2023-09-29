@@ -292,7 +292,11 @@ func TestFetchAllImages(t *testing.T) {
 		addNext := false
 		var imageJSON []string
 
-		fmt.Fprintf(w, `{"images": [`)
+		_, err = fmt.Fprint(w, `{"images": [`)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 		for _, i := range testImages {
 			if marker == "" || addNext {
@@ -311,12 +315,20 @@ func TestFetchAllImages(t *testing.T) {
 			}
 		}
 		t.Logf("Writing out %v image(s)", len(imageJSON))
-		fmt.Fprintf(w, strings.Join(imageJSON, ","))
+		_, err = fmt.Fprint(w, strings.Join(imageJSON, ","))
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-		fmt.Fprintf(w, `],
+		_, err = fmt.Fprintf(w, `],
 			    "next": "/images?marker=%s&limit=%v",
 			    "schema": "/schemas/images",
 			    "first": "/images?limit=%v"}`, newMarker, limit, limit)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 	})
 
@@ -396,12 +408,20 @@ func TestFetchImage(t *testing.T) {
 			}
 		}
 		t.Logf("Writing out %v image(s)", len(imageJSON))
-		fmt.Fprintf(w, strings.Join(imageJSON, ","))
+		_, err = fmt.Fprint(w, strings.Join(imageJSON, ","))
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-		fmt.Fprintf(w, `],
+		_, err = fmt.Fprintf(w, `],
 			    "next": "/images?marker=%s&limit=%v",
 			    "schema": "/schemas/images",
 			    "first": "/images?limit=%v"}`, newMarker, limit, limit)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 	})
 

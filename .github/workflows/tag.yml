@@ -20,6 +20,7 @@ jobs:
         with:
           version: latest
           skip-cache: true
+          args: --timeout=30m
 
   test:
     name: Run tests

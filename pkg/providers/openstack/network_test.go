@@ -38,14 +38,22 @@ func TestGetFloatingIP(t *testing.T) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		fmt.Fprintf(w, ListResponse)
+		_, err := fmt.Fprint(w, ListResponse)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	})
 
 	th.Mux.HandleFunc("/v2.0/floatingips", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 
-		fmt.Fprintf(w, fipCreate)
+		_, err := fmt.Fprint(w, fipCreate)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	})
 
 	nc := &NetworkClient{
