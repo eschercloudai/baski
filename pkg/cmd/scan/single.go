@@ -18,9 +18,11 @@ package scan
 
 import (
 	"errors"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/providers/openstack"
+	"github.com/eschercloudai/baski/pkg/providers/scanner"
+	"github.com/eschercloudai/baski/pkg/s3"
 	"github.com/eschercloudai/baski/pkg/trivy"
+	"github.com/eschercloudai/baski/pkg/util/flags"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -39,22 +41,49 @@ Scanning an a single image - useful for when an image has just been built.
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
-			if !trivy.ValidSeverity(strings.ToUpper(o.MaxSeverityType)) {
+			if !trivy.ValidSeverity(trivy.Severity(strings.ToUpper(o.MaxSeverityType))) {
 				return errors.New("severity value passed is invalid. Allowed values are: NONE, LOW, MEDIUM, HIGH, CRITICAL")
 			}
 
-			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
-			cloudsConfig.SetOpenstackEnvs(o.CloudName)
+			cloudProvider := ostack.NewCloudsProvider(o.CloudName)
 
-			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
+			i, err := ostack.NewImageClient(cloudProvider)
+			if err != nil {
+				return err
+			}
 
-			img, err := osClient.FetchImage(o.ImageID)
+			c, err := ostack.NewComputeClient(cloudProvider)
+			if err != nil {
+				return err
+			}
+
+			n, err := ostack.NewNetworkClient(cloudProvider)
+			if err != nil {
+				return err
+			}
+
+			img, err := i.FetchImage(o.ImageID)
 
 			if err != nil {
 				return err
 			}
 
-			err = runScan(osClient, &o.ScanOptions, img)
+			s := scanner.NewScanner(c, i, n, &s3.S3{
+				Endpoint:  o.Endpoint,
+				AccessKey: o.AccessKey,
+				SecretKey: o.SecretKey,
+				Bucket:    o.ScanBucket,
+			})
+
+			err = s.RunScan(&o.ScanOptions, img)
+			if err != nil {
+				return err
+			}
+			err = s.FetchScanResults()
+			if err != nil {
+				return err
+			}
+			err = s.ParseScanResults(img, o.MaxSeverityScore, o.MaxSeverityType, o.AutoDeleteImage, o.SkipCVECheck)
 			if err != nil {
 				return err
 			}

@@ -21,12 +21,12 @@ RUN apk add bash build-base jq curl git python3 py3-pip openssh-client
 RUN echo "ServerAliveInterval 120" >> /etc/ssh/ssh_config
 
 RUN echo "baski:x:1000:1000:Baski Non Root,,,:/home/baski:" >> /etc/passwd
-RUN mkdir -p /home/baski/.config/openstack/
+RUN mkdir -p /home/baski/
 RUN chown baski: -R /home/baski
 
-COPY --from=go-builder /tmp/baski /usr/bin/
+COPY --from=go-builder /tmp/baski-server /usr/bin/
 
-RUN chmod 755 /usr/bin/baski
+RUN chmod 755 /usr/bin/baski-server
 ENV PATH=${PATH}:/home/baski/.local/bin/
 
 USER 1000

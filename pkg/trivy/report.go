@@ -32,26 +32,26 @@ const (
 )
 
 // CheckSeverity compares two severities to see if a threshold has been met. IE: is sev: HIGH >= check: MEDIUM.
-func CheckSeverity(sev, check string) bool {
-	var sevValue, checkValue int
-	sevValue = parseSeverity(Severity(sev))
-	checkValue = parseSeverity(Severity(check))
+func CheckSeverity(sev, threshold Severity) bool {
+	var sevValue, thresholdValue int
+	sevValue = parseSeverity(sev)
+	thresholdValue = parseSeverity(threshold)
 
-	return sevValue >= checkValue
+	return sevValue >= thresholdValue
 }
 
 // ValidSeverity confirms that the supplied value is a valid severity value.
-func ValidSeverity(val string) bool {
+func ValidSeverity(val Severity) bool {
 	switch val {
-	case "NONE":
+	case NONE:
 		return true
-	case "LOW":
+	case LOW:
 		return true
-	case "MEDIUM":
+	case MEDIUM:
 		return true
-	case "HIGH":
+	case HIGH:
 		return true
-	case "CRITICAL":
+	case CRITICAL:
 		return true
 	}
 

@@ -19,13 +19,13 @@ package trivy
 import (
 	"fmt"
 	"github.com/eschercloudai/baski/pkg/constants"
-	"github.com/eschercloudai/baski/pkg/s3"
+	"github.com/eschercloudai/baski/pkg/util"
 	"log"
 	"strings"
 )
 
 // GenerateUserData Creates the user data that will be passed to the server being created so that a .trivyignore can be added and the scan can be run as per the users wishes.
-func GenerateUserData(s3 s3.InterfaceS3, ignoreFileName string, ignoreList []string) []byte {
+func GenerateUserData(s3 util.S3Interface, ignoreFileName string, ignoreList []string) []byte {
 	trivyIgnoreData := generateTrivyFile(s3, ignoreFileName, ignoreList)
 
 	log.Println("generating userdata")
@@ -67,7 +67,7 @@ echo done > /tmp/finished;
 }
 
 // generateTrivyFile generates the trivyignore file to be used during the scan.
-func generateTrivyFile(s3 s3.InterfaceS3, ignoreFileName string, ignoreList []string) []byte {
+func generateTrivyFile(s3 util.S3Interface, ignoreFileName string, ignoreList []string) []byte {
 	var ignoreListData, trivyIgnoreFile []byte
 	var err error
 

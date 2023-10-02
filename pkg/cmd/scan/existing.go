@@ -18,9 +18,11 @@ package scan
 
 import (
 	"errors"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	"github.com/eschercloudai/baski/pkg/providers/openstack"
+	"github.com/eschercloudai/baski/pkg/providers/scanner"
+	"github.com/eschercloudai/baski/pkg/s3"
 	"github.com/eschercloudai/baski/pkg/trivy"
+	"github.com/eschercloudai/baski/pkg/util/flags"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/spf13/cobra"
 	"log"
@@ -47,16 +49,28 @@ to prevent every single image being launched for a scan, the concurrency is limi
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
-			if !trivy.ValidSeverity(strings.ToUpper(o.MaxSeverityType)) {
+			if !trivy.ValidSeverity(trivy.Severity(strings.ToUpper(o.MaxSeverityType))) {
 				return errors.New("severity value passed is invalid. Allowed values are: NONE, LOW, MEDIUM, HIGH, CRITICAL")
 			}
 
-			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
-			cloudsConfig.SetOpenstackEnvs(o.CloudName)
+			cloudProvider := ostack.NewCloudsProvider(o.CloudName)
 
-			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
+			i, err := ostack.NewImageClient(cloudProvider)
+			if err != nil {
+				return err
+			}
 
-			imgs, err := osClient.FetchAllImages(o.ImageSearch)
+			c, err := ostack.NewComputeClient(cloudProvider)
+			if err != nil {
+				return err
+			}
+
+			n, err := ostack.NewNetworkClient(cloudProvider)
+			if err != nil {
+				return err
+			}
+
+			imgs, err := i.FetchAllImages(o.ImageSearch)
 			if err != nil {
 				return err
 			}
@@ -64,19 +78,27 @@ to prevent every single image being launched for a scan, the concurrency is limi
 			semaphore := make(chan struct{}, o.Concurrency)
 			var wg sync.WaitGroup
 
-			for i, img := range imgs {
+			for _, img := range imgs {
 				wg.Add(1)
 				semaphore <- struct{}{}
-				go func(image images.Image, id int) {
+				go func(image images.Image) {
 					defer func() {
 						<-semaphore // Release the slot in the semaphore
 					}()
-					err = scanServer(osClient, o.ScanOptions, image, id, &wg)
+
+					s := scanner.NewScanner(c, i, n, &s3.S3{
+						Endpoint:  o.Endpoint,
+						AccessKey: o.AccessKey,
+						SecretKey: o.SecretKey,
+						Bucket:    o.ScanBucket,
+					})
+
+					err = scanServer(o.ScanOptions, s, &image, &wg)
 					if err != nil {
 						log.Println(err)
 					}
 
-				}(img, i)
+				}(img)
 			}
 			wg.Wait()
 
@@ -91,15 +113,24 @@ to prevent every single image being launched for a scan, the concurrency is limi
 	return cmd
 }
 
-func scanServer(osClient *ostack.Client, opts flags.ScanOptions, img images.Image, id int, wg *sync.WaitGroup) error {
+func scanServer(o flags.ScanOptions, s *scanner.ScannerClient, img *images.Image, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
-	log.Printf("Processing Image %d with ID: %s\n", id, img.ID)
-	err := runScan(osClient, &opts, &img)
+	log.Printf("Processing Image with ID: %s\n", img.ID)
+
+	err := s.RunScan(&o, img)
+	if err != nil {
+		return err
+	}
+	err = s.FetchScanResults()
+	if err != nil {
+		return err
+	}
+	err = s.ParseScanResults(img, o.MaxSeverityScore, o.MaxSeverityType, o.AutoDeleteImage, o.SkipCVECheck)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Finished processing Image %d with ID: %s\n", id, img.ID)
+	log.Printf("Finished processing Image ID: %s\n", img.ID)
 	return nil
 }

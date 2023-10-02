@@ -38,16 +38,16 @@ var swaggerSpec = []string{
 func decodeSpec() ([]byte, error) {
 	zipped, err := base64.StdEncoding.DecodeString(strings.Join(swaggerSpec, ""))
 	if err != nil {
-		return nil, fmt.Errorf("error base64 decoding spec: %s", err)
+		return nil, fmt.Errorf("error base64 decoding spec: %s\n", err)
 	}
 	zr, err := gzip.NewReader(bytes.NewReader(zipped))
 	if err != nil {
-		return nil, fmt.Errorf("error decompressing spec: %s", err)
+		return nil, fmt.Errorf("error decompressing spec: %s\n", err)
 	}
 	var buf bytes.Buffer
 	_, err = buf.ReadFrom(zr)
 	if err != nil {
-		return nil, fmt.Errorf("error decompressing spec: %s", err)
+		return nil, fmt.Errorf("error decompressing spec: %s\n", err)
 	}
 
 	return buf.Bytes(), nil
@@ -88,7 +88,7 @@ func GetSwagger() (swagger *openapi3.T, err error) {
 		pathToFile = path.Clean(pathToFile)
 		getSpec, ok := resolvePath[pathToFile]
 		if !ok {
-			err1 := fmt.Errorf("path not found: %s", pathToFile)
+			err1 := fmt.Errorf("path not found: %s\n", pathToFile)
 			return nil, err1
 		}
 		return getSpec()

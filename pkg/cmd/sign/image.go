@@ -17,10 +17,10 @@ limitations under the License.
 package sign
 
 import (
-	"github.com/eschercloudai/baski/pkg/cmd/util/data"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	"github.com/eschercloudai/baski/pkg/cmd/util/sign"
-	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	ostack "github.com/eschercloudai/baski/pkg/providers/openstack"
+	"github.com/eschercloudai/baski/pkg/util/data"
+	"github.com/eschercloudai/baski/pkg/util/flags"
+	"github.com/eschercloudai/baski/pkg/util/sign"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/spf13/cobra"
 	"log"
@@ -49,9 +49,13 @@ If using vault, the key should be stored as follows:
 
 			var key []byte
 			var err error
-			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
-			cloudsConfig.SetOpenstackEnvs(o.CloudName)
+
 			imgID := getImageID(o.ImageID)
+
+			vaultClient := sign.VaultClient{
+				Endpoint: o.VaultURL,
+				Token:    o.VaultToken,
+			}
 
 			if len(o.PrivateKey) != 0 {
 				key, err = os.ReadFile(o.PrivateKey)
@@ -59,20 +63,25 @@ If using vault, the key should be stored as follows:
 					return err
 				}
 			} else if len(o.VaultURL) != 0 {
-				key, err = sign.FetchPrivateKeyFromVault(o.VaultURL, o.VaultToken, o.VaultMountPath, o.VaultSecretPath)
+				key, err = vaultClient.Fetch(o.VaultMountPath, o.VaultSecretPath, "private-key")
 				if err != nil {
 					return err
 				}
 			}
-			privKey := sign.DecodePrivateKey(key)
 
-			digest, err := sign.Sign(imgID, privKey)
+			digest, err := sign.Sign(imgID, key)
 			if err != nil {
 				return err
 			}
 
-			osClient := ostack.NewOpenstackClient(cloudsConfig.Clouds[o.CloudName])
-			img, err := osClient.FetchImage(imgID)
+			cloudProvider := ostack.NewCloudsProvider(o.CloudName)
+
+			i, err := ostack.NewImageClient(cloudProvider)
+			if err != nil {
+				return err
+			}
+
+			img, err := i.FetchImage(imgID)
 			if err != nil {
 				return err
 			}
@@ -86,7 +95,7 @@ If using vault, the key should be stored as follows:
 			}
 
 			log.Println("attaching digest to image metadata")
-			_, err = osClient.ModifyImageMetadata(imgID, "digest", digest, operation)
+			_, err = i.ModifyImageMetadata(imgID, "digest", digest, operation)
 
 			if err != nil {
 				return err

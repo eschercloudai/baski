@@ -17,8 +17,8 @@ limitations under the License.
 package sign
 
 import (
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
-	"github.com/eschercloudai/baski/pkg/cmd/util/sign"
+	"github.com/eschercloudai/baski/pkg/util/flags"
+	"github.com/eschercloudai/baski/pkg/util/sign"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -43,20 +43,23 @@ This just validates a signature. It's useful for verifying a signed image.
 			var err error
 			imgID := getImageID(o.ImageID)
 
+			vaultClient := sign.VaultClient{
+				Endpoint: o.VaultURL,
+				Token:    o.VaultToken,
+			}
 			if len(o.PublicKey) != 0 {
 				key, err = os.ReadFile(o.PublicKey)
 				if err != nil {
 					return err
 				}
 			} else if len(o.VaultURL) != 0 {
-				key, err = sign.FetchPublicKeyFromVault(o.VaultURL, o.VaultToken)
+				key, err = vaultClient.Fetch(o.VaultMountPath, o.VaultSecretPath, "public-key")
 				if err != nil {
 					return err
 				}
 			}
-			pubKey := sign.DecodePublicKey(key)
 
-			valid, err := sign.Validate(imgID, pubKey, o.Digest)
+			valid, err := sign.Validate(imgID, key, o.Digest)
 			if err != nil {
 				return err
 			}

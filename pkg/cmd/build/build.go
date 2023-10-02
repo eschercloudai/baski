@@ -18,11 +18,13 @@ package build
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/cmd/util/data"
-	"github.com/eschercloudai/baski/pkg/cmd/util/flags"
 	"github.com/eschercloudai/baski/pkg/constants"
-	ostack "github.com/eschercloudai/baski/pkg/openstack"
+	ostack "github.com/eschercloudai/baski/pkg/providers/openstack"
+	"github.com/eschercloudai/baski/pkg/providers/packer"
+	"github.com/eschercloudai/baski/pkg/util/data"
+	"github.com/eschercloudai/baski/pkg/util/flags"
 	"github.com/spf13/cobra"
+	"os"
 	"path/filepath"
 )
 
@@ -50,28 +52,32 @@ To use baski to build an image, an Openstack cluster is required.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
-			cloudsConfig := ostack.InitOpenstack(o.CloudsPath)
-			packerBuildConfig := ostack.InitPackerConfig(o)
 			if !checkValidOSSelected(o.BuildOS) {
 				return fmt.Errorf("an unsupported OS has been entered. Please select a valid OS: %s\n", constants.SupportedOS)
 			}
 
-			buildGitDir := CreateRepoDirectory()
-			FetchBuildRepo(buildGitDir, o)
-
-			metadata := ostack.GenerateBuilderMetadata(o)
-			err := ostack.UpdatePackerBuildersJson(buildGitDir, metadata)
+			err := os.Setenv("OS_CLOUD", o.CloudName)
 			if err != nil {
 				return err
 			}
+
+			packerBuildConfig := packer.InitConfig(o)
+			metadata := ostack.GenerateBuilderMetadata(o)
+
+			buildGitDir := createRepoDirectory()
+			fetchBuildRepo(buildGitDir, o)
+
+			err = packer.UpdatePackerBuildersJson(buildGitDir, metadata)
+			if err != nil {
+				return err
+			}
+
 			capiPath := filepath.Join(buildGitDir, "images", "capi")
 			packerBuildConfig.GenerateVariablesFile(capiPath)
 
-			InstallDependencies(capiPath, o.Verbose)
+			installDependencies(capiPath, o.Verbose)
 
-			cloudsConfig.SetOpenstackEnvs(o.CloudName)
-
-			err = BuildImage(capiPath, o.BuildOS, o.Verbose)
+			err = buildImage(capiPath, o.BuildOS, o.Verbose)
 			if err != nil {
 				return err
 			}
@@ -81,7 +87,7 @@ To use baski to build an image, an Openstack cluster is required.`,
 				return err
 			}
 
-			err = SaveImageIDToFile(imgID)
+			err = saveImageIDToFile(imgID)
 			if err != nil {
 				return err
 			}
