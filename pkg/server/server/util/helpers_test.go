@@ -14,26 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package scans
+package util
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/eschercloudai/baski/pkg/s3"
-	"github.com/eschercloudai/baski/pkg/server/generated"
+	"reflect"
+	"testing"
 )
 
-func FetchScanResult(imageID string, s3 *s3.S3) (*[]generated.ScanResult, error) {
-	res, err := s3.FetchFromS3(fmt.Sprintf("scans/%s/results.json", imageID))
-	if err != nil {
-		return nil, err
+func TestString(t *testing.T) {
+	s := "some_string"
+	test := String(s)
+	if reflect.ValueOf(test).Kind() != reflect.Ptr {
+		t.Errorf("expected pointer but didn't get one")
 	}
-	scanRes := []generated.ScanResult{}
-
-	fmt.Println(string(res))
-	err = json.Unmarshal(res, &scanRes)
-	if err != nil {
-		return nil, err
-	}
-	return &scanRes, nil
 }

@@ -25,10 +25,6 @@ import (
 	"testing"
 )
 
-func fetch(s util.S3Interface) ([]byte, error) {
-	return s.FetchFromS3("trivyignore")
-}
-
 func put(s util.S3Interface) error {
 	f := createFile()
 	t := s.PutToS3("text/plain", "path/results.json", "results.json", f)
@@ -42,7 +38,7 @@ func TestFetchFromS3(t *testing.T) {
 	m := mock.NewMockS3Interface(c)
 
 	m.EXPECT().FetchFromS3(gomock.Eq("trivyignore")).Return([]byte("some data"), nil)
-	if _, err := fetch(m); err != nil {
+	if _, err := m.FetchFromS3("trivyignore"); err != nil {
 		t.Error(err)
 	}
 }

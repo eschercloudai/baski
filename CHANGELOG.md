@@ -1,13 +1,33 @@
 # Changelog
 
-## [ Upcoming Release - v0.1.0-beta.10 ]
+## [ Upcoming Release - v0.1.0 ]
+
 ### Changed/Added
+
 ### Fixed
+
 ### Deprecated
+
+## [ 03/10/2023 - v0.1.0-beta.10 ]
+
+### Changed/Added
+
+* Updated issue templates
+* Added new Baski server for serving up CVE reports for image scans
+* Pipelines updated to support new server build requirements
+* Updated to latest Golang
+* Added tests for Server
+
+### Fixed
+
+### Deprecated
+
+* Remove publish and all related code
 
 ## [ 02/08/2023 - v0.1.0-beta.9 ]
 
 ### Changed/Added
+
 * Added a server so baski can serve up scans via an API
 * Added unit-tests
 * Updated builds to include server as a separate binary and docker image
@@ -26,6 +46,7 @@
 * Changed log.fatals to returns so that RunE can handle the error.
 
 ### Fixed
+
 * Fixed code to support new repo changes in kubernetes.
 
 ### Deprecated

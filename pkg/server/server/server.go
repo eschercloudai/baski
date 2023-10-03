@@ -18,6 +18,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/eschercloudai/baski/pkg/s3"
 	"github.com/eschercloudai/baski/pkg/server/generated"
 	"github.com/eschercloudai/baski/pkg/server/handler"
 	"github.com/gorilla/mux"
@@ -54,7 +55,13 @@ func (s *Server) NewServer(dev bool) (*http.Server, error) {
 		middleware = append(middleware, CORSAllowOriginAllMiddleware)
 	}
 
-	handlers := handler.New(s.Options.Endpoint, s.Options.AccessKey, s.Options.SecretKey, s.Options.Bucket)
+	sc := &s3.S3{
+		Endpoint:  s.Options.Endpoint,
+		AccessKey: s.Options.AccessKey,
+		SecretKey: s.Options.SecretKey,
+		Bucket:    s.Options.Bucket,
+	}
+	handlers := handler.New(sc)
 
 	options := generated.GorillaServerOptions{
 		BaseRouter:  r,

@@ -10,11 +10,60 @@ package mock
 
 import (
 	io "io"
+	http "net/http"
 	os "os"
 	reflect "reflect"
 
+	generated "github.com/eschercloudai/baski/pkg/server/generated"
 	gomock "go.uber.org/mock/gomock"
 )
+
+// MockHandlerInterface is a mock of HandlerInterface interface.
+type MockHandlerInterface struct {
+	ctrl     *gomock.Controller
+	recorder *MockHandlerInterfaceMockRecorder
+}
+
+// MockHandlerInterfaceMockRecorder is the mock recorder for MockHandlerInterface.
+type MockHandlerInterfaceMockRecorder struct {
+	mock *MockHandlerInterface
+}
+
+// NewMockHandlerInterface creates a new mock instance.
+func NewMockHandlerInterface(ctrl *gomock.Controller) *MockHandlerInterface {
+	mock := &MockHandlerInterface{ctrl: ctrl}
+	mock.recorder = &MockHandlerInterfaceMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockHandlerInterface) EXPECT() *MockHandlerInterfaceMockRecorder {
+	return m.recorder
+}
+
+// ApiV1GetScan mocks base method.
+func (m *MockHandlerInterface) ApiV1GetScan(w http.ResponseWriter, r *http.Request, imageId generated.ImageID) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ApiV1GetScan", w, r, imageId)
+}
+
+// ApiV1GetScan indicates an expected call of ApiV1GetScan.
+func (mr *MockHandlerInterfaceMockRecorder) ApiV1GetScan(w, r, imageId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiV1GetScan", reflect.TypeOf((*MockHandlerInterface)(nil).ApiV1GetScan), w, r, imageId)
+}
+
+// Healthz mocks base method.
+func (m *MockHandlerInterface) Healthz(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Healthz", w, r)
+}
+
+// Healthz indicates an expected call of Healthz.
+func (mr *MockHandlerInterfaceMockRecorder) Healthz(w, r any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Healthz", reflect.TypeOf((*MockHandlerInterface)(nil).Healthz), w, r)
+}
 
 // MockS3Interface is a mock of S3Interface interface.
 type MockS3Interface struct {

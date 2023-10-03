@@ -18,7 +18,7 @@ package ostack
 
 import (
 	"fmt"
-	th "github.com/gophercloud/gophercloud/testhelper"
+	th "github.com/eschercloudai/baski/testhelpers"
 	"net/http"
 	"reflect"
 	"testing"
@@ -37,7 +37,7 @@ func TestNewCloudsProvider(t *testing.T) {
 
 // NewOpenstackClient creates the initial client for connecting to Openstack.
 func TestClient(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -66,13 +66,13 @@ func TestClient(t *testing.T) {
 	})
 
 	th.Mux.HandleFunc("/v3.0/auth/tokens", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("X-Subject-Token", ID)
+		w.Header().Add("X-Subject-Token", th.ID)
 
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(w, `{ "token": { "expires_at": "2023-12-12T12:59:59.000000Z" } }`)
 	})
 
-	err := generateCloudsFile()
+	err := th.GenerateCloudsFile()
 	if err != nil {
 		t.Error(err)
 		return

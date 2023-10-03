@@ -18,8 +18,7 @@ package ostack
 
 import (
 	"fmt"
-	th "github.com/gophercloud/gophercloud/testhelper"
-	"github.com/gophercloud/gophercloud/testhelper/client"
+	th "github.com/eschercloudai/baski/testhelpers"
 	"net/http"
 	"testing"
 )
@@ -31,12 +30,12 @@ func TestNewComputeClient(t *testing.T) {
 
 // TestCreateKeypair creates a new KeyPair in Openstack.
 func TestCreateKeypair(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/os-keypairs", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
-		_, err := fmt.Fprint(w, CreateKeyPairOutput)
+		_, err := fmt.Fprint(w, th.CreateKeyPairOutput)
 		if err != nil {
 			t.Error(err)
 			return
@@ -44,7 +43,7 @@ func TestCreateKeypair(t *testing.T) {
 	})
 
 	cc := &ComputeClient{
-		client: client.ServiceClient(),
+		client: th.ServiceClient(),
 	}
 	key, err := cc.CreateKeypair("test-key")
 	if err != nil {
@@ -58,7 +57,7 @@ func TestCreateKeypair(t *testing.T) {
 
 // TestRemoveKeypair will delete a Keypair from Openstack.
 func TestRemoveKeypair(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/os-keypairs/test-key", func(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +65,7 @@ func TestRemoveKeypair(t *testing.T) {
 	})
 
 	cc := &ComputeClient{
-		client: client.ServiceClient(),
+		client: th.ServiceClient(),
 	}
 	err := cc.RemoveKeypair("test-key")
 	if err != nil {
@@ -77,12 +76,12 @@ func TestRemoveKeypair(t *testing.T) {
 
 // TestCreateServer creates a compute instance in Openstack.
 func TestCreateServer(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 	th.Mux.HandleFunc("/servers", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		w.Header().Add("Content-Type", "application/json")
-		_, err := fmt.Fprint(w, SingleServerBody)
+		_, err := fmt.Fprint(w, th.SingleServerBody)
 		if err != nil {
 			t.Error(err)
 			return
@@ -152,7 +151,7 @@ func TestCreateServer(t *testing.T) {
 		marker := r.Form.Get("marker")
 		switch marker {
 		case "":
-			fmt.Fprintf(w, `
+			_, err = fmt.Fprintf(w, `
 						{
 							"flavors": [
 								{
@@ -180,15 +179,21 @@ func TestCreateServer(t *testing.T) {
 							]
 						}
 					`, th.Server.URL)
+			if err != nil {
+				t.Error(err)
+			}
 		case "2":
-			fmt.Fprintf(w, `{ "flavors": [] }`)
+			_, err = fmt.Fprint(w, `{ "flavors": [] }`)
+			if err != nil {
+				t.Error(err)
+			}
 		default:
 			t.Fatalf("Unexpected marker: [%s]", marker)
 		}
 	})
 
 	cc := &ComputeClient{
-		client: client.ServiceClient(),
+		client: th.ServiceClient(),
 	}
 	configDrive := false
 	s, err := cc.CreateServer("test-key", "1", "d32019d3-bc6e-4319-9c1d-6722fc136a22", &configDrive, []byte{}, "f90f6034-2570-4974-8351-6b49732ef2eb")
@@ -204,11 +209,11 @@ func TestCreateServer(t *testing.T) {
 
 // TestGetServerStatus gets the status of a server
 func TestGetServerStatus(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/servers/9e5476bd-a4ec-4653-93d6-72c93aa682ba", func(w http.ResponseWriter, r *http.Request) {
-		_, err := fmt.Fprint(w, SingleServerBody)
+		_, err := fmt.Fprint(w, th.SingleServerBody)
 		if err != nil {
 			t.Error(err)
 			return
@@ -216,7 +221,7 @@ func TestGetServerStatus(t *testing.T) {
 	})
 
 	cc := &ComputeClient{
-		client: client.ServiceClient(),
+		client: th.ServiceClient(),
 	}
 	active, err := cc.GetServerStatus("9e5476bd-a4ec-4653-93d6-72c93aa682ba")
 	if err != nil {
@@ -231,14 +236,14 @@ func TestGetServerStatus(t *testing.T) {
 
 // TestAttachIP attaches the provided IP to the provided server.
 func TestAttachIP(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 	th.Mux.HandleFunc("/servers/9e5476bd-a4ec-4653-93d6-72c93aa682ba/action", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 	})
 
 	cc := &ComputeClient{
-		client: client.ServiceClient(),
+		client: th.ServiceClient(),
 	}
 	err := cc.AttachIP("9e5476bd-a4ec-4653-93d6-72c93aa682ba", "2f245a7b-796b-4f26-9cf9-9e82d248fda7")
 	if err != nil {
@@ -249,7 +254,7 @@ func TestAttachIP(t *testing.T) {
 
 // TestRemoveServer will delete a Server from Openstack.
 func TestRemoveServer(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/servers/9e5476bd-a4ec-4653-93d6-72c93aa682ba", func(w http.ResponseWriter, r *http.Request) {
@@ -257,7 +262,7 @@ func TestRemoveServer(t *testing.T) {
 	})
 
 	cc := &ComputeClient{
-		client: client.ServiceClient(),
+		client: th.ServiceClient(),
 	}
 	err := cc.RemoveServer("9e5476bd-a4ec-4653-93d6-72c93aa682ba")
 	if err != nil {
@@ -268,7 +273,7 @@ func TestRemoveServer(t *testing.T) {
 
 // TestGetFlavorIDByName will take a name of a flavor and attempt to find the ID from Openstack.
 func TestGetFlavorIDByName(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/flavors/detail", func(w http.ResponseWriter, r *http.Request) {
@@ -281,7 +286,7 @@ func TestGetFlavorIDByName(t *testing.T) {
 		marker := r.Form.Get("marker")
 		switch marker {
 		case "":
-			fmt.Fprintf(w, `
+			_, err = fmt.Fprintf(w, `
 					{
 						"flavors": [
 							{
@@ -324,15 +329,21 @@ func TestGetFlavorIDByName(t *testing.T) {
 						]
 					}
 				`, th.Server.URL)
+			if err != nil {
+				t.Error(err)
+			}
 		case "2":
-			fmt.Fprintf(w, `{ "flavors": [] }`)
+			_, err = fmt.Fprint(w, `{ "flavors": [] }`)
+			if err != nil {
+				t.Error(err)
+			}
 		default:
 			t.Fatalf("Unexpected marker: [%s]", marker)
 		}
 	})
 
 	cc := &ComputeClient{
-		client: client.ServiceClient(),
+		client: th.ServiceClient(),
 	}
 	fid, err := cc.GetFlavorIDByName("m1.tiny")
 	if err != nil {
