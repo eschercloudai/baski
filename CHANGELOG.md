@@ -2,8 +2,16 @@
 
 ## [ Upcoming Release - v0.1.0-beta.10 ]
 ### Changed/Added
+* Updated issue templates
+* Added new Baski server for serving up CVE reports for image scans
+* Pipelines updated to support new server build requirements
+* Updated to latest Golang
+* Added tests for Server
+
 ### Fixed
+
 ### Deprecated
+* Remove publish and all related code
 
 ## [ 02/08/2023 - v0.1.0-beta.9 ]
 
