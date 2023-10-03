@@ -19,9 +19,8 @@ package ostack
 import (
 	"fmt"
 	"github.com/eschercloudai/baski/pkg/util/flags"
+	th "github.com/eschercloudai/baski/testhelpers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
-	th "github.com/gophercloud/gophercloud/testhelper"
-	"github.com/gophercloud/gophercloud/testhelper/client"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -130,7 +129,7 @@ func TestNewImageClient(t *testing.T) {
 
 // TestGenerateBuilderMetadata generates some glance metadata for the image.
 func TestGenerateBuilderMetadata(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	tests := []struct {
@@ -192,13 +191,13 @@ func TestGenerateBuilderMetadata(t *testing.T) {
 
 // TestModifyImageMetadata allows image metadata to be added, updated or removed.
 func TestModifyImageMetadata(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/images/da3b75d9-3f4a-40e7-8a2c-bfab23927dea", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{
+		_, err := fmt.Fprint(w, `{
 			"id": "da3b75d9-3f4a-40e7-8a2c-bfab23927dea",
 			"name": "Fedora 17",
 			"status": "active",
@@ -228,9 +227,13 @@ func TestModifyImageMetadata(t *testing.T) {
 			"hw_scsi_model": "virtio-scsi",
 			"test": "test-value"
 		}`)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	})
 
-	i := ImageClient{client: client.ServiceClient()}
+	i := ImageClient{client: th.ServiceClient()}
 	img, err := i.ModifyImageMetadata("da3b75d9-3f4a-40e7-8a2c-bfab23927dea", "test", "test-value", images.ReplaceOp)
 	if err != nil {
 		t.Error(err)
@@ -244,12 +247,12 @@ func TestModifyImageMetadata(t *testing.T) {
 
 // TestRemoveImage will delete an image from Openstack.
 func TestRemoveImage(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 	th.Mux.HandleFunc("/images/da3b75d9-3f4a-40e7-8a2c-bfab23927dea", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	i := ImageClient{client: client.ServiceClient()}
+	i := ImageClient{client: th.ServiceClient()}
 	err := i.RemoveImage("da3b75d9-3f4a-40e7-8a2c-bfab23927dea")
 	if err != nil {
 		t.Errorf("Expected nil, got %s", err.Error())
@@ -262,7 +265,7 @@ func TestRemoveImage(t *testing.T) {
 // // and the tag search is limited to an id+tag :facepalm:
 // // This probably can be improved though to prevent fetching billions of images.
 func TestFetchAllImages(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/images", func(w http.ResponseWriter, r *http.Request) {
@@ -332,7 +335,7 @@ func TestFetchAllImages(t *testing.T) {
 
 	})
 
-	i := ImageClient{client: client.ServiceClient()}
+	i := ImageClient{client: th.ServiceClient()}
 	imgs, err := i.FetchAllImages("cirros-0.3.4-x86_64-uec")
 	if err != nil {
 		t.Error(err)
@@ -357,7 +360,7 @@ func TestFetchAllImages(t *testing.T) {
 
 // TestFetchImage allows us to fetch a single image by the id.
 func TestFetchImage(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	//TODO: Took this from gophercloud - not entirely sure it's a great test so may need refining.
@@ -389,7 +392,11 @@ func TestFetchImage(t *testing.T) {
 		addNext := false
 		var imageJSON []string
 
-		fmt.Fprintf(w, `{"images": [`)
+		_, err = fmt.Fprint(w, `{"images": [`)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 		for _, i := range testImages {
 			if marker == "" || addNext {
@@ -425,7 +432,7 @@ func TestFetchImage(t *testing.T) {
 
 	})
 
-	i := ImageClient{client: client.ServiceClient()}
+	i := ImageClient{client: th.ServiceClient()}
 	resImg, err := i.FetchImage("8c64f48a-45a3-4eaa-adff-a8106b6c005b")
 	if err != nil {
 		t.Error(err)

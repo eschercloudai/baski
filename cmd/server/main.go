@@ -77,7 +77,7 @@ func start() *cobra.Command {
 				},
 			}
 
-			server, err := s.NewServer(o.dev)
+			serv, err := s.NewServer(o.dev)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -93,12 +93,12 @@ func start() *cobra.Command {
 				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 				defer cancel()
 
-				if err := server.Shutdown(ctx); err != nil {
+				if err = serv.Shutdown(ctx); err != nil {
 					log.Fatalln(err, "server shutdown error")
 				}
 			}()
 
-			if err := server.ListenAndServe(); err != nil {
+			if err = serv.ListenAndServe(); err != nil {
 				if errors.Is(err, http.ErrServerClosed) {
 					return
 				}

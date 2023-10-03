@@ -1,4 +1,4 @@
-package ostack
+package testhelpers
 
 import "fmt"
 
@@ -13,16 +13,16 @@ var cloud = fmt.Sprintf(`clouds:
       user_domain_name: "Default"
     region_name: "RegionOne"
     interface: "public"
-    identity_api_version: 3`, port)
+    identity_api_version: 3`, Port)
 
 const (
-	port = 5000
+	Port = 5000
 
-	cloudPath = "/tmp/clouds.yaml"
+	CloudPath = "/tmp/clouds.yaml"
 	ID        = "0123456789"
 	TokenID   = "cbc36478b0bd8e67e89469c7749d4127"
 
-	fipCreate = `
+	FIPCreate = `
 {
     "floatingip": {
         "router_id": "d23abc8d-2991-4a55-ba98-2aaea84cc72f",

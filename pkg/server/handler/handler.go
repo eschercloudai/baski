@@ -17,35 +17,48 @@ limitations under the License.
 package handler
 
 import (
-	"github.com/eschercloudai/baski/pkg/s3"
+	"encoding/json"
+	"fmt"
 	"github.com/eschercloudai/baski/pkg/server/generated"
-	"github.com/eschercloudai/baski/pkg/server/handler/scans"
 	"github.com/eschercloudai/baski/pkg/server/server/util"
+	u "github.com/eschercloudai/baski/pkg/util"
 	"net/http"
 )
 
 type Handler struct {
-	s3 *s3.S3
+	s3 u.S3Interface
 }
 
-func New(endpoint, access, secret, bucket string) *Handler {
+func New(s u.S3Interface) *Handler {
 	h := &Handler{
-		s3: &s3.S3{
-			Endpoint:  endpoint,
-			AccessKey: access,
-			SecretKey: secret,
-			Bucket:    bucket,
-		},
+		s3: s,
 	}
 
 	return h
 }
 
+func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
+	util.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
 func (h *Handler) ApiV1GetScan(w http.ResponseWriter, r *http.Request, imageId generated.ImageID) {
-	res, err := scans.FetchScanResult(imageId, h.s3)
+	fmt.Println("here")
+	res, err := h.s3.FetchFromS3(fmt.Sprintf("scans/%s/results.json", imageId))
 	if err != nil {
 		util.JSON(w, http.StatusOK, map[string]string{"error": err.Error()})
 		return
 	}
-	util.JSON(w, http.StatusOK, res)
+	scanRes := []generated.ScanResult{}
+
+	err = json.Unmarshal(res, &scanRes)
+	if err != nil {
+		util.JSON(w, http.StatusOK, map[string]string{"error": err.Error()})
+		return
+	}
+
+	if err != nil {
+		util.JSON(w, http.StatusOK, map[string]string{"error": err.Error()})
+		return
+	}
+	util.JSON(w, http.StatusOK, scanRes)
 }

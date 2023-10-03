@@ -6,6 +6,18 @@ info:
     Baski Server is a tool to enable Baski to have an api that can be queried to pull data out of it. It begun as a 
     tool from which the scan results can be pulled from and has grown since then.
 paths:
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Returns ok when server is online
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/health'
+
   /api/v1/scan/{image-id}:
     get:
       operationId: apiV1GetScan
@@ -80,6 +92,16 @@ components:
           description: Message describing the error.
           type: string
 
+    health:
+      description: A response to a health request
+      type: object
+      properties:
+        status:
+          description: The status of the server
+          type: string
+      example:
+        - status: string
+
     cvss:
       description: The name of the package
       type: object
@@ -113,6 +135,27 @@ components:
     scanResult:
       description: A scan result.
       type: object
+      properties:
+        vulnerabilityID:
+          description: The name of the package
+          type: string
+        description:
+          description: The name of the package
+          type: string
+        pkgName:
+          description: The name of the package
+          type: string
+        installedVersion:
+          description: The name of the package
+          type: string
+        severity:
+          description: The name of the package
+          type: string
+        cvss:
+          $ref: '#/components/schemas/cvss'
+        fixedVersion:
+          description: The name of the package
+          type: string
       example:
         - vulnerabilityID: string
           description: string
@@ -136,24 +179,3 @@ components:
               v2Score: string
               v3Score: string
           fixedVersion: string
-      properties:
-        vulnerabilityID:
-          description: The name of the package
-          type: string
-        description:
-          description: The name of the package
-          type: string
-        pkgName:
-          description: The name of the package
-          type: string
-        installedVersion:
-          description: The name of the package
-          type: string
-        severity:
-          description: The name of the package
-          type: string
-        cvss:
-          $ref: '#/components/schemas/cvss'
-        fixedVersion:
-          description: The name of the package
-          type: string

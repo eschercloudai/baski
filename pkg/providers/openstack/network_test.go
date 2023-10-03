@@ -18,8 +18,7 @@ package ostack
 
 import (
 	"fmt"
-	"github.com/gophercloud/gophercloud/openstack/networking/v2/common"
-	th "github.com/gophercloud/gophercloud/testhelper"
+	th "github.com/eschercloudai/baski/testhelpers"
 	"net/http"
 	"testing"
 )
@@ -31,14 +30,14 @@ func TestNewNetworkClient(t *testing.T) {
 
 // TestGetFloatingIP will create a new FIP.
 func TestGetFloatingIP(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/v2.0/networks", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		_, err := fmt.Fprint(w, ListResponse)
+		_, err := fmt.Fprint(w, th.ListResponse)
 		if err != nil {
 			t.Error(err)
 			return
@@ -49,7 +48,7 @@ func TestGetFloatingIP(t *testing.T) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 
-		_, err := fmt.Fprint(w, fipCreate)
+		_, err := fmt.Fprint(w, th.FIPCreate)
 		if err != nil {
 			t.Error(err)
 			return
@@ -57,7 +56,7 @@ func TestGetFloatingIP(t *testing.T) {
 	})
 
 	nc := &NetworkClient{
-		client: common.ServiceClient(),
+		client: th.CommonServiceClient(),
 	}
 
 	fip, err := nc.GetFloatingIP("public")
@@ -73,7 +72,7 @@ func TestGetFloatingIP(t *testing.T) {
 
 // TestRemoveFIP will delete a Floating IP from Openstack.
 func TestRemoveFIP(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, port)
+	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
 	th.Mux.HandleFunc("/v2.0/floatingips/2f245a7b-796b-4f26-9cf9-9e82d248fda7", func(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +80,7 @@ func TestRemoveFIP(t *testing.T) {
 	})
 
 	nc := &NetworkClient{
-		client: common.ServiceClient(),
+		client: th.CommonServiceClient(),
 	}
 	err := nc.RemoveFIP("2f245a7b-796b-4f26-9cf9-9e82d248fda7")
 	if err != nil {
