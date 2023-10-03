@@ -13,7 +13,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 go build -o /tmp/baski-server /app/cmd/server/main.go
 
 
-FROM alpine:3.17
+FROM alpine:3.18.4
 
 RUN apk update --no-cache
 RUN apk add bash build-base jq curl git python3 py3-pip openssh-client

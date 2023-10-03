@@ -42,7 +42,6 @@ func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ApiV1GetScan(w http.ResponseWriter, r *http.Request, imageId generated.ImageID) {
-	fmt.Println("here")
 	res, err := h.s3.FetchFromS3(fmt.Sprintf("scans/%s/results.json", imageId))
 	if err != nil {
 		util.JSON(w, http.StatusOK, map[string]string{"error": err.Error()})
