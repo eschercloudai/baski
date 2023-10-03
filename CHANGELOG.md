@@ -17,6 +17,7 @@
 * Pipelines updated to support new server build requirements
 * Updated to latest Golang
 * Added tests for Server
+* Added charts for deploying server
 
 ### Fixed
 
