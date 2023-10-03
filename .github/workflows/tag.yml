@@ -76,6 +76,26 @@ jobs:
           cosign-tlog: true
           dockerfile-path: docker/server
 
+  package-and-push-charts:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: azure/setup-helm@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        id: install-helm
+
+      - name: Push Chart to Harbor
+        shell: bash
+        run: |
+          helm registry login -u ${{ secrets.HELM_USER }} -p ${{ secrets.HELM_PASSWORD }} https://harbor.infra.nl1.eschercloud.dev
+          
+          # Release the baski-server chart
+          helm package charts/baski-server --version ${{ github.ref_name }} --app-version ${{ github.ref_name }}
+          helm push baski-server-${{ github.ref_name }}.tgz oci://harbor.infra.nl1.eschercloud.dev/charts
+
   release:
     name: Create Release
     runs-on: 'ubuntu-22.04'
