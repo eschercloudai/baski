@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: baski-server
+  repository: ghcr.io/eschercloudai/baski-server
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v0.1.0-beta.10"
+  tag: "v0.1.0-beta.9"
 
 imagePullSecrets: [ ]
 nameOverride: ""
@@ -57,9 +57,9 @@ affinity: { }
 # These settings are passed through to the server as args.
 server:
   dev: false
-  # All S3 values are required.
-  s3:
-    endpoint: "" # https://some-s3-endpoint:PORT
-    accessKey: "" # Access key to authenticate
-    secretKey: "" # Secret key to authenticate
-    bucket: "baski" # The name of the bucket
+  # The following should be provided via the secret
+  # endpoint
+  # accessKey
+  # secretKey
+  # It's presumed that the bucket was generated from the baski scan commands and therefore should be named baski.
+  existingSecretName: "baski-server-s3-credentials"
