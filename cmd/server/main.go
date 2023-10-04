@@ -22,6 +22,7 @@ import (
 	"github.com/eschercloudai/baski/pkg/server/server"
 	"github.com/eschercloudai/baski/pkg/util/flags"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
 	"net/http"
 	"os"
@@ -35,45 +36,43 @@ type Options struct {
 	port int32
 	dev  bool
 	flags.S3Flags
-	bucket string
 }
 
 func (o *Options) AddFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&o.ip, "bind-address", "a", "127.0.0.1", "The ip to bind to")
+	cmd.Flags().StringVarP(&o.ip, "bind-address", "a", "0.0.0.0", "The ip to bind to")
 	cmd.Flags().Int32VarP(&o.port, "bind-port", "p", 8080, "The port to bind to")
 	cmd.Flags().BoolVarP(&o.dev, "dev", "d", false, "Set to true to allow all in cors world")
-	o.S3Flags.AddFlags(cmd)
-	cmd.Flags().StringVar(&o.bucket, "bucket", "baski", "The S3 bucket")
-
-	for _, flag := range []string{"endpoint", "access-key", "secret-key", "bucket"} {
-		requireFlag(cmd, flag)
-	}
-}
-
-func requireFlag(cmd *cobra.Command, name string) {
-	err := cmd.MarkFlagRequired(name)
-	if err != nil {
-		log.Fatalln(err)
-	}
 }
 
 func start() *cobra.Command {
 	o := &Options{}
 
 	cmd := &cobra.Command{
-		Use:   "run",
+		Use:   "",
 		Short: "Runs the api server",
-		Long:  "Runs the api server to which the front end will connect",
+		Long: `Runs the api server to which the front end will connect
+
+The following environment variables are required to ensure it's running as flags are not supported on the server for the S3 connectivity.
+This is because it's expected this will be run in containers/kubernetes and as such env vars are easier to pass in via secrets - It's laziness winning!'
+  * BASKI_S3_ENDPOINT
+  * BASKI_S3_ACCESSKEY
+  * BASKI_S3_SECRETKEY
+  * BASKI_S3_BUCKET
+
+The server runs on 0.0.0.0:8080 by default and this can be overridden via the flags. 
+`,
 		Run: func(cmd *cobra.Command, args []string) {
+			viper.SetEnvPrefix("BASKI")
+			viper.AutomaticEnv()
 
 			s := &server.Server{
 				Options: server.Options{
 					ListenAddress: o.ip,
 					ListenPort:    o.port,
-					Endpoint:      o.Endpoint,
-					AccessKey:     o.AccessKey,
-					SecretKey:     o.SecretKey,
-					Bucket:        o.bucket,
+					Endpoint:      viper.Get("S3_ENDPOINT").(string),
+					AccessKey:     viper.Get("S3_ACCESSKEY").(string),
+					SecretKey:     viper.Get("S3_SECRETKEY").(string),
+					Bucket:        viper.Get("S3_BUCKET").(string),
 				},
 			}
 

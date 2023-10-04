@@ -15,8 +15,13 @@ RUN CGO_ENABLED=0 go build -o /tmp/baski-server /app/cmd/server/main.go
 
 FROM alpine:3.18.4
 
+ENV S3_ENDPOINT=""
+ENV S3_ACCESSKEY=""
+ENV S3_SECRETKEY=""
+ENV S3_BUCKET="baski"
+
 RUN apk update --no-cache
-RUN apk add bash build-base jq curl git python3 py3-pip openssh-client
+RUN apk add build-base jq curl git python3 py3-pip openssh-client
 
 RUN echo "ServerAliveInterval 120" >> /etc/ssh/ssh_config
 
@@ -31,4 +36,4 @@ ENV PATH=${PATH}:/home/baski/.local/bin/
 
 USER 1000
 
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["baski-server"]

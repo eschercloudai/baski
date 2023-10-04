@@ -94,13 +94,8 @@ components:
 
     health:
       description: A response to a health request
-      type: object
-      properties:
-        status:
-          description: The status of the server
-          type: string
-      example:
-        - status: string
+      type: string
+      example: ok
 
     cvss:
       description: The name of the package

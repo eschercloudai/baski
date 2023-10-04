@@ -38,7 +38,12 @@ func New(s u.S3Interface) *Handler {
 }
 
 func (h *Handler) Healthz(w http.ResponseWriter, r *http.Request) {
-	util.JSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	w.WriteHeader(200)
+	_, err := w.Write([]byte("ok"))
+	if err != nil {
+		util.JSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
 }
 
 func (h *Handler) ApiV1GetScan(w http.ResponseWriter, r *http.Request, imageId generated.ImageID) {

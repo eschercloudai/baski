@@ -78,6 +78,7 @@ jobs:
 
   package-and-push-charts:
     runs-on: ubuntu-22.04
+    needs: security-checks
     steps:
       - uses: actions/checkout@v3
         with:
