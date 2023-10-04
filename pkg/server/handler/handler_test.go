@@ -89,7 +89,7 @@ func TestHealthz(t *testing.T) {
 	th.SetupPersistentPortHTTP(t, th.Port)
 	defer th.TeardownHTTP()
 
-	expectedResponse := []byte(`{"status":"ok"}`)
+	expectedResponse := []byte(`ok`)
 
 	h := Handler{}
 

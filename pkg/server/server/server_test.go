@@ -63,7 +63,7 @@ func TestNewServer(t *testing.T) {
 		t.Error(err)
 	}
 
-	expected := `{"status":"ok"}`
+	expected := "ok"
 
 	if string(body) != expected {
 		t.Errorf("expected %s, got %s", expected, string(body))
