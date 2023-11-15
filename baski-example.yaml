@@ -147,16 +147,3 @@ sign:
   # If you would like to validate an image signing, this allows you to put the digest in and validate the image.
   # This will be deprecated and then removed soon to make way for fetching the digest from the metadata of the image where it is currently stored.
   digest: ""
-
-# Publish stage options - this is deprecated and will be rwqorked soon to no longer have reliance on GitHub pages.
-# It will instead generate the HTML/Js so that the user can review the results locally and, if they wish, add it to an accessible website/server.
-# It is recommended you do not use this stage for now.
-publish:
-  image-id: ""
-  github:
-    user: "some-user"
-    account: "some-account"
-    project: "some-project"
-    token: "123456789"
-    pages-branch: ""
-  #results-file: "/tmp/results.json" # Not currently used
