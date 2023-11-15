@@ -42,7 +42,7 @@ jobs:
       id-token: write
     steps:
       - name: Build Baski Image
-        uses: eschercloudai/container-security-action@v0.0.1-beta.3
+        uses: eschercloudai/container-security-action@v0.0.1
         if: github.event_name != 'pull_request'
         id: build-and-scan-baski
         with:
@@ -51,7 +51,13 @@ jobs:
           repo-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: baski
           image-tag: ${{ github.ref_name }}
-          min-severity: critical
+          check-severity: CRITICAL
+          trivyignore-from-s3: true
+          aws-endpoint: "https://nl1.eschercloud.com:6780"
+          aws-access-key: ${{secrets.AWS_ACCESS_KEY}}
+          aws-secret-key: ${{secrets.AWS_SECRET_KEY}}
+          s3-bucket: "trivyignores"
+          s3-path: "baski"
           add-latest-tag: true
           publish-image: true
           cosign-private-key: ${{secrets.COSIGN_KEY}}
@@ -59,7 +65,7 @@ jobs:
           cosign-tlog: true
           dockerfile-path: docker/baski
       - name: Build Baski Server Image
-        uses: eschercloudai/container-security-action@v0.0.1-beta.3
+        uses: eschercloudai/container-security-action@v0.0.1
         if: github.event_name != 'pull_request'
         id: build-and-scan-server
         with:
@@ -68,7 +74,13 @@ jobs:
           repo-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: baski-server
           image-tag: ${{ github.ref_name }}
-          min-severity: critical
+          check-severity: CRITICAL
+          trivyignore-from-s3: true
+          aws-endpoint: "https://nl1.eschercloud.com:6780"
+          aws-access-key: ${{secrets.AWS_ACCESS_KEY}}
+          aws-secret-key: ${{secrets.AWS_SECRET_KEY}}
+          s3-bucket: "trivyignores"
+          s3-path: "baski-server"
           add-latest-tag: true
           publish-image: true
           cosign-private-key: ${{secrets.COSIGN_KEY}}
