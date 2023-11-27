@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang as go-builder
+FROM cgr.dev/chainguard/go:latest as go-builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 go build -o /tmp/baski-server /app/cmd/server/main.go
 
 
-FROM alpine:3.18.4
+FROM cgr.dev/chainguard/wolfi-base:latest
 
 ENV S3_ENDPOINT=""
 ENV S3_ACCESSKEY=""
@@ -21,9 +21,7 @@ ENV S3_SECRETKEY=""
 ENV S3_BUCKET="baski"
 
 RUN apk update --no-cache
-RUN apk add build-base jq curl git python3 py3-pip openssh-client
-
-RUN echo "ServerAliveInterval 120" >> /etc/ssh/ssh_config
+RUN apk add jq curl
 
 RUN echo "baski:x:1000:1000:Baski Non Root,,,:/home/baski:" >> /etc/passwd
 RUN mkdir -p /home/baski/
