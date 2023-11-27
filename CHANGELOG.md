@@ -1,6 +1,6 @@
 # Changelog
 
-## [ Upcoming Release - v0.1.0 ]
+## [ 2023/11/27 - v0.1.0 ]
 
 ### Changed/Added
 * Updated container scanner
@@ -12,7 +12,7 @@
 
 ### Deprecated
 
-## [ 03/10/2023 - v0.1.0-beta.9 ]
+## [ 2023/10/03 - v0.1.0-beta.9 ]
 
 ### Changed/Added
 
@@ -29,7 +29,7 @@
 ### Deprecated
 * Removed the publish command and all related code.
 
-## [ 12/07/2023 - v0.1.0-beta.8 ]
+## [ 2023/07/12 - v0.1.0-beta.8 ]
 
 ### Changed/Added
 
@@ -44,7 +44,7 @@
 
 * Removed references to publish command so that it can no longer be called - code will be removed in coming release.
 
-## [ 12/07/2023 - v0.1.0-beta.7 ]
+## [ 2023/07/12 - v0.1.0-beta.7 ]
 
 ### Changed/Added
 
@@ -56,7 +56,7 @@
 * Corrected names in GitHub actions.
 * fixed date tag on image as it was just setting RFC3339 rather than using it as the format.
 
-## [ 12/07/2023 - v0.1.0-beta.6 ]
+## [ 2023/07/12 - v0.1.0-beta.6 ]
 
 ### Changed/Added
 
@@ -68,7 +68,7 @@
 * Corrected names in GitHub actions.
 * fixed date tag on image as it was just setting RFC3339 rather than using it as the format.
 
-## [ 16/05/2023 - v0.1.0-beta.5 ]
+## [ 2023/05/16 - v0.1.0-beta.5 ]
 
 ### Changed/Added
 
