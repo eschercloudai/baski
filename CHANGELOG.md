@@ -1,6 +1,6 @@
 # Changelog
 
-## [ 2023/11/27 - v0.1.0 ]
+## [ 2023/11/28 - v0.1.0 ]
 
 ### Changed/Added
 * Updated container scanner
