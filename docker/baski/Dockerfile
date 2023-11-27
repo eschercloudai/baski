@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang as go-builder
+FROM cgr.dev/chainguard/go:latest as go-builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 go build -o /tmp/baski /app/cmd/baski/main.go
 
 
-FROM alpine:3.18.4
+FROM cgr.dev/chainguard/wolfi-base:latest
 
 RUN apk update --no-cache
 RUN apk add bash build-base jq curl git python3 py3-pip openssh-client

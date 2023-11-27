@@ -3,6 +3,10 @@
 ## [ Upcoming Release - v0.1.0 ]
 
 ### Changed/Added
+* Updated container scanner
+* Updated go modules
+* Switched to chainguard Golang image
+* Switched from alpine to WolfiOS.
 
 ### Fixed
 
