@@ -13,8 +13,8 @@ jobs:
     name: Lint files
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
         with:
           go-version: '1.21.1'
       - name: golangci-lint
@@ -28,8 +28,8 @@ jobs:
     runs-on: 'ubuntu-22.04'
     needs: lint
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
         with:
           go-version: '1.21.1'
       - run: go test -v -cover ./...
@@ -43,7 +43,7 @@ jobs:
       id-token: write
     steps:
       - name: Build Local Baski Image
-        uses: eschercloudai/container-security-action@v0.0.1
+        uses: eschercloudai/container-security-action@v0.0.4
         if: github.event_name != 'pull_request'
         id: build-and-scan-baski
         with:
@@ -65,7 +65,7 @@ jobs:
           cosign-tlog: false
           dockerfile-path: docker/baski
       - name: Build Local Baski Server Image
-        uses: eschercloudai/container-security-action@v0.0.1
+        uses: eschercloudai/container-security-action@v0.0.4
         if: github.event_name != 'pull_request'
         id: build-and-scan-server
         with:
