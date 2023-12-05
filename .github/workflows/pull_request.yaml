@@ -45,7 +45,6 @@ jobs:
           echo "branch_name=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_ENV"
       - name: Build Local Baski Image
         uses: eschercloudai/container-security-action@v0.0.4
-        if: github.event_name != 'pull_request'
         id: build-and-scan-baski
         with:
           image-repo: ghcr.io
@@ -68,7 +67,6 @@ jobs:
           dockerfile-path: docker/baski
       - name: Build Local Baski Server Image
         uses: eschercloudai/container-security-action@v0.0.4
-        if: github.event_name != 'pull_request'
         id: build-and-scan-server
         with:
           image-repo: ghcr.io
