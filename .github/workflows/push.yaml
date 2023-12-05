@@ -59,6 +59,7 @@ jobs:
           aws-secret-key: ${{secrets.AWS_SECRET_KEY}}
           s3-bucket: "trivyignores"
           s3-path: "baski"
+          add-latest-tag: false
           publish-image: false
           cosign-private-key: ${{secrets.COSIGN_KEY}}
           cosign-password: ${{secrets.COSIGN_PASSWORD}}
