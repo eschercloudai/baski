@@ -1,5 +1,10 @@
 # Changelog
 
+## [ 2023/12/05 - v0.2.0 ]
+
+### Changed/Added
+* Made gridd template and license download optional, so they're not automatically added when not required.
+
 ## [ 2023/11/28 - v0.1.0 ]
 
 ### Changed/Added
