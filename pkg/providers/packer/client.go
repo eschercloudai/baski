@@ -174,15 +174,25 @@ func InitConfig(o *flags.BuildOptions) *Buildconfig {
 	if o.AddNvidiaSupport {
 		customRoles = "nvidia"
 
-		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_ceph=%t nvidia_installer_location=%s nvidia_tok_location=%s gridd_feature_type=%d",
+		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_ceph=%t nvidia_installer_location=%s",
 			o.Endpoint,
 			o.NvidiaBucket,
 			o.AccessKey,
 			o.SecretKey,
 			o.IsCeph,
-			o.NvidiaInstallerLocation,
-			o.NvidiaTOKLocation,
-			o.NvidiaGriddFeatureType)
+			o.NvidiaInstallerLocation)
+
+		if o.NvidiaTOKLocation != "" {
+			ansibleUserVars = fmt.Sprintf("%s nvidia_tok_location=%s",
+				ansibleUserVars,
+				o.NvidiaTOKLocation)
+		}
+
+		if o.NvidiaGriddFeatureType != -1 {
+			ansibleUserVars = fmt.Sprintf("%s gridd_feature_type=%d",
+				ansibleUserVars,
+				o.NvidiaGriddFeatureType)
+		}
 	}
 
 	if o.AdditionalImages != nil {
