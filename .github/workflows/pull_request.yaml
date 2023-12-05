@@ -3,7 +3,7 @@ name: Validate on Pull Request
 on:
   workflow_dispatch:
   pull_request:
-    types: [ opened, reopened, edited ]
+    types: [ opened, reopened, synchronized ]
 
 jobs:
   lint:
@@ -39,16 +39,19 @@ jobs:
       packages: write
       id-token: write
     steps:
+      - name: Get Branch Name
+        shell: bash
+        run: |
+          echo "branch_name=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_ENV"
       - name: Build Local Baski Image
         uses: eschercloudai/container-security-action@v0.0.4
-        if: github.event_name != 'pull_request'
         id: build-and-scan-baski
         with:
           image-repo: ghcr.io
           repo-username: ${{ github.repository_owner }}
           repo-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: baski
-          image-tag: ${{ github.ref_name }}
+          image-tag: ${{ env.branch_name }}
           check-severity: CRITICAL
           trivyignore-from-s3: true
           aws-endpoint: "https://nl1.eschercloud.com:6780"
@@ -64,14 +67,13 @@ jobs:
           dockerfile-path: docker/baski
       - name: Build Local Baski Server Image
         uses: eschercloudai/container-security-action@v0.0.4
-        if: github.event_name != 'pull_request'
         id: build-and-scan-server
         with:
           image-repo: ghcr.io
           repo-username: ${{ github.repository_owner }}
           repo-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: baski-server
-          image-tag: ${{ github.ref_name }}
+          image-tag: ${{ env.branch_name }}
           check-severity: CRITICAL
           trivyignore-from-s3: true
           aws-endpoint: "https://nl1.eschercloud.com:6780"
