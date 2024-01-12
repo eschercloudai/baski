@@ -13,10 +13,22 @@ import (
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-	// Get a scan result
+	// Get the scan and test results for an image.
+	// (GET /api/v1/image/{image-id})
+	ApiV1GetImage(w http.ResponseWriter, r *http.Request, imageId ImageID)
+	// Get a list of images based on the scan results.
+	// (GET /api/v1/images)
+	ApiV1GetImages(w http.ResponseWriter, r *http.Request)
+	// Get a scan result.
 	// (GET /api/v1/scan/{image-id})
 	ApiV1GetScan(w http.ResponseWriter, r *http.Request, imageId ImageID)
-	// Returns ok when server is online
+	// Get a list of scan results.
+	// (GET /api/v1/scans)
+	ApiV1GetScans(w http.ResponseWriter, r *http.Request)
+	// Get a test result.
+	// (GET /api/v1/test/{image-id})
+	ApiV1GetTest(w http.ResponseWriter, r *http.Request, imageId ImageID)
+	// Returns ok when server is online.
 	// (GET /healthz)
 	Healthz(w http.ResponseWriter, r *http.Request)
 }
@@ -29,6 +41,47 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.HandlerFunc) http.HandlerFunc
+
+// ApiV1GetImage operation middleware
+func (siw *ServerInterfaceWrapper) ApiV1GetImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "image-id" -------------
+	var imageId ImageID
+
+	err = runtime.BindStyledParameter("simple", false, "image-id", mux.Vars(r)["image-id"], &imageId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "image-id", Err: err})
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApiV1GetImage(w, r, imageId)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// ApiV1GetImages operation middleware
+func (siw *ServerInterfaceWrapper) ApiV1GetImages(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApiV1GetImages(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
 
 // ApiV1GetScan operation middleware
 func (siw *ServerInterfaceWrapper) ApiV1GetScan(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +100,47 @@ func (siw *ServerInterfaceWrapper) ApiV1GetScan(w http.ResponseWriter, r *http.R
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ApiV1GetScan(w, r, imageId)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// ApiV1GetScans operation middleware
+func (siw *ServerInterfaceWrapper) ApiV1GetScans(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApiV1GetScans(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// ApiV1GetTest operation middleware
+func (siw *ServerInterfaceWrapper) ApiV1GetTest(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "image-id" -------------
+	var imageId ImageID
+
+	err = runtime.BindStyledParameter("simple", false, "image-id", mux.Vars(r)["image-id"], &imageId)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "image-id", Err: err})
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApiV1GetTest(w, r, imageId)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -184,7 +278,15 @@ func HandlerWithOptions(si ServerInterface, options GorillaServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.HandleFunc(options.BaseURL+"/api/v1/image/{image-id}", wrapper.ApiV1GetImage).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/api/v1/images", wrapper.ApiV1GetImages).Methods("GET")
+
 	r.HandleFunc(options.BaseURL+"/api/v1/scan/{image-id}", wrapper.ApiV1GetScan).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/api/v1/scans", wrapper.ApiV1GetScans).Methods("GET")
+
+	r.HandleFunc(options.BaseURL+"/api/v1/test/{image-id}", wrapper.ApiV1GetTest).Methods("GET")
 
 	r.HandleFunc(options.BaseURL+"/healthz", wrapper.Healthz).Methods("GET")
 

@@ -32,6 +32,9 @@ type Options struct {
 	AccessKey     string
 	SecretKey     string
 	Bucket        string
+	EnableDogKat  bool
+	DogKatBucket  string
+	CloudName     string
 }
 
 type Server struct {
@@ -55,13 +58,21 @@ func (s *Server) NewServer(dev bool) (*http.Server, error) {
 		middleware = append(middleware, CORSAllowOriginAllMiddleware)
 	}
 
-	sc := &s3.S3{
-		Endpoint:  s.Options.Endpoint,
-		AccessKey: s.Options.AccessKey,
-		SecretKey: s.Options.SecretKey,
-		Bucket:    s.Options.Bucket,
+	baskiS3, err := s3.New(s.Options.Endpoint, s.Options.AccessKey, s.Options.SecretKey, s.Options.Bucket, "")
+
+	if err != nil {
+		return nil, err
 	}
-	handlers := handler.New(sc)
+
+	var dogKatS3 *s3.S3
+	if s.Options.EnableDogKat {
+		dogKatS3, err = s3.New(s.Options.Endpoint, s.Options.AccessKey, s.Options.SecretKey, s.Options.DogKatBucket, "")
+		if err != nil {
+			return nil, err
+		}
+
+	}
+	handlers := handler.New(baskiS3, dogKatS3, s.Options.CloudName)
 
 	options := generated.GorillaServerOptions{
 		BaseRouter:  r,

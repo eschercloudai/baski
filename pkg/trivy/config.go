@@ -24,9 +24,35 @@ import (
 	"strings"
 )
 
-// GenerateUserData Creates the user data that will be passed to the server being created so that a .trivyignore can be added and the scan can be run as per the users wishes.
-func GenerateUserData(s3 util.S3Interface, ignoreFileName string, ignoreList []string) []byte {
-	trivyIgnoreData := generateTrivyFile(s3, ignoreFileName, ignoreList)
+type TrivyOptions struct {
+	ignorePath     string
+	ignoreFilename string
+	ignoreList     []string
+	severity       Severity
+}
+
+func New(filePath, filename string, ignoreList []string, severity Severity) *TrivyOptions {
+	return &TrivyOptions{
+		ignorePath:     filePath,
+		ignoreFilename: filename,
+		ignoreList:     ignoreList,
+		severity:       severity,
+	}
+}
+
+func (t *TrivyOptions) GetFilename() string {
+	filename := t.ignoreFilename
+	if t.ignoreFilename != "" {
+		if t.ignorePath != "" {
+			filename = fmt.Sprintf("%s/%s", t.ignorePath, t.ignoreFilename)
+		}
+	}
+	return filename
+}
+
+// GenerateTrivyCommand Creates the user data that will be passed to the server being created so that a .trivyignore can be added and the scan can be run as per the users wishes.
+func (t *TrivyOptions) GenerateTrivyCommand(s3 util.S3Interface) ([]byte, error) {
+	trivyIgnoreData := generateTrivyFile(s3, t.GetFilename(), t.ignoreList)
 
 	log.Println("generating userdata")
 
@@ -40,8 +66,15 @@ func GenerateUserData(s3 util.S3Interface, ignoreFileName string, ignoreList []s
 	mv ./trivy /usr/local/bin/trivy;
 fi`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion)
 
+	if !ValidSeverity(t.severity) {
+		return nil, fmt.Errorf("severity value passed is invalid. Allowed values are: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL")
+	}
+
+	severity := ParseSeverity(t.severity)
+	severityList := strings.Join(severity, ",")
+
 	// Set the default command to run here - it may get overridden later.
-	runScanCommand := "sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /;"
+	runScanCommand := fmt.Sprintf("sudo trivy rootfs --scanners vuln -s %s -f json -o /tmp/results.json /;", severityList)
 
 	// Prepare .trivyignore file
 	if len(trivyIgnoreData) > 0 {
@@ -52,7 +85,7 @@ EOF
 `, string(trivyIgnoreData))
 
 		//Override the command to run as we now have a .trivyignore to add
-		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
+		runScanCommand = fmt.Sprintf("sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -s %s -f json -o /tmp/results.json /;", severityList)
 	}
 
 	// Put it all together
@@ -62,7 +95,7 @@ touch /tmp/finished;
 %s
 %s
 echo done > /tmp/finished;
-`, trivyIgnoreFile, trivyUserData, runScanCommand))
+`, trivyIgnoreFile, trivyUserData, runScanCommand)), nil
 
 }
 
@@ -72,23 +105,28 @@ func generateTrivyFile(s3 util.S3Interface, ignoreFileName string, ignoreList []
 	var err error
 
 	//We return nothing if there are no checks required
-	if len(ignoreList) == 0 && len(ignoreFileName) == 0 {
+	if ignoreList[0] == "[]" && len(ignoreFileName) == 0 {
 		return nil
 	}
 
 	// Check if a list of CVEs was passed in before checking for a trivyIgnore file
-	if len(ignoreList) != 0 {
+	if ignoreList[0] != "[]" {
 		ignoreListData = parseIgnoreList(ignoreList)
 	}
 
 	if len(ignoreFileName) != 0 {
-		trivyIgnoreFile, err = s3.FetchFromS3(ignoreFileName)
+		trivyIgnoreFile, err = s3.Fetch(ignoreFileName)
 		if err != nil {
 			log.Printf("error: %s\n", err)
 		}
 	}
 
-	return []byte(fmt.Sprintf("%s\n%s", string(trivyIgnoreFile), string(ignoreListData)))
+	data := trivyIgnoreFile
+
+	if ignoreListData != nil {
+		data = []byte(fmt.Sprintf("%s\n%s", string(trivyIgnoreFile), string(ignoreListData)))
+	}
+	return data
 }
 
 // parseIgnoreList turns the ignore list passed into a format that can be used in the trivyignore file.

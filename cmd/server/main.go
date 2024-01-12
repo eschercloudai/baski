@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -50,20 +51,32 @@ func start() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "",
 		Short: "Runs the api server",
-		Long: `Runs the api server to which the front end will connect
+		Long: `Runs the api server to which a front end will connect to pull results.
 
-The following environment variables are required to ensure it's running as flags are not supported on the server for the S3 connectivity.
-This is because it's expected this will be run in containers/kubernetes and as such env vars are easier to pass in via secrets - It's laziness winning!'
+An Openstack cloud file is required to be read and the BASKI_OS_CLOUD var should be passed for parsing said file.
+There is support for pulling DogKat results too. It is expected that the endpoint, access key and secret key have permissions to read from the DogKat bucket.
+The following environment variables are required to ensure as flags are not supported wrt s3 credentials.
+This is because it's expected this will be run in containers/kubernetes and as such env vars are easier to pass in via secrets and the flags for setting up the server are good defaults.
   * BASKI_S3_ENDPOINT
   * BASKI_S3_ACCESSKEY
   * BASKI_S3_SECRETKEY
   * BASKI_S3_BUCKET
+  * BASKI_ENABLE_DOGKAT
+  * BASKI_DOGKAT_BUCKET
+  * BASKI_OS_CLOUD
 
-The server runs on 0.0.0.0:8080 by default and this can be overridden via the flags. 
+The server runs on 0.0.0.0:8080 by default and this can be overridden via the flags.
 `,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			viper.SetEnvPrefix("BASKI")
 			viper.AutomaticEnv()
+
+			enableDogKat := false
+
+			enableDogKat, err := strconv.ParseBool(viper.Get("ENABLE_DOGKAT").(string))
+			if err != nil {
+				return err
+			}
 
 			s := &server.Server{
 				Options: server.Options{
@@ -73,12 +86,15 @@ The server runs on 0.0.0.0:8080 by default and this can be overridden via the fl
 					AccessKey:     viper.Get("S3_ACCESSKEY").(string),
 					SecretKey:     viper.Get("S3_SECRETKEY").(string),
 					Bucket:        viper.Get("S3_BUCKET").(string),
+					EnableDogKat:  enableDogKat,
+					DogKatBucket:  viper.Get("DOGKAT_BUCKET").(string),
+					CloudName:     viper.Get("OS_CLOUD").(string),
 				},
 			}
 
 			serv, err := s.NewServer(o.dev)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 
 			stop := make(chan os.Signal, 1)
@@ -99,13 +115,15 @@ The server runs on 0.0.0.0:8080 by default and this can be overridden via the fl
 
 			if err = serv.ListenAndServe(); err != nil {
 				if errors.Is(err, http.ErrServerClosed) {
-					return
+					return err
 				}
 
 				log.Fatalln(err, "unexpected server error")
 
-				return
+				return err
 			}
+
+			return nil
 		},
 	}
 	o.AddFlags(cmd)

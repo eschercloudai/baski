@@ -22,5 +22,5 @@ var (
 		"ubuntu-2004",
 		"ubuntu-2204",
 	}
-	TrivyVersion = "0.38.3"
+	TrivyVersion = "0.48.3"
 )

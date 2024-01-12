@@ -17,71 +17,98 @@ limitations under the License.
 package s3
 
 import (
-	"fmt"
-	"github.com/rhnvrm/simples3"
+	"context"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"io"
 )
 
 type S3 struct {
-	Endpoint  string
-	AccessKey string
-	SecretKey string
-	Bucket    string
-	s3Conn    *simples3.S3
+	Bucket string
+	Client *s3.Client
 }
 
-// FetchFromS3 Downloads a file from an S3 bucket and returns its contents as a byte array.
-func (s *S3) FetchFromS3(fileName string) ([]byte, error) {
-	s.s3Conn = simples3.New("us-east-1", s.AccessKey, s.SecretKey)
-	s.s3Conn.SetEndpoint(s.Endpoint)
-
-	input := simples3.DownloadInput{
-		Bucket:    s.Bucket,
-		ObjectKey: fileName,
+func New(endpoint, accessKey, secretKey, bucket, region string) (*S3, error) {
+	const defaultRegion = "us-east-1"
+	r := defaultRegion
+	if region != "" {
+		r = region
 	}
-	// Download the file.
-	file, err := s.download(input)
 
+	resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...any) (aws.Endpoint, error) {
+		return aws.Endpoint{
+			PartitionID:       "aws",
+			URL:               endpoint,
+			SigningRegion:     r,
+			HostnameImmutable: true,
+		}, nil
+	})
+
+	ctx := context.Background()
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(r),
+		config.WithEndpointResolverWithOptions(resolver),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to download file from S3: %v\n", err)
+		return nil, err
 	}
-	defer file.Close()
+	return &S3{
+		Bucket: bucket,
+		Client: s3.NewFromConfig(cfg),
+	}, nil
+}
 
-	data, err := io.ReadAll(file)
+// Fetch Downloads a file from an S3 bucket and returns its contents as a byte array.
+func (s *S3) Fetch(fileName string) ([]byte, error) {
+	params := &s3.GetObjectInput{
+		Bucket: &s.Bucket,
+		Key:    &fileName,
+	}
+
+	obj, err := s.Client.GetObject(context.Background(), params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file contents: %v\n", err)
+		return nil, err
 	}
 
-	return data, nil
+	return io.ReadAll(obj.Body)
 }
 
-// fileDownload Downloads the file from an S3 bucket
-func (s *S3) download(input simples3.DownloadInput) (io.ReadCloser, error) {
-	return s.s3Conn.FileDownload(input)
-}
-
-// PutToS3 Pushes a file to an S3 bucket.
-func (s *S3) PutToS3(contentType, key, fileName string, body io.ReadSeeker) error {
-	s3Conn := simples3.New("us-east-1", s.AccessKey, s.SecretKey)
-	s3Conn.SetEndpoint(s.Endpoint)
-
-	// Put the file into S3.
-	input := simples3.UploadInput{
-		Bucket:      s.Bucket,
-		ObjectKey:   key,
-		ContentType: contentType,
-		FileName:    fileName,
+// Put Pushes a file to an S3 bucket.
+func (s *S3) Put(contentType, key string, body io.ReadSeeker) error {
+	params := &s3.PutObjectInput{
+		Bucket:      &s.Bucket,
+		Key:         &key,
+		ContentType: &contentType,
 		Body:        body,
 	}
-	_, err := s.upload(input)
+
+	_, err := s.Client.PutObject(context.Background(), params)
 	if err != nil {
-		return fmt.Errorf("failed to push file to S3: %v\n", err)
+		return err
 	}
 
 	return nil
 }
 
-// PutToS3 Pushes a file to an S3 bucket.
-func (s *S3) upload(input simples3.UploadInput) (simples3.PutResponse, error) {
-	return s.s3Conn.FilePut(input)
+// List will list the contents of a bucket
+func (s *S3) List() ([]string, error) {
+
+	params := &s3.ListObjectsInput{
+		Bucket: &s.Bucket,
+	}
+	obj, err := s.Client.ListObjects(context.Background(), params)
+	if err != nil {
+		return nil, err
+	}
+
+	contents := []string{}
+	for _, v := range obj.Contents {
+		contents = append(contents, *v.Key)
+	}
+
+	return contents, nil
 }

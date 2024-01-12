@@ -67,7 +67,7 @@ The CVE results are searched for based on the locations generated during the `si
 ```shell
 docker build -t baski-server:v0.0.0 -f docker/server/Dockerfile .
 
-docker run --name baski-server -e BASKI_S3_ENDPOINT=https://SOME-ENDPOINT -e BASKI_S3_ACCESSKEY=SOME-ACCESS-KEY -e BASKI_S3_SECRETKEY=SOME-SECRET-KEY -e BASKI_S3_BUCKET="baski" -p 8080 -it --rm baski-server:v0.0.0
+docker run --name baski-server -e BASKI_S3_ENDPOINT=https://SOME-ENDPOINT -e BASKI_S3_ACCESSKEY=SOME-ACCESS-KEY -e BASKI_S3_SECRETKEY=SOME-SECRET-KEY -e BASKI_S3_BUCKET="baski" -e BASKI_ENABLE_DOGKAT="true" -e BASKI_DOGKAT_BUCKET="dogkat" -p 8080 -it --rm baski-server:v0.0.0
 
 curl http://127.0.0.1:DOCKER-PORT/api/v1/scan/SOME-IMAGE-ID
 ```

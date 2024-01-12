@@ -22,21 +22,120 @@ import (
 	"github.com/eschercloudai/baski/pkg/constants"
 	"github.com/eschercloudai/baski/pkg/mock"
 	"go.uber.org/mock/gomock"
+	"reflect"
 	"testing"
 )
+
+func TestNew(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		name           string
+		filename       string
+		path           string
+		ignoreList     []string
+		severity       Severity
+		expectedResult *TrivyOptions
+	}{
+		{
+			name:       "Test case 1: Test ignorefile",
+			filename:   ".trivyignore",
+			path:       "",
+			ignoreList: []string{},
+			severity:   MEDIUM,
+			expectedResult: &TrivyOptions{
+				ignorePath:     "",
+				ignoreFilename: ".trivyignore",
+				ignoreList:     []string{},
+				severity:       MEDIUM,
+			},
+		},
+		{
+			name:       "Test case 2: Test ignorefile with path",
+			filename:   ".trivyignore",
+			path:       "something",
+			ignoreList: []string{},
+			severity:   MEDIUM,
+			expectedResult: &TrivyOptions{
+				ignorePath:     "something",
+				ignoreFilename: ".trivyignore",
+				ignoreList:     []string{},
+				severity:       MEDIUM,
+			},
+		},
+		{
+			name:       "Test case 3: Test ignorefile and list",
+			filename:   ".trivyignore",
+			path:       "",
+			ignoreList: []string{"a", "b", "c"},
+			severity:   HIGH,
+			expectedResult: &TrivyOptions{
+				ignorePath:     "",
+				ignoreFilename: ".trivyignore",
+				ignoreList:     []string{"a", "b", "c"},
+				severity:       HIGH,
+			},
+		},
+	}
+
+	// RunScan the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			to := New(tc.path, tc.filename, nil, MEDIUM)
+
+			if reflect.DeepEqual(to, tc.expectedResult) {
+				t.Errorf("Expected data %v, got: %v\n", tc.expectedResult, to)
+			}
+		})
+	}
+}
+
+func TestGetFilename(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		name           string
+		filename       string
+		path           string
+		expectedResult string
+	}{
+		{
+			name:           "Test case 1: Test filename without path",
+			filename:       ".trivyignore",
+			path:           "",
+			expectedResult: ".trivyignore",
+		},
+		{
+			name:           "Test case 2: Test filename with path",
+			filename:       ".trivyignore",
+			path:           "something",
+			expectedResult: "something/.trivyignore",
+		},
+	}
+
+	// RunScan the test cases
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			to := New(tc.path, tc.filename, nil, MEDIUM)
+			result := to.GetFilename()
+
+			if result != tc.expectedResult {
+				t.Errorf("Expected data %s, got: %s\n", tc.expectedResult, result)
+			}
+		})
+	}
+}
 
 func TestGenerateUserData(t *testing.T) {
 	c := gomock.NewController(t)
 	defer c.Finish()
 
 	m := mock.NewMockS3Interface(c)
-	// Set expectations for FetchFromS3.
+	// Set expectations for Fetch.
 
 	ignoreFile := ".trivyignore"
 	fileBytes := []byte("CVE-1234-56789\nCVE-A1B2-56789")
 	ignoreList := []string{"CVE-ABC-56789", "CVE-DEF-56789", "CVE-GHI-56789"}
 
-	m.EXPECT().FetchFromS3(ignoreFile).Return(fileBytes, nil).AnyTimes()
+	m.EXPECT().Fetch(ignoreFile).Return(fileBytes, nil).AnyTimes()
 
 	// Define test cases
 	testCases := []struct {
@@ -50,14 +149,14 @@ func TestGenerateUserData(t *testing.T) {
 			name:           "Test case 1: No ignore file and empty ignore list",
 			s3:             m,
 			ignoreFile:     "",
-			ignoreList:     nil,
+			ignoreList:     []string{"[]"},
 			expectedResult: generateTestCase(false, false),
 		},
 		{
 			name:           "Test case 2: With ignore file and empty ignore list",
 			s3:             m,
 			ignoreFile:     ignoreFile,
-			ignoreList:     nil,
+			ignoreList:     []string{"[]"},
 			expectedResult: generateTestCase(true, false),
 		},
 		{
@@ -79,10 +178,14 @@ func TestGenerateUserData(t *testing.T) {
 	// RunScan the test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := GenerateUserData(tc.s3, tc.ignoreFile, tc.ignoreList)
+			to := New("", tc.ignoreFile, tc.ignoreList, MEDIUM)
+			result, err := to.GenerateTrivyCommand(tc.s3)
+			if err != nil {
+				t.Errorf("Expected error %v, got: %s\n", nil, err.Error())
+			}
 
 			if !bytes.Equal(result, tc.expectedResult) {
-				t.Errorf("Expected data %s, got: %s\n", string(tc.expectedResult), string(result))
+				t.Errorf("Expected data %s, got: %s\n", tc.expectedResult, result)
 			}
 		})
 	}
@@ -101,7 +204,7 @@ func generateTestCase(ignoreFile bool, ignoreList bool) []byte {
 	mv ./trivy /usr/local/bin/trivy;
 fi`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion)
 
-	runScanCommand := "sudo trivy rootfs --scanners vuln -f json -o /tmp/results.json /;"
+	runScanCommand := "sudo trivy rootfs --scanners vuln -s MEDIUM,HIGH,CRITICAL -f json -o /tmp/results.json /;"
 
 	// Prepare .trivyignore file
 	if ignoreFile && !ignoreList {
@@ -109,10 +212,9 @@ fi`, constants.TrivyVersion, constants.TrivyVersion, constants.TrivyVersion, con
 cat << EOF > /tmp/.trivyignore
 CVE-1234-56789
 CVE-A1B2-56789
-
 EOF
 `
-		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
+		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -s MEDIUM,HIGH,CRITICAL -f json -o /tmp/results.json /;"
 	} else if !ignoreFile && ignoreList {
 		trivyIgnoreFile = `
 cat << EOF > /tmp/.trivyignore
@@ -122,7 +224,7 @@ CVE-DEF-56789
 CVE-GHI-56789
 EOF
 `
-		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
+		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -s MEDIUM,HIGH,CRITICAL -f json -o /tmp/results.json /;"
 	} else if ignoreFile && ignoreList {
 		trivyIgnoreFile = `
 cat << EOF > /tmp/.trivyignore
@@ -133,7 +235,7 @@ CVE-DEF-56789
 CVE-GHI-56789
 EOF
 `
-		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -f json -o /tmp/results.json /;"
+		runScanCommand = "sudo trivy rootfs --ignorefile /tmp/.trivyignore --scanners vuln -s MEDIUM,HIGH,CRITICAL -f json -o /tmp/results.json /;"
 	}
 
 	// Put it all together
