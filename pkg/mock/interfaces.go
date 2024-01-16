@@ -53,6 +53,42 @@ func (mr *MockHandlerInterfaceMockRecorder) ApiV1GetScan(w, r, imageId any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiV1GetScan", reflect.TypeOf((*MockHandlerInterface)(nil).ApiV1GetScan), w, r, imageId)
 }
 
+// ApiV1GetScans mocks base method.
+func (m *MockHandlerInterface) ApiV1GetScans(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ApiV1GetScans", w, r)
+}
+
+// ApiV1GetScans indicates an expected call of ApiV1GetScans.
+func (mr *MockHandlerInterfaceMockRecorder) ApiV1GetScans(w, r any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiV1GetScans", reflect.TypeOf((*MockHandlerInterface)(nil).ApiV1GetScans), w, r)
+}
+
+// ApiV1GetTest mocks base method.
+func (m *MockHandlerInterface) ApiV1GetTest(w http.ResponseWriter, r *http.Request, imageId generated.ImageID) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ApiV1GetTest", w, r, imageId)
+}
+
+// ApiV1GetTest indicates an expected call of ApiV1GetTest.
+func (mr *MockHandlerInterfaceMockRecorder) ApiV1GetTest(w, r, imageId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiV1GetTest", reflect.TypeOf((*MockHandlerInterface)(nil).ApiV1GetTest), w, r, imageId)
+}
+
+// ApiV1GetTests mocks base method.
+func (m *MockHandlerInterface) ApiV1GetTests(w http.ResponseWriter, r *http.Request) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ApiV1GetTests", w, r)
+}
+
+// ApiV1GetTests indicates an expected call of ApiV1GetTests.
+func (mr *MockHandlerInterfaceMockRecorder) ApiV1GetTests(w, r any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApiV1GetTests", reflect.TypeOf((*MockHandlerInterface)(nil).ApiV1GetTests), w, r)
+}
+
 // Healthz mocks base method.
 func (m *MockHandlerInterface) Healthz(w http.ResponseWriter, r *http.Request) {
 	m.ctrl.T.Helper()
@@ -88,33 +124,48 @@ func (m *MockS3Interface) EXPECT() *MockS3InterfaceMockRecorder {
 	return m.recorder
 }
 
-// FetchFromS3 mocks base method.
-func (m *MockS3Interface) FetchFromS3(arg0 string) ([]byte, error) {
+// Fetch mocks base method.
+func (m *MockS3Interface) Fetch(arg0 string) ([]byte, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchFromS3", arg0)
+	ret := m.ctrl.Call(m, "Fetch", arg0)
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FetchFromS3 indicates an expected call of FetchFromS3.
-func (mr *MockS3InterfaceMockRecorder) FetchFromS3(arg0 any) *gomock.Call {
+// Fetch indicates an expected call of Fetch.
+func (mr *MockS3InterfaceMockRecorder) Fetch(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchFromS3", reflect.TypeOf((*MockS3Interface)(nil).FetchFromS3), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Fetch", reflect.TypeOf((*MockS3Interface)(nil).Fetch), arg0)
 }
 
-// PutToS3 mocks base method.
-func (m *MockS3Interface) PutToS3(arg0, arg1, arg2 string, arg3 io.ReadSeeker) error {
+// List mocks base method.
+func (m *MockS3Interface) List() ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PutToS3", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "List")
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockS3InterfaceMockRecorder) List() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockS3Interface)(nil).List))
+}
+
+// Put mocks base method.
+func (m *MockS3Interface) Put(arg0, arg1 string, arg2 io.ReadSeeker) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Put", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// PutToS3 indicates an expected call of PutToS3.
-func (mr *MockS3InterfaceMockRecorder) PutToS3(arg0, arg1, arg2, arg3 any) *gomock.Call {
+// Put indicates an expected call of Put.
+func (mr *MockS3InterfaceMockRecorder) Put(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutToS3", reflect.TypeOf((*MockS3Interface)(nil).PutToS3), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Put", reflect.TypeOf((*MockS3Interface)(nil).Put), arg0, arg1, arg2)
 }
 
 // MockVaultInterface is a mock of VaultInterface interface.

@@ -15,10 +15,12 @@ RUN CGO_ENABLED=0 go build -o /tmp/baski-server /app/cmd/server/main.go
 
 FROM cgr.dev/chainguard/wolfi-base:latest
 
-ENV S3_ENDPOINT=""
-ENV S3_ACCESSKEY=""
-ENV S3_SECRETKEY=""
-ENV S3_BUCKET="baski"
+ENV BASKI_S3_ENDPOINT=""
+ENV BASKI_S3_ACCESSKEY=""
+ENV BASKI_S3_SECRETKEY=""
+ENV BASKI_S3_BUCKET="baski"
+ENV BASKI_ENABLE_DOGKAT="true"
+ENV BASKI_DOGKAT_BUCKET="dogkat"
 
 RUN apk update --no-cache
 RUN apk add jq curl

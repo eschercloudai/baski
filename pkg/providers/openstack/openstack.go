@@ -23,18 +23,11 @@ import (
 	"github.com/gophercloud/utils/openstack/clientconfig"
 )
 
-// OSClient contains the Env vars of the program as well as the Provider and any EndpointOptions.
-// This is used in gophercloud connections.
-//type OSClient struct {
-//	//Cloud           OpenstackCloud
-//	EndpointOptions *gophercloud.EndpointOpts
-//}
-
 type Provider interface {
 	Client() (*gophercloud.ProviderClient, error)
 }
 
-// CloudsProvider cretes a client from clouds.yaml.
+// CloudsProvider creates a client from clouds.yaml.
 type CloudsProvider struct {
 	// cloud is the key to lookup in clouds.yaml.
 	cloud string

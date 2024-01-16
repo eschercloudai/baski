@@ -27,30 +27,30 @@ import (
 
 func put(s util.S3Interface) error {
 	f := createFile()
-	t := s.PutToS3("text/plain", "path/results.json", "results.json", f)
+	t := s.Put("text/plain", "path/results.json", f)
 	removeFile(f)
 	return t
 }
 
-func TestFetchFromS3(t *testing.T) {
+func TestFetch(t *testing.T) {
 	c := gomock.NewController(t)
 	defer c.Finish()
 	m := mock.NewMockS3Interface(c)
 
-	m.EXPECT().FetchFromS3(gomock.Eq("trivyignore")).Return([]byte("some data"), nil)
-	if _, err := m.FetchFromS3("trivyignore"); err != nil {
+	m.EXPECT().Fetch(gomock.Eq("trivyignore")).Return([]byte("some data"), nil)
+	if _, err := m.Fetch("trivyignore"); err != nil {
 		t.Error(err)
 	}
 }
 
-func TestPutToS3(t *testing.T) {
+func TestPut(t *testing.T) {
 	c := gomock.NewController(t)
 	defer c.Finish()
 	m := mock.NewMockS3Interface(c)
 
 	f := createFile()
 
-	m.EXPECT().PutToS3(gomock.Eq("text/plain"), gomock.Eq("path/results.json"), gomock.Eq("results.json"), gomock.Eq(f)).Return(nil)
+	m.EXPECT().Put(gomock.Eq("text/plain"), gomock.Eq("path/results.json"), gomock.Eq(f)).Return(nil)
 	if err := put(m); err != nil {
 		t.Error(err)
 	}

@@ -40,9 +40,9 @@ Scanning an a single image - useful for when an image has just been built.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
-
-			if !trivy.ValidSeverity(trivy.Severity(strings.ToUpper(o.MaxSeverityType))) {
-				return errors.New("severity value passed is invalid. Allowed values are: NONE, LOW, MEDIUM, HIGH, CRITICAL")
+			severity := trivy.Severity(strings.ToUpper(o.MaxSeverityType))
+			if !trivy.ValidSeverity(severity) {
+				return errors.New("severity value passed is invalid. Allowed values are: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL")
 			}
 
 			cloudProvider := ostack.NewCloudsProvider(o.CloudName)
@@ -68,14 +68,14 @@ Scanning an a single image - useful for when an image has just been built.
 				return err
 			}
 
-			s := scanner.NewScanner(c, i, n, &s3.S3{
-				Endpoint:  o.Endpoint,
-				AccessKey: o.AccessKey,
-				SecretKey: o.SecretKey,
-				Bucket:    o.ScanBucket,
-			})
+			s3Conn, err := s3.New(o.Endpoint, o.AccessKey, o.SecretKey, o.ScanBucket, "")
+			if err != nil {
+				return err
+			}
 
-			err = s.RunScan(&o.ScanOptions, img)
+			s := scanner.NewScanner(c, i, n, s3Conn)
+
+			err = s.RunScan(&o.ScanOptions, severity, img)
 			if err != nil {
 				return err
 			}
@@ -83,7 +83,7 @@ Scanning an a single image - useful for when an image has just been built.
 			if err != nil {
 				return err
 			}
-			err = s.ParseScanResults(img, o.MaxSeverityScore, o.MaxSeverityType, o.AutoDeleteImage, o.SkipCVECheck)
+			err = s.CheckResultsTagImageAndUploadToS3(img, o.AutoDeleteImage, o.SkipCVECheck)
 			if err != nil {
 				return err
 			}

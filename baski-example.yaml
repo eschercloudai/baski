@@ -107,8 +107,6 @@ scan:
   # This option allows the scan to skip checking the CVE check which would result in a failure should the thresholds below be hit.
   # It can be useful for building an image that needs to stick around, even if a scan would fail. Maybe for troubleshooting or review.
   skip-cve-check: false
-  # Minimum severity score to check for during the scan.
-  max-severity-score: 7.0
   # Minimum severity to check for during the scan.
   max-severity-type: MEDIUM
   # The bucket name in which the trivyignore file can be located.

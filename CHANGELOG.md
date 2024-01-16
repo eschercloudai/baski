@@ -1,5 +1,14 @@
 # Changelog
 
+## [ 2023/12/17 - v0.3.0 ]
+
+### Changed/Added
+* Added a new response for baski server for collecting and prasing test results from DogKat and provide data to a UI
+* Updated S3 connectivity to be done via the AWS SDK
+
+### Deprecated/Removed
+* Removed the put function from S3 as it's not 
+
 ## [ 2023/12/05 - v0.2.0 ]
 
 ### Changed/Added

@@ -5,11 +5,14 @@ info:
   description: |-
     Baski Server is a tool to enable Baski to have an api that can be queried to pull data out of it. It begun as a 
     tool from which the scan results can be pulled from and has grown since then.
+servers:
+  - description: Development
+    url: "127.0.0.1:8080"
 paths:
   /healthz:
     get:
       operationId: healthz
-      summary: Returns ok when server is online
+      summary: Returns ok when server is online.
       responses:
         '200':
           description: OK
@@ -18,10 +21,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/health'
 
+  /api/v1/scans:
+    get:
+      operationId: apiV1GetScans
+      summary: Get a list of scan results.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/scanResults'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+
   /api/v1/scan/{image-id}:
     get:
       operationId: apiV1GetScan
-      summary: Get a scan result
+      summary: Get a scan result.
       parameters:
         - $ref: '#/components/parameters/imageID'
       responses:
@@ -31,6 +48,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/scanResult'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+
+  /api/v1/test/{image-id}:
+    get:
+      operationId: apiV1GetTest
+      summary: Get a test result.
+      parameters:
+        - $ref: '#/components/parameters/imageID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/testResult'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+
+
+  /api/v1/images:
+    get:
+      operationId: apiV1GetImages
+      summary: Get a list of images based on the scan results.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/imageResults'
+        '404':
+          $ref: '#/components/responses/notFoundResponse'
+
+  /api/v1/image/{image-id}:
+    get:
+      operationId: apiV1GetImage
+      summary: Get the scan and test results for an image.
+      parameters:
+        - $ref: '#/components/parameters/imageID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/imageResult'
         '404':
           $ref: '#/components/responses/notFoundResponse'
 components:
@@ -93,12 +157,12 @@ components:
           type: string
 
     health:
-      description: A response to a health request
+      description: A response to a health request.
       type: string
       example: ok
 
     cvss:
-      description: The name of the package
+      description: The CVE data.
       type: object
       items:
         properties:
@@ -110,46 +174,46 @@ components:
             $ref: '#/components/schemas/cvssType'
 
     cvssType:
-      description: The name of the package
+      description: A CVE type.
       type: object
       items:
         properties:
           v2Vector:
-            description: The name of the package
+            description: The score of the CVE.
             type: string
           v3Vector:
-            description: The name of the package
+            description: The score of the CVE.
             type: string
           v2Score:
-            description: The name of the package
+            description: The score of the CVE.
             type: string
           v3Score:
-            description: The name of the package
+            description: The score of the CVE.
             type: string
 
-    scanResult:
-      description: A scan result.
-      type: object
+    scans:
+      description: A list of scan results.
+      type: array
       properties:
         vulnerabilityID:
-          description: The name of the package
+          description: The ID of the vulnerability.
           type: string
         description:
-          description: The name of the package
+          description: A description of the package.
           type: string
         pkgName:
-          description: The name of the package
+          description: The name of the package.
           type: string
         installedVersion:
-          description: The name of the package
+          description: The version of the package that's installed.
           type: string
         severity:
-          description: The name of the package
+          description: The severity of the vulnerability.
           type: string
         cvss:
           $ref: '#/components/schemas/cvss'
         fixedVersion:
-          description: The name of the package
+          description: The version in which the vulnerability is fixed if applicable.
           type: string
       example:
         - vulnerabilityID: string
@@ -174,3 +238,98 @@ components:
               v2Score: string
               v3Score: string
           fixedVersion: string
+    tests:
+      description: A collection of test results for an image.
+      type: array
+      properties:
+        name:
+          description: The name of the test.
+          type: string
+        description:
+          description: The description of the test.
+          type: string
+        completed:
+          description: Whether the test completed.
+          type: boolean
+          x-go-type: bool
+          format: string
+      example:
+        - name: string
+          description: string
+          completed: "true"
+
+
+    scanResults:
+      description: A list of image IDs from scan results.
+      type: object
+      properties:
+        imageID:
+          description: The ID of the image.
+          type: string
+      example:
+        - id: string
+
+    imageResults:
+      description: A list of image IDs from scan results.
+      type: object
+      properties:
+        imageID:
+          description: The ID of the image.
+          type: string
+        imageName:
+          description: The ID of the image.
+          type: string
+        scanStatus:
+          description: The status of the image scan.
+          type: string
+        testStatus:
+          description: The status of the image test.
+          type: string
+      example:
+        - id: string
+          name: string
+          scan_status: string
+          testStatus: string
+
+    scanResult:
+      $ref: '#/components/schemas/scans'
+
+    testResult:
+      $ref: '#/components/schemas/tests'
+
+    imageResult:
+      description: A scan and test result combined.
+      type: object
+      properties:
+        testResults:
+          $ref: '#/components/schemas/tests'
+        scanResults:
+          $ref: '#/components/schemas/scans'
+      example:
+        testResults:
+          - name: string
+            description: string
+            completed: "true"
+        scanResults:
+          - vulnerabilityID: string
+            description: string
+            pkgName: string
+            installedVersion: string
+            severity: string
+            cvss:
+              ghsa:
+                v2Vector: string
+                v3Vector: string
+                v2Score: string
+                v3Score: string
+              nvd:
+                v2Vector: string
+                v3Vector: string
+                v2Score: string
+                v3Score: string
+              redhat:
+                v2Vector: string
+                v3Vector: string
+                v2Score: string
+                v3Score: string
+            fixedVersion: string

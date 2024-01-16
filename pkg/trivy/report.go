@@ -24,26 +24,26 @@ import (
 type Severity string
 
 const (
-	NONE     Severity = "NONE"
+	UNKNOWN  Severity = "UNKNOWN"
 	LOW      Severity = "LOW"
 	MEDIUM   Severity = "MEDIUM"
 	HIGH     Severity = "HIGH"
 	CRITICAL Severity = "CRITICAL"
 )
 
-// CheckSeverity compares two severities to see if a threshold has been met. IE: is sev: HIGH >= check: MEDIUM.
-func CheckSeverity(sev, threshold Severity) bool {
-	var sevValue, thresholdValue int
-	sevValue = parseSeverity(sev)
-	thresholdValue = parseSeverity(threshold)
-
-	return sevValue >= thresholdValue
-}
+//// CheckSeverity compares two severities to see if a threshold has been met. IE: is sev: HIGH >= check: MEDIUM.
+//func CheckSeverity(sev, threshold Severity) bool {
+//	var sevValue, thresholdValue int
+//	sevValue = parseSeverity(sev)
+//	thresholdValue = parseSeverity(threshold)
+//
+//	return sevValue >= thresholdValue
+//}
 
 // ValidSeverity confirms that the supplied value is a valid severity value.
 func ValidSeverity(val Severity) bool {
 	switch val {
-	case NONE:
+	case UNKNOWN:
 		return true
 	case LOW:
 		return true
@@ -58,22 +58,17 @@ func ValidSeverity(val Severity) bool {
 	return false
 }
 
-// parseSeverity takes a Severity and turns it into a numerical value so that it can be compared.
-func parseSeverity(val Severity) int {
-	switch val {
-	case NONE:
-		return 1
-	case LOW:
-		return 2
-	case MEDIUM:
-		return 3
-	case HIGH:
-		return 4
-	case CRITICAL:
-		return 5
+// ParseSeverity takes a Severity and returns everything from that severity value upwards as a string slice
+func ParseSeverity(val Severity) []string {
+	severityList := []string{"UNKNOWN", "LOW", "MEDIUM", "HIGH", "CRITICAL"}
+	index := -1
+	for i, v := range severityList {
+		if Severity(v) == val {
+			index = i
+		}
 	}
 
-	return 0
+	return severityList[index:]
 }
 
 type ScanFailedReport struct {

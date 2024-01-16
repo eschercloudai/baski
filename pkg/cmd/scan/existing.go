@@ -49,7 +49,8 @@ to prevent every single image being launched for a scan, the concurrency is limi
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
 
-			if !trivy.ValidSeverity(trivy.Severity(strings.ToUpper(o.MaxSeverityType))) {
+			severity := trivy.Severity(strings.ToUpper(o.MaxSeverityType))
+			if !trivy.ValidSeverity(severity) {
 				return errors.New("severity value passed is invalid. Allowed values are: NONE, LOW, MEDIUM, HIGH, CRITICAL")
 			}
 
@@ -86,14 +87,15 @@ to prevent every single image being launched for a scan, the concurrency is limi
 						<-semaphore // Release the slot in the semaphore
 					}()
 
-					s := scanner.NewScanner(c, i, n, &s3.S3{
-						Endpoint:  o.Endpoint,
-						AccessKey: o.AccessKey,
-						SecretKey: o.SecretKey,
-						Bucket:    o.ScanBucket,
-					})
+					s3Conn, err := s3.New(o.Endpoint, o.AccessKey, o.SecretKey, o.ScanBucket, "")
+					if err != nil {
+						log.Println(err)
+						return
+					}
 
-					err = scanServer(o.ScanOptions, s, &image, &wg)
+					s := scanner.NewScanner(c, i, n, s3Conn)
+
+					err = scanServer(o.ScanOptions, s, severity, &image, &wg)
 					if err != nil {
 						log.Println(err)
 					}
@@ -113,12 +115,12 @@ to prevent every single image being launched for a scan, the concurrency is limi
 	return cmd
 }
 
-func scanServer(o flags.ScanOptions, s *scanner.ScannerClient, img *images.Image, wg *sync.WaitGroup) error {
+func scanServer(o flags.ScanOptions, s *scanner.ScannerClient, severity trivy.Severity, img *images.Image, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	log.Printf("Processing Image with ID: %s\n", img.ID)
 
-	err := s.RunScan(&o, img)
+	err := s.RunScan(&o, severity, img)
 	if err != nil {
 		return err
 	}
@@ -126,7 +128,7 @@ func scanServer(o flags.ScanOptions, s *scanner.ScannerClient, img *images.Image
 	if err != nil {
 		return err
 	}
-	err = s.ParseScanResults(img, o.MaxSeverityScore, o.MaxSeverityType, o.AutoDeleteImage, o.SkipCVECheck)
+	err = s.CheckResultsTagImageAndUploadToS3(img, o.AutoDeleteImage, o.SkipCVECheck)
 	if err != nil {
 		return err
 	}

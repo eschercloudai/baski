@@ -23,6 +23,7 @@ import (
 	th "github.com/eschercloudai/baski/testhelpers"
 	"go.uber.org/mock/gomock"
 	"io"
+	"log"
 	"net/http"
 	"reflect"
 	"testing"
@@ -30,21 +31,28 @@ import (
 
 func TestNew(t *testing.T) {
 	endpoint := "test"
+	cloud := "testCloud"
 	access := "abc"
 	secret := "def"
 	bucket := "a_bucket"
 
-	sc := &s3.S3{
-		Endpoint:  endpoint,
-		AccessKey: access,
-		SecretKey: secret,
-		Bucket:    bucket,
+	b, err := s3.New(endpoint, access, secret, bucket, "")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	d, err := s3.New(endpoint, access, secret, bucket, "")
+	if err != nil {
+		log.Println(err)
+		return
 	}
 	expected := &Handler{
-		s3: sc,
+		baskiS3:   b,
+		dogkatS3:  d,
+		cloudName: cloud,
 	}
 
-	test := New(sc)
+	test := New(b, d, cloud)
 	if !reflect.DeepEqual(expected, test) {
 		t.Errorf("expected %+v, got %+v", expected, test)
 	}
@@ -58,11 +66,11 @@ func TestApiV1GetScan(t *testing.T) {
 
 	c := gomock.NewController(t)
 	defer c.Finish()
-	m := mock.NewMockS3Interface(c)
+	bm := mock.NewMockS3Interface(c)
 
-	m.EXPECT().FetchFromS3(gomock.Eq("scans/abcde-123456/results.json")).Return(expectedResponse, nil)
+	bm.EXPECT().Fetch(gomock.Eq("scans/abcde-123456/results.json")).Return(expectedResponse, nil)
 
-	h := Handler{s3: m}
+	h := Handler{baskiS3: bm}
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		h.ApiV1GetScan(w, r, "abcde-123456")
@@ -71,6 +79,41 @@ func TestApiV1GetScan(t *testing.T) {
 	th.Mux.HandleFunc("/api/v1/scan/abcde-123456", handler)
 
 	res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/api/v1/scan/%s", th.Port, "abcde-123456"))
+	if err != nil {
+		t.Error(err)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if string(expectedResponse) != string(body) {
+		t.Errorf("expected %s, got %s", expectedResponse, body)
+	}
+}
+
+func TestApiV1GetTest(t *testing.T) {
+	th.SetupPersistentPortHTTP(t, th.Port)
+	defer th.TeardownHTTP()
+
+	expectedResponse := []byte(`[{"completed":"true","description":"Some description","name":"some_test"},{"completed":"true","description":"Some description2","name":"some_test2"}]`)
+
+	c := gomock.NewController(t)
+	defer c.Finish()
+	dm := mock.NewMockS3Interface(c)
+
+	dm.EXPECT().Fetch(gomock.Eq("abcde-123456.json")).Return(expectedResponse, nil)
+
+	h := Handler{dogkatS3: dm}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		h.ApiV1GetTest(w, r, "abcde-123456")
+	}
+
+	th.Mux.HandleFunc("/api/v1/test/abcde-123456", handler)
+
+	res, err := http.Get(fmt.Sprintf("http://127.0.0.1:%d/api/v1/test/%s", th.Port, "abcde-123456"))
 	if err != nil {
 		t.Error(err)
 	}
