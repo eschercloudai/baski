@@ -63,3 +63,7 @@ server:
   # secretKey
   # It's presumed that the bucket was generated from the baski scan commands and therefore should be named baski.
   existingSecretName: "baski-server-s3-credentials"
+  baskiBucket: "baski"
+  enableDogkat: "true"
+  dogKatBucket: "dogkat"
+  osCloud: "image-builder"

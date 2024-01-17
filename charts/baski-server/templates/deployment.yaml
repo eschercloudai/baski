@@ -52,11 +52,13 @@ spec:
                   name: {{ .Values.server.existingSecretName }}
                   key: secretKey
             - name: BASKI_S3_BUCKET
-              value: baski
+              value: {{ .Values.server.baskiBucket }}
             - name: BASKI_ENABLE_DOGKAT
-              value: "true"
+              value: {{ .Values.server.enableDogkat }}
             - name: BASKI_DOGKAT_BUCKET
-              value: dogkat
+              value: {{ .Values.server.dogKatBucket }}
+            - name: BASKI_OS_CLOUD
+              value: {{ .Values.server.osCloud }}
           ports:
             - name: http
               containerPort: 8080
