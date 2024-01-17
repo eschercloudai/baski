@@ -54,7 +54,7 @@ spec:
             - name: BASKI_S3_BUCKET
               value: baski
             - name: BASKI_ENABLE_DOGKAT
-              value: true
+              value: "true"
             - name: BASKI_DOGKAT_BUCKET
               value: dogkat
           ports:
