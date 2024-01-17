@@ -27,7 +27,7 @@ RUN apk update --no-cache
 RUN apk add jq curl
 
 RUN echo "baski:x:1000:1000:Baski Non Root,,,:/home/baski:" >> /etc/passwd
-RUN mkdir -p /home/baski/
+RUN mkdir -p /home/baski/.config/openstack
 RUN chown baski: -R /home/baski
 
 COPY --from=go-builder /tmp/baski-server /usr/bin/
