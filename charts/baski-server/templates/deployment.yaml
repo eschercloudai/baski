@@ -54,7 +54,7 @@ spec:
             - name: BASKI_S3_BUCKET
               value: {{ .Values.server.baskiBucket }}
             - name: BASKI_ENABLE_DOGKAT
-              value: {{ .Values.server.enableDogkat }}
+              value: "{{ .Values.server.enableDogkat }}"
             - name: BASKI_DOGKAT_BUCKET
               value: {{ .Values.server.dogKatBucket }}
             - name: BASKI_OS_CLOUD
