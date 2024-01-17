@@ -21,6 +21,7 @@ ENV BASKI_S3_SECRETKEY=""
 ENV BASKI_S3_BUCKET="baski"
 ENV BASKI_ENABLE_DOGKAT="true"
 ENV BASKI_DOGKAT_BUCKET="dogkat"
+ENV BASKI_OS_CLOUD="openstack"
 
 RUN apk update --no-cache
 RUN apk add jq curl
