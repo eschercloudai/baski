@@ -21,8 +21,12 @@ A Helm chart for Kubernetes
 | replicaCount | int | `1` |  |
 | resources | object | `{}` |  |
 | securityContext | object | `{}` |  |
+| server.baskiBucket | string | `"baski"` |  |
 | server.dev | bool | `false` |  |
+| server.dogKatBucket | string | `"dogkat"` |  |
+| server.enableDogkat | string | `"true"` |  |
 | server.existingSecretName | string | `"baski-server-s3-credentials"` |  |
+| server.osCloud | string | `"image-builder"` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
