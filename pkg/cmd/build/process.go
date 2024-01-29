@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	gitRepo "github.com/eschercloudai/baski/pkg/git"
-	systemUtils "github.com/eschercloudai/baski/pkg/system"
-	"github.com/eschercloudai/baski/pkg/util/flags"
+	gitRepo "github.com/drewbernetes/baski/pkg/git"
+	systemUtils "github.com/drewbernetes/baski/pkg/system"
+	"github.com/drewbernetes/baski/pkg/util/flags"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/uuid"
 )
@@ -56,8 +56,8 @@ func fetchBuildRepo(path string, o *flags.BuildOptions) {
 	//FIXME: This check is in place until the security branch in this repo go upstream.
 	// Until it has been added, we must force users over to this repo as it's the only one that has these new additions.
 	if o.AddTrivy || o.AddFalco {
-		log.Println("the kubernetes sigs project doesn't currently support falco or trivy. Using https://github.com/eschercloudai/image-builder.git until it's pushed upstream")
-		imageRepo = "https://github.com/eschercloudai/image-builder.git"
+		log.Println("the kubernetes sigs project doesn't currently support falco or trivy. Using https://github.com/drew-viles/image-builder.git until it's pushed upstream")
+		imageRepo = "https://github.com/drew-viles/image-builder.git"
 		branch = plumbing.ReferenceName("refs/heads/security-updates")
 	}
 

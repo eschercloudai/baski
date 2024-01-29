@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 
 // TestGitClone Tests the cloning by cloning the image builder repo.
 func TestGitClone(t *testing.T) {
-	repo := "https://github.com/eschercloudai/image-builder.git"
+	repo := "https://github.com/drew-viles/image-builder.git"
 	cloneLocation := "/tmp/test"
 	err := os.RemoveAll(cloneLocation)
 	if err != nil {

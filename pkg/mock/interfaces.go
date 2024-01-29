@@ -14,7 +14,7 @@ import (
 	os "os"
 	reflect "reflect"
 
-	generated "github.com/eschercloudai/baski/pkg/server/generated"
+	generated "github.com/drewbernetes/baski/pkg/server/generated"
 	gomock "go.uber.org/mock/gomock"
 )
 

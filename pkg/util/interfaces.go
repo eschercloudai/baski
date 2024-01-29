@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/eschercloudai/baski/pkg/server/generated"
+	"github.com/drewbernetes/baski/pkg/server/generated"
 	"io"
 	"net/http"
 	"os"

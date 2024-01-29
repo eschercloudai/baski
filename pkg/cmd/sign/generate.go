@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"github.com/eschercloudai/baski/pkg/util/flags"
-	"github.com/eschercloudai/baski/pkg/util/sign"
+	"github.com/drewbernetes/baski/pkg/util/flags"
+	"github.com/drewbernetes/baski/pkg/util/sign"
 	"github.com/spf13/cobra"
 	"os"
 	"path"
