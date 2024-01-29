@@ -14,7 +14,7 @@ import (
 	os "os"
 	reflect "reflect"
 
-	generated "github.com/drewbernetes/baski/pkg/server/generated"
+	generated "github.com/eschercloudai/baski/pkg/server/generated"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -230,18 +230,18 @@ func (m *MockSSHInterface) EXPECT() *MockSSHInterfaceMockRecorder {
 }
 
 // CopyFromRemoteServer mocks base method.
-func (m *MockSSHInterface) CopyFromRemoteServer(src, dst string) (*os.File, error) {
+func (m *MockSSHInterface) CopyFromRemoteServer(srcPath, dstPath, filename string) (*os.File, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CopyFromRemoteServer", src, dst)
+	ret := m.ctrl.Call(m, "CopyFromRemoteServer", srcPath, dstPath, filename)
 	ret0, _ := ret[0].(*os.File)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CopyFromRemoteServer indicates an expected call of CopyFromRemoteServer.
-func (mr *MockSSHInterfaceMockRecorder) CopyFromRemoteServer(src, dst any) *gomock.Call {
+func (mr *MockSSHInterfaceMockRecorder) CopyFromRemoteServer(srcPath, dstPath, filename any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CopyFromRemoteServer", reflect.TypeOf((*MockSSHInterface)(nil).CopyFromRemoteServer), src, dst)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CopyFromRemoteServer", reflect.TypeOf((*MockSSHInterface)(nil).CopyFromRemoteServer), srcPath, dstPath, filename)
 }
 
 // SFTPClose mocks base method.

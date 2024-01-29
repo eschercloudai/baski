@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	ostack "github.com/drewbernetes/baski/pkg/providers/openstack"
-	sshconnect "github.com/drewbernetes/baski/pkg/remote"
-	"github.com/drewbernetes/baski/pkg/s3"
-	"github.com/drewbernetes/baski/pkg/trivy"
-	"github.com/drewbernetes/baski/pkg/util"
-	"github.com/drewbernetes/baski/pkg/util/data"
-	"github.com/drewbernetes/baski/pkg/util/flags"
+	ostack "github.com/eschercloudai/baski/pkg/providers/openstack"
+	sshconnect "github.com/eschercloudai/baski/pkg/remote"
+	"github.com/eschercloudai/baski/pkg/s3"
+	"github.com/eschercloudai/baski/pkg/trivy"
+	"github.com/eschercloudai/baski/pkg/util"
+	"github.com/eschercloudai/baski/pkg/util/data"
+	"github.com/eschercloudai/baski/pkg/util/flags"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
@@ -32,7 +32,7 @@ type ScannerClient struct {
 }
 
 // fetchResultsFromServer pulls the results.json from the remote scanning server.
-func fetchResultsFromServer(client util.SSHInterface, imgID string) error {
+func fetchResultsFromServer(client util.SSHInterface) error {
 	log.Println("Successfully connected to ssh server")
 	log.Println("checking for scan completion")
 	retries := 20
@@ -46,7 +46,7 @@ func fetchResultsFromServer(client util.SSHInterface, imgID string) error {
 	}
 	log.Println("scan completed, fetching results")
 
-	_, err := client.CopyFromRemoteServer("/tmp/results.json", fmt.Sprintf("/tmp/%s.json", imgID))
+	_, err := client.CopyFromRemoteServer("/tmp/", "/tmp/", "results.json")
 	if err != nil {
 		log.Println(err.Error())
 		return err
@@ -55,7 +55,7 @@ func fetchResultsFromServer(client util.SSHInterface, imgID string) error {
 }
 
 func hasScanCompleted(client util.SSHInterface) bool {
-	status, err := client.CopyFromRemoteServer("/tmp/finished", "/tmp/finished")
+	status, err := client.CopyFromRemoteServer("/tmp/", "/tmp/", "finished")
 	if err != nil {
 		return false
 	}
@@ -90,9 +90,9 @@ func removeScanningResources(serverID, keyName string, fip *floatingips.Floating
 }
 
 // parsingVulnerabilities will read the results file and parse it into a more user friendly format.
-func parsingVulnerabilities(resultsFile string) ([]trivy.ScanFailedReport, error) {
+func parsingVulnerabilities() ([]trivy.ScanFailedReport, error) {
 	log.Println("checking results")
-	rf, err := os.ReadFile(resultsFile)
+	rf, err := os.ReadFile("/tmp/results.json")
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +109,7 @@ func parsingVulnerabilities(resultsFile string) ([]trivy.ScanFailedReport, error
 
 	for _, r := range report.Results {
 		for _, v := range r.Vulnerabilities {
+			//if checkSeverityThresholdPassed(trivy.Severity(v.Severity), v.Cvss, checkScore, trivy.Severity(severityThreshold)) {
 			vuln := trivy.ScanFailedReport{
 				VulnerabilityID:  v.VulnerabilityID,
 				Description:      v.Description,
@@ -118,12 +119,55 @@ func parsingVulnerabilities(resultsFile string) ([]trivy.ScanFailedReport, error
 				Severity:         v.Severity,
 				Cvss:             v.Cvss,
 			}
+			//// We don't need all scores in here, so we just grab the one that triggered the threshold
+			//if v.Cvss.Nvd != nil {
+			//	if v.Cvss.Nvd.V3Score >= checkScore {
+			//		vuln.Cvss = trivy.CVSS{Nvd: &trivy.Score{V3Score: v.Cvss.Nvd.V3Score}}
+			//	} else if v.Cvss.Nvd.V2Score >= checkScore {
+			//		vuln.Cvss = trivy.CVSS{Nvd: &trivy.Score{V2Score: v.Cvss.Nvd.V2Score}}
+			//	}
+			//} else if v.Cvss.Redhat != nil {
+			//	if v.Cvss.Redhat.V3Score >= checkScore {
+			//		vuln.Cvss = trivy.CVSS{Redhat: &trivy.Score{V3Score: v.Cvss.Redhat.V3Score}}
+			//	} else if v.Cvss.Redhat.V2Score >= checkScore {
+			//		vuln.Cvss = trivy.CVSS{Redhat: &trivy.Score{V2Score: v.Cvss.Redhat.V2Score}}
+			//	}
+			//} else if v.Cvss.Ghsa != nil {
+			//	if v.Cvss.Ghsa.V3Score >= checkScore {
+			//		vuln.Cvss = trivy.CVSS{Ghsa: &trivy.Score{V3Score: v.Cvss.Ghsa.V3Score}}
+			//	}
+			//}
 
 			vf = append(vf, vuln)
 		}
+		//}
 	}
 	return vf, nil
 }
+
+//// checkSeverityThresholdPassed checks for a score that is >= checkScore and checkSeverity. It will return true if so.
+//func checkSeverityThresholdPassed(severity trivy.Severity, cvss trivy.CVSS, checkScore float64, severityThreshold trivy.Severity) bool {
+//	if cvss.Nvd != nil {
+//		if cvss.Nvd.V3Score >= checkScore && trivy.CheckSeverity(severity, severityThreshold) {
+//			return true
+//		} else if cvss.Nvd.V2Score >= checkScore && trivy.CheckSeverity(severity, severityThreshold) {
+//			return true
+//		}
+//	}
+//	if cvss.Redhat != nil {
+//		if cvss.Redhat.V3Score >= checkScore && trivy.CheckSeverity(severity, severityThreshold) {
+//			return true
+//		} else if cvss.Redhat.V2Score >= checkScore && trivy.CheckSeverity(severity, severityThreshold) {
+//			return true
+//		}
+//	}
+//	if cvss.Ghsa != nil {
+//		if cvss.Ghsa.V3Score >= checkScore && trivy.CheckSeverity(severity, severityThreshold) {
+//			return true
+//		}
+//	}
+//	return false
+//}
 
 func (s *ScannerClient) getKeypair(imgID string) error {
 	kp, err := s.computeClient.CreateKeypair(imgID)
@@ -235,14 +279,14 @@ func (s *ScannerClient) RunScan(o *flags.ScanOptions, severity trivy.Severity, i
 	return nil
 }
 
-func (s *ScannerClient) FetchScanResults(imgID string) error {
+func (s *ScannerClient) FetchScanResults() error {
 	//TODO: We need to capture-ctl c and cleanup resources if it's hit.
 	client, err := sshconnect.NewSSHClient(s.keyPair, s.fip.FloatingIP)
 	if err != nil {
 		return err
 	}
 
-	err = fetchResultsFromServer(client, imgID)
+	err = fetchResultsFromServer(client)
 	if err != nil {
 		e := removeScanningResources(s.server.ID, s.keyPair.Name, s.fip, s.computeClient, s.networkClient)
 		if e != nil {
@@ -283,7 +327,7 @@ func (s *ScannerClient) CheckResultsTagImageAndUploadToS3(img *images.Image, aut
 	metaValue := "passed"
 	resultsFile := fmt.Sprintf("/tmp/%s.json", img.ID)
 
-	vulns, err := parsingVulnerabilities(resultsFile)
+	vulns, err := parsingVulnerabilities()
 	if err != nil {
 		return err
 	}

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Drewbernetes.
+Copyright 2023 EscherCloud.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,10 +19,10 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	ostack "github.com/drewbernetes/baski/pkg/providers/openstack"
-	"github.com/drewbernetes/baski/pkg/server/generated"
-	"github.com/drewbernetes/baski/pkg/server/server/util"
-	u "github.com/drewbernetes/baski/pkg/util"
+	ostack "github.com/eschercloudai/baski/pkg/providers/openstack"
+	"github.com/eschercloudai/baski/pkg/server/generated"
+	"github.com/eschercloudai/baski/pkg/server/server/util"
+	u "github.com/eschercloudai/baski/pkg/util"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"log"
 	"net/http"

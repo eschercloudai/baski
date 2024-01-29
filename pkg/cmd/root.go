@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Drewbernetes.
+Copyright 2023 EscherCloud.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@ limitations under the License.
 package cmd
 
 import (
-	"github.com/drewbernetes/baski/pkg/cmd/build"
-	"github.com/drewbernetes/baski/pkg/cmd/scan"
-	"github.com/drewbernetes/baski/pkg/cmd/sign"
-	"github.com/drewbernetes/baski/pkg/cmd/util/config"
+	"github.com/eschercloudai/baski/pkg/cmd/build"
+	"github.com/eschercloudai/baski/pkg/cmd/scan"
+	"github.com/eschercloudai/baski/pkg/cmd/sign"
+	"github.com/eschercloudai/baski/pkg/cmd/util/config"
 	"github.com/spf13/cobra"
 )
 

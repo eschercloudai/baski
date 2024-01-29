@@ -42,20 +42,20 @@ jobs:
       id-token: write
     steps:
       - name: Build Baski Image
-        uses: drewbernetes/container-security-action@v0.0.1
+        uses: eschercloudai/container-security-action@v0.0.4
         if: github.event_name != 'pull_request'
         id: build-and-scan-baski
         with:
-          image-repo: "registry.hudson-viles.uk/public"
-          repo-username: ${{ secrets.REGISTRY_PUBLIC_USER }}
-          repo-password: ${{ secrets.REGISTRY_PUBLIC_PASSWORD }}
+          image-repo: ghcr.io
+          repo-username: ${{ github.repository_owner }}
+          repo-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: baski
           image-tag: ${{ github.ref_name }}
           check-severity: CRITICAL
           trivyignore-from-s3: true
-          aws-endpoint: "https://api.storage.home.hudson-viles.uk/"
-          aws-access-key: ${{secrets.S3_ACCESS_KEY}}
-          aws-secret-key: ${{secrets.S3_SECRET_KEY}}
+          aws-endpoint: "https://nl1.eschercloud.com:6780"
+          aws-access-key: ${{secrets.AWS_ACCESS_KEY}}
+          aws-secret-key: ${{secrets.AWS_SECRET_KEY}}
           s3-bucket: "trivyignores"
           s3-path: "baski"
           add-latest-tag: true
@@ -65,20 +65,20 @@ jobs:
           cosign-tlog: false
           dockerfile-path: docker/baski
       - name: Build Baski Server Image
-        uses: drewbernetes/container-security-action@v0.0.1
+        uses: eschercloudai/container-security-action@v0.0.4
         if: github.event_name != 'pull_request'
         id: build-and-scan-server
         with:
-          image-repo: "registry.hudson-viles.uk/public"
-          repo-username: ${{ secrets.REGISTRY_PUBLIC_USER }}
-          repo-password: ${{ secrets.REGISTRY_PUBLIC_PASSWORD }}
+          image-repo: ghcr.io
+          repo-username: ${{ github.repository_owner }}
+          repo-password: ${{ secrets.GITHUB_TOKEN }}
           image-name: baski-server
           image-tag: ${{ github.ref_name }}
           check-severity: CRITICAL
           trivyignore-from-s3: true
-          aws-endpoint: "https://api.s3.hudson-viles.uk/"
-          aws-access-key: ${{secrets.S3_ACCESS_KEY}}
-          aws-secret-key: ${{secrets.S3_SECRET_KEY}}
+          aws-endpoint: "https://nl1.eschercloud.com:6780"
+          aws-access-key: ${{secrets.AWS_ACCESS_KEY}}
+          aws-secret-key: ${{secrets.AWS_SECRET_KEY}}
           s3-bucket: "trivyignores"
           s3-path: "baski-server"
           add-latest-tag: true
@@ -103,8 +103,8 @@ jobs:
       - name: Push Chart to Harbor
         shell: bash
         run: |
-          helm registry login -u ${{ secrets.GITHUB_USER }} -p ${{ secrets.GITHUB_TOKEN }} ghcr.io/drewbernetes/baski
+          helm registry login -u ${{ secrets.HELM_USER }} -p ${{ secrets.HELM_PASSWORD }} https://harbor.infra.nl1.eschercloud.dev
           
           # Release the baski-server chart
-          helm package baski-server --version ${{ github.ref_name }} --app-version ${{ github.ref_name }}
-          helm push baski-server-${{ github.ref_name }}.tgz oci://ghcr.io/drewbernetes/baski
+          helm package charts/baski-server --version ${{ github.ref_name }} --app-version ${{ github.ref_name }}
+          helm push baski-server-${{ github.ref_name }}.tgz oci://harbor.infra.nl1.eschercloud.dev/charts

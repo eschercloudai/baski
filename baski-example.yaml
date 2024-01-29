@@ -126,7 +126,7 @@ sign:
     # Output path of the generated keys.
     path: "."
   # Vault can be used to store the certificates. Vault is currently the only supported storage as it's FOSS making it available to anyone.
-  # Other options could be supported but will not be added by Drewbernetes.
+  # Other options could be supported but will not be added by EscherCloud.
   vault:
     # The Vault endpoint.
     url: "https://vault.ENDPOINT/"

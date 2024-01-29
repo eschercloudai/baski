@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Drewbernetes.
+Copyright 2023 EscherCloud.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package ostack
 
 import (
 	"fmt"
-	th "github.com/drewbernetes/baski/testhelpers"
+	th "github.com/eschercloudai/baski/testhelpers"
 	"net/http"
 	"reflect"
 	"testing"

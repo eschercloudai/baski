@@ -11,7 +11,7 @@ A Helm chart for Kubernetes
 | affinity | object | `{}` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"ghcr.io/drewbernetes/baski-server"` |  |
+| image.repository | string | `"ghcr.io/eschercloudai/baski-server"` |  |
 | image.tag | string | `"v0.1.0-beta.9"` |  |
 | imagePullSecrets | list | `[]` |  |
 | nameOverride | string | `""` |  |

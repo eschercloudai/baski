@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Drewbernetes.
+Copyright 2023 EscherCloud.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@ limitations under the License.
 package sign
 
 import (
-	ostack "github.com/drewbernetes/baski/pkg/providers/openstack"
-	"github.com/drewbernetes/baski/pkg/util/data"
-	"github.com/drewbernetes/baski/pkg/util/flags"
-	"github.com/drewbernetes/baski/pkg/util/sign"
+	ostack "github.com/eschercloudai/baski/pkg/providers/openstack"
+	"github.com/eschercloudai/baski/pkg/util/data"
+	"github.com/eschercloudai/baski/pkg/util/flags"
+	"github.com/eschercloudai/baski/pkg/util/sign"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/spf13/cobra"
 	"log"

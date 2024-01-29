@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Drewbernetes.
+Copyright 2023 EscherCloud.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package trivy
 
 import (
 	"fmt"
-	"github.com/drewbernetes/baski/pkg/constants"
-	"github.com/drewbernetes/baski/pkg/util"
+	"github.com/eschercloudai/baski/pkg/constants"
+	"github.com/eschercloudai/baski/pkg/util"
 	"log"
 	"strings"
 )
