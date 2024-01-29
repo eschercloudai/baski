@@ -79,7 +79,7 @@ Scanning an a single image - useful for when an image has just been built.
 			if err != nil {
 				return err
 			}
-			err = s.FetchScanResults()
+			err = s.FetchScanResults(img.ID)
 			if err != nil {
 				return err
 			}

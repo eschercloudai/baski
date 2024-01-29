@@ -87,7 +87,9 @@ to prevent every single image being launched for a scan, the concurrency is limi
 						<-semaphore // Release the slot in the semaphore
 					}()
 
-					s3Conn, err := s3.New(o.Endpoint, o.AccessKey, o.SecretKey, o.ScanBucket, "")
+					var s3Conn *s3.S3
+
+					s3Conn, err = s3.New(o.Endpoint, o.AccessKey, o.SecretKey, o.ScanBucket, "")
 					if err != nil {
 						log.Println(err)
 						return
@@ -124,7 +126,7 @@ func scanServer(o flags.ScanOptions, s *scanner.ScannerClient, severity trivy.Se
 	if err != nil {
 		return err
 	}
-	err = s.FetchScanResults()
+	err = s.FetchScanResults(img.ID)
 	if err != nil {
 		return err
 	}

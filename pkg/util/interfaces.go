@@ -27,7 +27,7 @@ type VaultInterface interface {
 }
 
 type SSHInterface interface {
-	CopyFromRemoteServer(srcPath, dstPath, filename string) (*os.File, error)
+	CopyFromRemoteServer(src, dst string) (*os.File, error)
 	SSHClose() error
 	SFTPClose() error
 }

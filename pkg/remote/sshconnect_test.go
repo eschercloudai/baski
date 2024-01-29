@@ -17,15 +17,14 @@ limitations under the License.
 package remote
 
 import (
-	"fmt"
 	"github.com/drewbernetes/baski/pkg/mock"
 	"go.uber.org/mock/gomock"
 	"os"
 	"testing"
 )
 
-func generateTestData(t *testing.T, from, to, filename string) *os.File {
-	f, err := os.Create(fmt.Sprintf("/%s/%s", from, filename))
+func generateTestData(t *testing.T, from string) *os.File {
+	f, err := os.Create(from)
 	if err != nil {
 		t.Error(err)
 		return nil
@@ -36,13 +35,13 @@ func generateTestData(t *testing.T, from, to, filename string) *os.File {
 
 // TestCopyFromRemoteServer uses sftp to copy a file from a remotes server to a local directory.
 func TestCopyFromRemoteServer(t *testing.T) {
-	testFile := generateTestData(t, "/tmp/", "/tmp/", "some-file.txt")
+	testFile := generateTestData(t, "/tmp/some-file.json")
 
 	c := gomock.NewController(t)
 	defer c.Finish()
 
 	m := mock.NewMockSSHInterface(c)
-	m.EXPECT().CopyFromRemoteServer("/tmp/", "/tmp/", "some-file.txt").Return(testFile, nil).AnyTimes()
+	m.EXPECT().CopyFromRemoteServer("/tmp/some-file.json", "/tmp/another-file.json").Return(testFile, nil).AnyTimes()
 	m.EXPECT().SSHClose().Return(nil).AnyTimes()
 	m.EXPECT().SFTPClose().Return(nil).AnyTimes()
 
@@ -55,18 +54,17 @@ func TestCopyFromRemoteServer(t *testing.T) {
 		filename string
 	}{
 		{
-			name:     "Test case 1: Copy file from remote location",
-			ssh:      m,
-			from:     "/tmp/",
-			to:       "/tmp/",
-			filename: "some-file.txt",
+			name: "Test case 1: Copy file from remote location",
+			ssh:  m,
+			from: "/tmp/some-file.json",
+			to:   "/tmp/another-file.json",
 		},
 	}
 
 	// RunScan the test cases
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := tc.ssh.CopyFromRemoteServer(tc.from, tc.to, tc.filename)
+			result, err := tc.ssh.CopyFromRemoteServer(tc.from, tc.to)
 			if err != nil {
 				t.Error(err)
 				return

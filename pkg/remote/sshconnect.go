@@ -25,7 +25,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -109,9 +108,7 @@ func NewSSHClient(kp *keypairs.KeyPair, ip string) (*SSHClient, error) {
 }
 
 // CopyFromRemoteServer uses sftp to copy a file from a remotes server to a local directory.
-func (s *SSHClient) CopyFromRemoteServer(srcPath, dstPath, filename string) (*os.File, error) {
-	src := filepath.Join(srcPath, filename)
-	dst := filepath.Join(dstPath, filename)
+func (s *SSHClient) CopyFromRemoteServer(src, dst string) (*os.File, error) {
 
 	// Open the source file
 	srcFile, err := s.SFTP.Open(src)
