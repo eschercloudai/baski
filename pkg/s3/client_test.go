@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package s3
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/mock"
-	"github.com/eschercloudai/baski/pkg/util"
+	"github.com/drewbernetes/baski/pkg/mock"
+	"github.com/drewbernetes/baski/pkg/util"
 	"go.uber.org/mock/gomock"
 	"os"
 	"testing"

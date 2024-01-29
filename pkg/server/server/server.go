@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package server
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/s3"
-	"github.com/eschercloudai/baski/pkg/server/generated"
-	"github.com/eschercloudai/baski/pkg/server/handler"
+	"github.com/drewbernetes/baski/pkg/s3"
+	"github.com/drewbernetes/baski/pkg/server/generated"
+	"github.com/drewbernetes/baski/pkg/server/handler"
 	"github.com/gorilla/mux"
 	"net/http"
 )

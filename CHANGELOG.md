@@ -1,5 +1,13 @@
 # Changelog
 
+## [ 2024/01/29 - v1.0.0 ]
+
+### Changed/Added
+* Removed EC branding
+
+### Fixed
+* Scan erroring out with file not found when parsing the results
+
 ## [ 2023/12/17 - v0.3.0 ]
 
 ### Changed/Added

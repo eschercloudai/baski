@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package flags
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/util/completion"
+	"github.com/drewbernetes/baski/pkg/util/completion"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

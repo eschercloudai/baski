@@ -1,11 +1,11 @@
 # Baski - Build And Scan Kubernetes Images
 
-[//]: # ([![Known Vulnerabilities]&#40;https://snyk.io/test/github/eschercloudai/baski/badge.svg&#41;]&#40;https://snyk.io/test/github/eschercloudai/baski&#41;)
-[![Build on Tag](https://github.com/eschercloudai/baski/actions/workflows/tag.yml/badge.svg?branch=main&event=release)](https://github.com/eschercloudai/baski/actions/workflows/tag.yml)
+[//]: # ([![Known Vulnerabilities]&#40;https://snyk.io/test/github/drewbernetes/baski/badge.svg&#41;]&#40;https://snyk.io/test/github/drewbernetes/baski&#41;)
+[![Build on Tag](https://github.com/drewbernetes/baski/actions/workflows/tag.yml/badge.svg?branch=main&event=release)](https://github.com/drewbernetes/baski/actions/workflows/tag.yml)
 
 A binary for building and scanning (with [Trivy](https://github.com/aquasecurity/trivy)) a Kubernetes image using
 the [kubernetes-sigs/image-builder](https://github.com/kubernetes-sigs/image-builder) repo or
-the [eschercloud-image-builder](https://github.com/eschercloudai/image-builder) repo where new functionality is required
+the [drew-viles-image-builder](https://github.com/drew-viles/image-builder) repo where new functionality is required
 but not yet merged upstream.
 
 Baski also supports signing images and will tag the image with a digest so that a verification can be done against
@@ -23,7 +23,7 @@ The scanning and signing functionality are separate from the build meaning these
 |--------------------------------|
 | [Openstack](docs/openstack.md) |
 
-*More clouds could be supported but may not be maintained by EscherCloudAI.*
+*More clouds could be supported but may not be maintained by Drewbernetes.*
 
 # Usage
 

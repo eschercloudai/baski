@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ package scan
 
 import (
 	"errors"
-	"github.com/eschercloudai/baski/pkg/providers/openstack"
-	"github.com/eschercloudai/baski/pkg/providers/scanner"
-	"github.com/eschercloudai/baski/pkg/s3"
-	"github.com/eschercloudai/baski/pkg/trivy"
-	"github.com/eschercloudai/baski/pkg/util/flags"
+	"github.com/drewbernetes/baski/pkg/providers/openstack"
+	"github.com/drewbernetes/baski/pkg/providers/scanner"
+	"github.com/drewbernetes/baski/pkg/s3"
+	"github.com/drewbernetes/baski/pkg/trivy"
+	"github.com/drewbernetes/baski/pkg/util/flags"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -79,7 +79,7 @@ Scanning an a single image - useful for when an image has just been built.
 			if err != nil {
 				return err
 			}
-			err = s.FetchScanResults()
+			err = s.FetchScanResults(img.ID)
 			if err != nil {
 				return err
 			}

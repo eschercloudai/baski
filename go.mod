@@ -1,4 +1,4 @@
-module github.com/eschercloudai/baski
+module github.com/drewbernetes/baski
 
 go 1.21
 

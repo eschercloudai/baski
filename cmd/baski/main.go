@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 package main
 
 import (
-	"github.com/eschercloudai/baski/pkg/cmd"
+	"github.com/drewbernetes/baski/pkg/cmd"
 	"log"
 	"os"
 	"runtime"

@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package handler
 
 import (
 	"fmt"
-	"github.com/eschercloudai/baski/pkg/mock"
-	"github.com/eschercloudai/baski/pkg/s3"
-	th "github.com/eschercloudai/baski/testhelpers"
+	"github.com/drewbernetes/baski/pkg/mock"
+	"github.com/drewbernetes/baski/pkg/s3"
+	th "github.com/drewbernetes/baski/testhelpers"
 	"go.uber.org/mock/gomock"
 	"io"
 	"log"

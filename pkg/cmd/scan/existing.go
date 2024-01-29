@@ -1,5 +1,5 @@
 /*
-Copyright 2023 EscherCloud.
+Copyright 2024 Drewbernetes.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ package scan
 
 import (
 	"errors"
-	"github.com/eschercloudai/baski/pkg/providers/openstack"
-	"github.com/eschercloudai/baski/pkg/providers/scanner"
-	"github.com/eschercloudai/baski/pkg/s3"
-	"github.com/eschercloudai/baski/pkg/trivy"
-	"github.com/eschercloudai/baski/pkg/util/flags"
+	"github.com/drewbernetes/baski/pkg/providers/openstack"
+	"github.com/drewbernetes/baski/pkg/providers/scanner"
+	"github.com/drewbernetes/baski/pkg/s3"
+	"github.com/drewbernetes/baski/pkg/trivy"
+	"github.com/drewbernetes/baski/pkg/util/flags"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/spf13/cobra"
 	"log"
@@ -87,7 +87,9 @@ to prevent every single image being launched for a scan, the concurrency is limi
 						<-semaphore // Release the slot in the semaphore
 					}()
 
-					s3Conn, err := s3.New(o.Endpoint, o.AccessKey, o.SecretKey, o.ScanBucket, "")
+					var s3Conn *s3.S3
+
+					s3Conn, err = s3.New(o.Endpoint, o.AccessKey, o.SecretKey, o.ScanBucket, "")
 					if err != nil {
 						log.Println(err)
 						return
@@ -124,7 +126,7 @@ func scanServer(o flags.ScanOptions, s *scanner.ScannerClient, severity trivy.Se
 	if err != nil {
 		return err
 	}
-	err = s.FetchScanResults()
+	err = s.FetchScanResults(img.ID)
 	if err != nil {
 		return err
 	}
