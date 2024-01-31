@@ -19,7 +19,6 @@ package remote
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/gophercloud/gophercloud/openstack/compute/v2/extensions/keypairs"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"log"
@@ -63,18 +62,18 @@ func trustedHostKeyCallback(key string) ssh.HostKeyCallback {
 // NewSSHClient creates a new ssh connection to a remote server.
 // It will attempt to connect up to 10 times with a 10-second gap to prevent a crash
 // should the first attempt fail while the server is booting.
-func NewSSHClient(kp *keypairs.KeyPair, ip string) (*SSHClient, error) {
+func NewSSHClient(user, privateKey, ip, port string) (*SSHClient, error) {
 	var hostKey string
 	var client *ssh.Client
 
 	// Create the Signer for this private key.
-	signer, err := ssh.ParsePrivateKey([]byte(kp.PrivateKey))
+	signer, err := ssh.ParsePrivateKey([]byte(privateKey))
 	if err != nil {
 		return nil, err
 	}
 
 	config := &ssh.ClientConfig{
-		User: "ubuntu",
+		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
@@ -84,7 +83,7 @@ func NewSSHClient(kp *keypairs.KeyPair, ip string) (*SSHClient, error) {
 	log.Println("waiting for server to boot.")
 	for i := 10; i > 0; i-- {
 		// Connect to the remote server and perform the SSH handshake.
-		client, err = ssh.Dial("tcp", strings.Join([]string{ip, "22"}, ":"), config)
+		client, err = ssh.Dial("tcp", strings.Join([]string{ip, port}, ":"), config)
 		if err != nil {
 			if i > 0 {
 				log.Printf("ssh unavailable - server is probably still booting. %d retires left\n", i)
@@ -109,7 +108,6 @@ func NewSSHClient(kp *keypairs.KeyPair, ip string) (*SSHClient, error) {
 
 // CopyFromRemoteServer uses sftp to copy a file from a remotes server to a local directory.
 func (s *SSHClient) CopyFromRemoteServer(src, dst string) (*os.File, error) {
-
 	// Open the source file
 	srcFile, err := s.SFTP.Open(src)
 	if err != nil {

@@ -17,17 +17,17 @@ limitations under the License.
 package sign
 
 import (
+	"github.com/drewbernetes/baski/pkg/provisoner"
 	"github.com/drewbernetes/baski/pkg/util/flags"
 	"github.com/drewbernetes/baski/pkg/util/sign"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 )
 
 // NewSignValidateCommand creates a command that allows the signing of an image.
 func NewSignValidateCommand() *cobra.Command {
 
-	o := &flags.SignValidateOptions{}
+	o := &flags.SignOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "validate",
@@ -41,7 +41,6 @@ This just validates a signature. It's useful for verifying a signed image.
 
 			var key []byte
 			var err error
-			imgID := getImageID(o.ImageID)
 
 			vaultClient := sign.VaultClient{
 				Endpoint: o.VaultURL,
@@ -58,13 +57,14 @@ This just validates a signature. It's useful for verifying a signed image.
 					return err
 				}
 			}
+			// TODO: We should look at grabbing the digest from the image tags so the user doesn't have to put it directly in.
 
-			valid, err := sign.Validate(imgID, key, o.Digest)
+			signer := provisoner.NewSigner(o)
+			err = signer.ValidateImage(key)
 			if err != nil {
 				return err
 			}
 
-			log.Printf("The validation result was: %t", valid)
 			return nil
 		},
 	}

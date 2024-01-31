@@ -29,7 +29,7 @@ import (
 
 // NewSignGenerateCommand creates a command that allows the signing of an image.
 func NewSignGenerateCommand() *cobra.Command {
-	o := &flags.SignGenerateOptions{}
+	o := &flags.SignOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "generate",

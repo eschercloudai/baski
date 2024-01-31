@@ -28,7 +28,7 @@ import (
 // generally speaking the os.Stdout will be used but the option is there to write to a file
 // in case parsing needs to happen after.
 func RunMake(makeArgs, path string, env []string, output io.Writer) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "make", makeArgs)

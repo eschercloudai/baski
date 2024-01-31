@@ -18,11 +18,9 @@ package ostack
 
 import (
 	"fmt"
-	"github.com/drewbernetes/baski/pkg/util/flags"
 	th "github.com/drewbernetes/baski/testhelpers"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -125,68 +123,6 @@ type imageEntry struct {
 func TestNewImageClient(t *testing.T) {
 	//TODO: Implement this.
 	// Not sure of the best approach for this yet.
-}
-
-// TestGenerateBuilderMetadata generates some glance metadata for the image.
-func TestGenerateBuilderMetadata(t *testing.T) {
-	th.SetupPersistentPortHTTP(t, th.Port)
-	defer th.TeardownHTTP()
-
-	tests := []struct {
-		name     string
-		options  *flags.BuildOptions
-		expected map[string]string
-	}{
-		{
-			name: "Test with GPU",
-			options: &flags.BuildOptions{
-				AddNvidiaSupport: true,
-				NvidiaVersion:    "1.2.3",
-				BuildOS:          "ubuntu",
-				KubeVersion:      "1.28",
-				OpenStackFlags: flags.OpenStackFlags{
-					RootfsUUID: "123456",
-				},
-			},
-			expected: map[string]string{
-				"os":          "ubuntu",
-				"k8s":         "1.28",
-				"gpu":         "1.2.3",
-				"date":        "2006-01-02T15:04:05Z07:00",
-				"rootfs_uuid": "123456",
-			},
-		},
-		{
-			name: "Test without GPU",
-			options: &flags.BuildOptions{
-				AddNvidiaSupport: false,
-				BuildOS:          "ubuntu",
-				KubeVersion:      "1.28",
-				OpenStackFlags: flags.OpenStackFlags{
-					RootfsUUID: "123456",
-				},
-			},
-			expected: map[string]string{
-				"os":          "ubuntu",
-				"k8s":         "1.28",
-				"gpu":         "no_gpu",
-				"date":        "2006-01-02T15:04:05Z07:00",
-				"rootfs_uuid": "123456",
-			},
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			meta := GenerateBuilderMetadata(tc.options)
-			//We override the dat here as it's based off of time.Now()
-			meta["date"] = "2006-01-02T15:04:05Z07:00"
-
-			if !reflect.DeepEqual(meta, tc.expected) {
-				t.Errorf("Expected %+v, got %+v", tc.expected, meta)
-			}
-		})
-	}
-
 }
 
 // TestModifyImageMetadata allows image metadata to be added, updated or removed.

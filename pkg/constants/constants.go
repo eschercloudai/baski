@@ -17,10 +17,12 @@ limitations under the License.
 package constants
 
 var (
-	Version     = "v0.1.0-beta.1"
+	Version     = "v1.1.0"
 	SupportedOS = []string{
 		"ubuntu-2004",
+		"ubuntu-2004-efi",
 		"ubuntu-2204",
+		"ubuntu-2204-efi",
 	}
 	TrivyVersion = "0.48.3"
 )

@@ -19,147 +19,83 @@ package packer
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/drewbernetes/baski/pkg/util/flags"
-
-	"github.com/google/uuid"
 )
 
-// Buildconfig exists to allow variables to be parsed into a packer json file which can then be used for a build.
-type Buildconfig struct {
-	ImageName            string `json:"image_name,omitempty"`
-	SourceImage          string `json:"source_image"`
-	Networks             string `json:"networks"`
-	Flavor               string `json:"flavor"`
-	AttachConfigDrive    string `json:"attach_config_drive,omitempty"`
-	UseFloatingIp        string `json:"use_floating_ip,omitempty"`
-	FloatingIpNetwork    string `json:"floating_ip_network,omitempty"`
-	CniVersion           string `json:"kubernetes_cni_semver,omitempty"`
-	CniDebVersion        string `json:"kubernetes_cni_deb_version,omitempty"`
-	CrictlVersion        string `json:"crictl_version,omitempty"`
-	ImageVisibility      string `json:"image_visibility,omitempty"`
-	KubernetesSemver     string `json:"kubernetes_semver,omitempty"`
-	KubernetesRpmVersion string `json:"kubernetes_rpm_version,omitempty"`
-	KubernetesSeries     string `json:"kubernetes_series,omitempty"`
-	KubernetesDebVersion string `json:"kubernetes_deb_version,omitempty"`
-	NodeCustomRolesPre   string `json:"node_custom_roles_pre,omitempty"`
-	NodeCustomRolesPost  string `json:"node_custom_roles_post,omitempty"`
-	AnsibleUserVars      string `json:"ansible_user_vars,omitempty"`
-	ExtraDebs            string `json:"extra_debs,omitempty"`
-	ImageDiskFormat      string `json:"image_disk_format"`
-	VolumeType           string `json:"volume_type"`
-	VolumeSize           string `json:"volume_size"`
+type GlobalBuildConfig struct {
+	CniVersion           string            `json:"kubernetes_cni_semver,omitempty"`
+	CniDebVersion        string            `json:"kubernetes_cni_deb_version,omitempty"`
+	CrictlVersion        string            `json:"crictl_version,omitempty"`
+	KubernetesSemver     string            `json:"kubernetes_semver,omitempty"`
+	KubernetesRpmVersion string            `json:"kubernetes_rpm_version,omitempty"`
+	KubernetesSeries     string            `json:"kubernetes_series,omitempty"`
+	KubernetesDebVersion string            `json:"kubernetes_deb_version,omitempty"`
+	NodeCustomRolesPre   string            `json:"node_custom_roles_pre,omitempty"`
+	NodeCustomRolesPost  string            `json:"node_custom_roles_post,omitempty"`
+	AnsibleUserVars      string            `json:"ansible_user_vars,omitempty"`
+	ExtraDebs            string            `json:"extra_debs,omitempty"`
+	Metadata             map[string]string `json:"-"`
+	OpenStackBuildconfig
+	KubeVirtBuildConfig
 }
 
-// Extract Kubernetes series with the assumption we want vX.XX
-func truncateVersion(version string) string {
-	re := regexp.MustCompile(`v\d+\.\d+`)
-	return re.FindString(version)
-}
-
-// generateImageName creates a name for the image that will be built.
-func generateImageName(imagePrefix string) string {
-	imageUUID, err := uuid.NewRandom()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	shortDate := time.Now().Format("060102")
-	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
-
-	return imagePrefix + "-" + shortDate + "-" + shortUUID
-}
-
-// addMetadataToBuilders inserts the metadata into the packer's builder section.
-func addMetadataToBuilders(metadata map[string]string, data []byte) []byte {
-	jsonStruct := struct {
-		Builders       []map[string]interface{} `json:"builders"`
-		PostProcessors []map[string]interface{} `json:"post-processors"`
-		Provisioners   []map[string]interface{} `json:"provisioners"`
-		Variables      map[string]interface{}   `json:"variables"`
-	}{}
-
-	err := json.Unmarshal(data, &jsonStruct)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	jsonStruct.Builders[0]["metadata"] = metadata
-
-	res, err := json.Marshal(jsonStruct)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return res
-}
-
-// UpdatePackerBuildersJson pre-populates the metadata field in the packer.json file as objects cannot be passed as variables in packer.
-func UpdatePackerBuildersJson(dir string, metadata map[string]string) error {
-	file, err := os.OpenFile(filepath.Join(dir, "images", "capi", "packer", "openstack", "packer.json"), os.O_RDWR, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return err
-	}
-
-	res := addMetadataToBuilders(metadata, data)
-
-	err = file.Truncate(0)
-	if err != nil {
-		return err
-	}
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(res)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// InitConfig takes the application inputs and converts it into a Buildconfig.
-func InitConfig(o *flags.BuildOptions) *Buildconfig {
-	buildConfig := &Buildconfig{
-		SourceImage:          o.SourceImageID,
-		Networks:             o.NetworkID,
-		Flavor:               o.FlavorName,
-		AttachConfigDrive:    strconv.FormatBool(o.AttachConfigDrive),
-		UseFloatingIp:        strconv.FormatBool(o.UseFloatingIP),
-		FloatingIpNetwork:    o.FloatingIPNetworkName,
+func NewCoreBuildconfig(o *flags.BuildOptions) (*GlobalBuildConfig, string) {
+	b := &GlobalBuildConfig{
 		CniVersion:           "v" + o.CniVersion,
 		CniDebVersion:        o.CniDebVersion,
 		CrictlVersion:        o.CrictlVersion,
-		ImageVisibility:      o.ImageVisibility,
 		KubernetesSemver:     "v" + o.KubeVersion,
 		KubernetesSeries:     truncateVersion("v" + o.KubeVersion),
 		KubernetesRpmVersion: o.KubeRpmVersion,
 		KubernetesDebVersion: o.KubeDebVersion,
 		ExtraDebs:            o.ExtraDebs,
-		ImageDiskFormat:      o.ImageDiskFormat,
-		VolumeType:           o.VolumeType,
-		VolumeSize:           strconv.Itoa(o.VolumeSize),
 	}
-
 	var ansibleUserVars string
+	var customRoles string
 	var additionalImages string
 	var securityVars string
-	var customRoles string
+
+	if o.AddGpuSupport {
+		customRoles = "gpu"
+
+		if o.GpuVendor == "nvidia" {
+			ansibleUserVars = fmt.Sprintf("gpu_vendor=%s nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_ceph=%t nvidia_installer_location=%s",
+				o.GpuVendor,
+				o.Endpoint,
+				o.NvidiaBucket,
+				o.AccessKey,
+				o.SecretKey,
+				o.IsCeph,
+				o.NvidiaInstallerLocation)
+
+			if o.NvidiaTOKLocation != "" {
+				ansibleUserVars = fmt.Sprintf("%s nvidia_tok_location=%s",
+					ansibleUserVars,
+					o.NvidiaTOKLocation)
+			}
+
+			if o.NvidiaGriddFeatureType != -1 {
+				ansibleUserVars = fmt.Sprintf("%s gridd_feature_type=%d",
+					ansibleUserVars,
+					o.NvidiaGriddFeatureType)
+			}
+		} else if o.GpuVendor == "amd" {
+			ansibleUserVars = fmt.Sprintf("gpu_vendor=%s amd_version=%s amd_deb_version=%s gpu_amd_usecase=%s",
+				o.GpuVendor,
+				o.AMDVersion,
+				o.AMDDebVersion,
+				o.AMDUseCase)
+		}
+	}
 
 	// Little workaround for people leaving an empty field or not having the field in the yaml.
 	// viper likes to replace a non-existent entry with the string "[]" even when the default is nil.
@@ -170,31 +106,6 @@ func InitConfig(o *flags.BuildOptions) *Buildconfig {
 			}
 		}
 	}
-
-	if o.AddNvidiaSupport {
-		customRoles = "nvidia"
-
-		ansibleUserVars = fmt.Sprintf("nvidia_s3_url=%s nvidia_bucket=%s nvidia_bucket_access=%s nvidia_bucket_secret=%s nvidia_ceph=%t nvidia_installer_location=%s",
-			o.Endpoint,
-			o.NvidiaBucket,
-			o.AccessKey,
-			o.SecretKey,
-			o.IsCeph,
-			o.NvidiaInstallerLocation)
-
-		if o.NvidiaTOKLocation != "" {
-			ansibleUserVars = fmt.Sprintf("%s nvidia_tok_location=%s",
-				ansibleUserVars,
-				o.NvidiaTOKLocation)
-		}
-
-		if o.NvidiaGriddFeatureType != -1 {
-			ansibleUserVars = fmt.Sprintf("%s gridd_feature_type=%d",
-				ansibleUserVars,
-				o.NvidiaGriddFeatureType)
-		}
-	}
-
 	if o.AdditionalImages != nil {
 		for k, v := range o.AdditionalImages {
 			if k == 0 {
@@ -231,15 +142,59 @@ func InitConfig(o *flags.BuildOptions) *Buildconfig {
 		}
 	}
 
-	buildConfig.NodeCustomRolesPre = customRoles
-	buildConfig.AnsibleUserVars = ansibleUserVars
-	buildConfig.ImageName = generateImageName(o.ImagePrefix)
+	b.NodeCustomRolesPre = customRoles
+	b.AnsibleUserVars = ansibleUserVars
 
-	return buildConfig
+	return b, generateImageName(o.ImagePrefix)
 }
 
-// GenerateVariablesFile converts the Buildconfig into a build configuration file that packer can use.
-func (p *Buildconfig) GenerateVariablesFile(buildGitDir string) {
+type BuildersModifier struct {
+	Function func(metadata map[string]string, data []byte) []byte
+	Metadata map[string]string
+}
+
+// UpdatePackerBuildersJson pre-populates the metadata field in the packer.json file as objects cannot be passed as variables in packer.
+func UpdatePackerBuildersJson(dir string, infra string, modifier BuildersModifier) error {
+	// change infra to qemu if kubevirt is the infra type as this is what is needed to build
+	if infra == "kubevirt" {
+		infra = "qemu"
+	}
+
+	file, err := os.OpenFile(filepath.Join(dir, "images", "capi", "packer", infra, "packer.json"), os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return err
+	}
+
+	res := modifier.Function(modifier.Metadata, data)
+
+	if res == nil {
+		return nil
+	}
+
+	err = file.Truncate(0)
+	if err != nil {
+		return err
+	}
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+
+	_, err = file.Write(res)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GenerateVariablesFile converts the GlobalBuildConfig into a build configuration file that packer can use.
+func (p *GlobalBuildConfig) GenerateVariablesFile(buildGitDir string) {
 	outputFileName := strings.Join([]string{"tmp", ".json"}, "")
 	outputFile := filepath.Join(buildGitDir, outputFileName)
 
@@ -252,4 +207,23 @@ func (p *Buildconfig) GenerateVariablesFile(buildGitDir string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// Extract Kubernetes series with the assumption we want vX.XX
+func truncateVersion(version string) string {
+	re := regexp.MustCompile(`v\d+\.\d+`)
+	return re.FindString(version)
+}
+
+// generateImageName creates a name for the image that will be built.
+func generateImageName(imagePrefix string) string {
+	imageUUID, err := uuid.NewRandom()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	shortDate := time.Now().Format("060102")
+	shortUUID := imageUUID.String()[:strings.Index(imageUUID.String(), "-")]
+
+	return imagePrefix + "-" + shortDate + "-" + shortUUID
 }

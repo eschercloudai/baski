@@ -17,6 +17,7 @@ limitations under the License.
 package build
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -49,7 +50,7 @@ func createRepoDirectory() string {
 }
 
 // fetchBuildRepo simply pulls the contents of the imageRepo to the specified path
-func fetchBuildRepo(path string, o *flags.BuildOptions) {
+func fetchBuildRepo(path string, o *flags.BuildOptions) error {
 	branch := plumbing.ReferenceName("refs/heads/" + o.ImageRepoBranch)
 	imageRepo := o.ImageRepo
 
@@ -63,13 +64,19 @@ func fetchBuildRepo(path string, o *flags.BuildOptions) {
 
 	_, err := gitRepo.GitClone(imageRepo, path, branch)
 	if err != nil {
-		log.Fatalf("Error cloning repo: %s", err)
+		return fmt.Errorf("Error cloning repo: %s", err)
 	}
+	return nil
 }
 
 // installDependencies will run make dep-openstack so that any requirements such as packer, ansible
 // and goss will be installed.
-func installDependencies(repoPath string, verbose bool) {
+func installDependencies(repoPath, infra string, verbose bool) {
+	// change infra to qemu if kubevirt is the infra type as this is what is needed to build
+	if infra == "kubevirt" {
+		infra = "qemu"
+	}
+
 	log.Printf("fetching dependencies\n")
 
 	w, err := os.Create("/tmp/out-deps.txt")
@@ -85,7 +92,7 @@ func installDependencies(repoPath string, verbose bool) {
 		wr = w
 	}
 
-	err = systemUtils.RunMake("deps-openstack", repoPath, nil, wr)
+	err = systemUtils.RunMake(fmt.Sprintf("deps-%s", infra), repoPath, nil, wr)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -100,7 +107,12 @@ func installDependencies(repoPath string, verbose bool) {
 
 // buildImage will run make build-openstack-buildOS which will launch an instance in Openstack,
 // add any requirements as defined in the image-builder imageRepo and then create an image from that build.
-func buildImage(capiPath string, buildOS string, verbose bool) error {
+func buildImage(capiPath, infra, buildOS string, verbose bool) error {
+	// change infra to qemu if kubevirt is the infra type as this is what is needed to build
+	if infra == "kubevirt" {
+		infra = "qemu"
+	}
+
 	log.Printf("building image\n")
 
 	w, err := os.Create("/tmp/out-build.txt")
@@ -116,13 +128,13 @@ func buildImage(capiPath string, buildOS string, verbose bool) error {
 		wr = w
 	}
 
-	args := strings.Join([]string{"build-openstack", buildOS}, "-")
+	args := strings.Join([]string{fmt.Sprintf("build-%s", infra), buildOS}, "-")
 
 	env := []string{"PACKER_VAR_FILES=tmp.json"}
 	env = append(env, os.Environ()...)
 	err = systemUtils.RunMake(args, capiPath, env, wr)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	return nil

@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-// TestInitPackerConfig takes the application inputs and converts it into a Buildconfig.
+// TestInitPackerConfig takes the application inputs and converts it into a OpenStackBuildconfig.
 func TestInitConfig(t *testing.T) {
 
 }
@@ -35,7 +35,7 @@ func TestUpdatePackerBuildersJson(t *testing.T) {
 
 }
 
-// TestGenerateVariablesFile converts the Buildconfig into a build configuration file that packer can use.
+// TestGenerateVariablesFile converts the OpenStackBuildconfig into a build configuration file that packer can use.
 func TestGenerateVariablesFile(t *testing.T) {
 
 }

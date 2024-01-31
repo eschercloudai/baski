@@ -19,17 +19,19 @@ package flags
 import "fmt"
 
 const (
-	viperCloudPrefix   = "cloud"
-	viperS3Prefix      = "s3"
-	viperBuildPrefix   = "build"
-	viperScanPrefix    = "scan"
-	viperSignPrefix    = "sign"
-	viperPublishPrefix = "publish"
+	viperInfraPrefix             = "infra"
+	viperKubernetesClusterPrefix = "k8s"
+	viperS3Prefix                = "s3"
+	viperBuildPrefix             = "build"
+	viperScanPrefix              = "scan"
+	viperSignPrefix              = "sign"
+	viperPublishPrefix           = "publish"
 )
 
 var (
-	viperOpenStackPrefix = fmt.Sprintf("%s.openstack", viperCloudPrefix)
-	viperNvidiaPrefix    = fmt.Sprintf("%s.nvidia", viperBuildPrefix)
+	viperOpenStackPrefix = fmt.Sprintf("%s.openstack", viperInfraPrefix)
+	viperKubeVirtPrefix  = fmt.Sprintf("%s.kubevirt", viperInfraPrefix)
+	viperGpuPrefix       = fmt.Sprintf("%s.gpu", viperBuildPrefix)
 	viperGithubPrefix    = fmt.Sprintf("%s.github", viperPublishPrefix)
 	viperVaultPrefix     = fmt.Sprintf("%s.vault", viperSignPrefix)
 	viperGeneratePrefix  = fmt.Sprintf("%s.generate", viperSignPrefix)

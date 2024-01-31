@@ -1,5 +1,8 @@
-# The cloud section defines the cloud to use.
-cloud:
+# The infra section defines the infrastructure to use.
+infra:
+  # type dictates which settings to use in the infra section below - must match the yaml key.
+  # IE, openstack, kubevirt etc
+  type: kubevirt
   # OpenStack support is a tricky one due to the varying nature of configurations that can exist across different setups.
   # The approach taken with this is a basic kolla-ansible install with no bells and whistles. Any additional configuration must be seriously considered before adding additional code/options to support it.
   openstack:
@@ -17,25 +20,54 @@ cloud:
     attach-config-drive: false
     # Whether to use a floating IP on the instance.
     use-floating-ip: true
+    # Specify a specific security group to use instead of "default"
+    security-group: ""
     # The name of the network from which to get a floating IP from.
-    floating-ip-network-name: "Internet"
+    floating-ip-network-name: "public1"
     # Sets the image visibility once it has been created. The cloud account being used must have permission to do this.
     image-visibility: "public"
     # The disk format
     image-disk-format: "raw"
-    # the volume type
+    # Whether to use block_storage_volume
+    use-blockstorage-volume: false
+    # Specify an existing SSH keypair to use
+    ssh-keypair-name: "drew-rsa"
+    # The private Key file to use with the ssh-keypair-name
+    ssh-privatekey-file: "/home/<USER>/.ssh/id_rsa"
+    # The volume type
     volume-type: ""
     # The size of the storage volume
     volume-size: 0
     # The rootfs-UUID. In testing this has only been required for bare-metal instances as the bare-metal instance needs know about the rootfs, so it knows what to boot.
-    rootfs-uuid: "ROOT_FS_UUID"
+    rootfs-uuid: ""
+  # KubeVirt support is a wrapper around QEMU builds however at the end of the build it will generate a PVC in the target Kubernetes cluster
+  kubevirt:
+    # qemu_binary enables the overriding of the qemu-system-x86_64 binary name
+    qemu_binary: "qemu-system-x86_64"
+    # disk_size describes the size of the VM disk
+    disk_size: "10G"
+    # The directory in which the resulting QCOW2 image will be stored.
+    # This will have the image-name stored within it resulting in:
+    # /tmp/image-output/{{build.image-prefix}}-{{date}}-{{unique-code}}/{{build.build-os}}-kube-v{{build.kubernetes-version}}
+    output-directory: "/tmp/image-output"
+    # This enables the image to be uploaded to an S3 endpoint as defined in the S3 object and is recommended if using the datavolume-from-S3 approach in KubeVirt.
+    store-in-s3: false
+    # The bucket in which to store the resulting image - required if store-in-s3 is true
+    image-bucket: "images"
+    # kubevirt_namespace is the namespace in which the DV will be created
+    image-namespace: "baski-vm-images"
+# k8s contains kubernetes cluster options
+k8s:
+  # kubeconfig_path is the path to the kubeconfig that will be used to generate the PVC for Kubevirt
+  kubeconfig_path: "/tmp/kubeconfig"
 
-# Baski presumes there is an S3 endpoint available for the pulling of any items such as the .trivyignore and nvidia files.
-# This is because the image builder defaults to this for the Nvidia support, and it is presumed that most if not all people can have/can set up an S3 endpoint for authenticated storage.
+# Baski presumes there is an S3 endpoint available for the pulling of any items such as the .trivyignore and nvidia files (where required) as well as uploading any other items such as scan results and QEMU images (where required).
+# This is because the image builder defaults to this for the NVIDIA support, and it is presumed that most if not all people can have/can set up an S3 endpoint for authenticated storage.
 s3:
   endpoint: "S3_ENDPOINT_URL"
   access-key: "ACCESS_KEY"
   secret-key: "SECRET_KEY"
+  region: "us-east-1"
   # If the S3 endpoint is being used, set this to true to instruct the aws ansible role to do the same.
   is-ceph: true
 
@@ -46,10 +78,10 @@ build:
   # The OS to build for. This should match the source image.
   build-os: "ubuntu-2204"
   # The prefix to prepend to the name of the image that is built. The name will result in <prefix>-yymmdd-unique_id.
-  image-prefix: "kube"
+  image-prefix: "kmi"
   # The repo to use for image building. This will default to the main image builder repo but can be updated if additional functionality is required in a fork.
   image-repo: "https://github.com/kubernetes-sigs/image-builder.git"
-  # The branch to checkout from the image repo
+  # The branch to use in the image repo
   image-repo-branch: "main"
   # The crictl version.
   crictl-version: "1.26.0"
@@ -67,25 +99,36 @@ build:
   add-trivy: true
   # Whether to add Falco into the image.
   add-falco: true
-  # NVIDIA will soon be supported in the image builder https://github.com/kubernetes-sigs/image-builder/pull/1147.
-  # However, it has a prerequisite that means the operator should provide the NVIDIA license (.tok) and installer (.run) files via an S3 endpoint
-  # due to license restrictions by NVIDIA. These are not publicly available which is why this requirement is in place.
+  # GPU support is available in the image-builder project.
+  # NVIDIA support has a prerequisite that means the operator should provide the NVIDIA license (.tok) and installer (.run) files via an S3 endpoint
+  # due to license restrictions by NVIDIA. The vGPU drivers are not publicly available which is why this requirement is in place.
   # The image builder will not provide these files and if they are not supplied, the build will fail.
-  nvidia:
-    # enable NVIDIA driver install in the image.
-    enable-nvidia-support: true
-    # The NVIDIA driver version to be installed - Currently used for tagging metadata - may be removed in future in favor of parsing the filename.
-    nvidia-driver-version: "525.85.05"
-    # The S3 bucket to get the installer and license files from.
+  gpu:
+    # Enable GPU driver installs into the image.
+    enable-gpu-support: true
+    # The GPU architecture being used ("nvidia" or "amd" are currently supported).
+    gpu-vendor: "amd"
+    # The AMD driver version to be installed
+    amd-driver-version: "6.0.2"
+    # The NVIDIA driver version to be installed - Currently used for tagging metadata
+    nvidia-driver-version: "535.129.03"
+    # The S3 bucket to get the NVIDIA installer and license files from.
     nvidia-bucket: "nvidia"
-    # The installer file name in the bucket.
-    nvidia-installer-location: "NVIDIA-Linux-x86_64-525.85.05-grid.run"
-    # The license file name in the bucket.
+    # The NVIDIA installer file name in the bucket.
+    nvidia-installer-location: "NVIDIA-Linux-x86_64-535.129.03-grid.run"
+    # The NVIDIA license file name in the bucket.
     nvidia-tok-location: "client_configuration_token.tok"
-    # The feature type to configure the GRIDD service with -  see NVIDIA docs for more information on this.
+    # The feature type to configure the NVIDIA GRIDD service with - see NVIDIA docs for more information on this.
     nvidia-gridd-feature-type: "4"
   # The additional-images section should be a list of container images to bake into the image.
-  additional-images: [ ]
+  additional-images: []
+  # Any additional metadata/tags to add to the image as a map[string]string
+  # The following are available via the `generateBuilderMetadata` func in the provisioner and any additional data added here will be appended in that func
+  #  "os": o.BuildOS,
+  #  "k8s": o.KubeVersion,
+  #  "gpu": gpu,
+  #  "date": time.Now().Format(time.RFC3339),
+  additional-metadata: {}
 
 # Scan stage options
 scan:
@@ -117,7 +160,7 @@ scan:
   trivyignore-filename: ".trivyignore"
   # A list of CVEs to add to the ignore list. If a file is also provided, this list will be appended to the list within the file.
   # If no file exists, then the file will be created with the list contents
-  trivyignore-list: [ ]
+  trivyignore-list: []
 
 # Sign stage options
 sign:
@@ -142,6 +185,3 @@ sign:
   private-key: ""
   # The public key to use in the validation process - this takes precedence over vault.
   public-key: ""
-  # If you would like to validate an image signing, this allows you to put the digest in and validate the image.
-  # This will be deprecated and then removed soon to make way for fetching the digest from the metadata of the image where it is currently stored.
-  digest: ""

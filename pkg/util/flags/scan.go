@@ -23,8 +23,12 @@ import (
 )
 
 type ScanOptions struct {
+	BaseOptions
 	OpenStackFlags
+	KubeVirtFlags
 	S3Flags
+	ScanSingleOptions
+	ScanMultipleOptions
 
 	AutoDeleteImage     bool
 	SkipCVECheck        bool
@@ -37,15 +41,6 @@ type ScanOptions struct {
 }
 
 func (o *ScanOptions) SetOptionsFromViper() {
-	o.OpenStackFlags.SetOptionsFromViper()
-	o.S3Flags.SetOptionsFromViper()
-
-	// We can override the value of the instance at the scan level
-	// This isn't available in the flags as it's already a flag that's available. This is viper only.
-	instance := viper.GetString(fmt.Sprintf("%s.flavor-name", viperScanPrefix))
-	if instance != "" {
-		o.FlavorName = instance
-	}
 	o.AutoDeleteImage = viper.GetBool(fmt.Sprintf("%s.auto-delete-image", viperScanPrefix))
 	o.SkipCVECheck = viper.GetBool(fmt.Sprintf("%s.skip-cve-check", viperScanPrefix))
 	o.MaxSeverityScore = viper.GetFloat64(fmt.Sprintf("%s.max-severity-score", viperScanPrefix))
@@ -54,12 +49,23 @@ func (o *ScanOptions) SetOptionsFromViper() {
 	o.TrivyignorePath = viper.GetString(fmt.Sprintf("%s.trivyignore-path", viperScanPrefix))
 	o.TrivyignoreFilename = viper.GetString(fmt.Sprintf("%s.trivyignore-filename", viperScanPrefix))
 	o.TrivyignoreList = viper.GetStringSlice(fmt.Sprintf("%s.trivyignore-list", viperScanPrefix))
+
+	o.BaseOptions.SetOptionsFromViper()
+	o.OpenStackFlags.SetOptionsFromViper()
+	o.KubeVirtFlags.SetOptionsFromViper()
+	o.S3Flags.SetOptionsFromViper()
+	o.ScanSingleOptions.SetOptionsFromViper()
+	o.ScanMultipleOptions.SetOptionsFromViper()
+
+	// We can override the value of the instance at the scan level
+	// This isn't available in the flags as it's already a flag that's available. This is viper only.
+	instance := viper.GetString(fmt.Sprintf("%s.flavor-name", viperScanPrefix))
+	if instance != "" {
+		o.FlavorName = instance
+	}
 }
 
 func (o *ScanOptions) AddFlags(cmd *cobra.Command) {
-	o.OpenStackFlags.AddFlags(cmd, viperOpenStackPrefix)
-	o.S3Flags.AddFlags(cmd)
-
 	BoolVarWithViper(cmd, &o.AutoDeleteImage, viperScanPrefix, "auto-delete-image", false, "If true, the image will be deleted if a vulnerability check does not succeed - recommended when building new images.")
 	BoolVarWithViper(cmd, &o.SkipCVECheck, viperScanPrefix, "skip-cve-check", false, "If true, the image will be allowed even if a vulnerability is detected.")
 	Float64VarWithViper(cmd, &o.MaxSeverityScore, viperScanPrefix, "max-severity-score", 7.0, "Can be anything from 0.1 to 10.0. Anything equal to or above this value will cause a failure. (Unless skip-cve-check is supplied)")
@@ -68,41 +74,38 @@ func (o *ScanOptions) AddFlags(cmd *cobra.Command) {
 	StringVarWithViper(cmd, &o.TrivyignorePath, viperScanPrefix, "trivyignore-path", "", "The path in the scan-bucket where the trivyignore file is located")
 	StringVarWithViper(cmd, &o.TrivyignoreFilename, viperScanPrefix, "trivyignore-filename", "", "The filename of the trivyignore file")
 	StringSliceVarWithViper(cmd, &o.TrivyignoreList, viperScanPrefix, "trivyignore-list", []string{}, "A list of CVEs to ignore")
+
+	o.BaseOptions.AddFlags(cmd)
+	o.OpenStackFlags.AddFlags(cmd, viperOpenStackPrefix)
+	o.KubeVirtFlags.AddFlags(cmd, viperOpenStackPrefix)
+	o.S3Flags.AddFlags(cmd)
+	o.ScanSingleOptions.AddFlags(cmd)
+	o.ScanMultipleOptions.AddFlags(cmd)
 }
 
 type ScanSingleOptions struct {
-	ScanOptions
-
 	ImageID string
 }
 
 func (o *ScanSingleOptions) SetOptionsFromViper() {
-	o.ScanOptions.SetOptionsFromViper()
 	o.ImageID = viper.GetString(fmt.Sprintf("%s.image-id", viperSinglePrefix))
 }
 
 func (o *ScanSingleOptions) AddFlags(cmd *cobra.Command) {
-	o.ScanOptions.AddFlags(cmd)
-
 	StringVarWithViper(cmd, &o.ImageID, viperSinglePrefix, "image-id", "", "The ID of the image to scan")
 }
 
 type ScanMultipleOptions struct {
-	ScanOptions
-
 	ImageSearch string
 	Concurrency int
 }
 
 func (o *ScanMultipleOptions) SetOptionsFromViper() {
-	o.ScanOptions.SetOptionsFromViper()
 	o.Concurrency = viper.GetInt(fmt.Sprintf("%s.concurrency", viperMultiplePrefix))
 	o.ImageSearch = viper.GetString(fmt.Sprintf("%s.image-search", viperMultiplePrefix))
 }
 
 func (o *ScanMultipleOptions) AddFlags(cmd *cobra.Command) {
-	o.ScanOptions.AddFlags(cmd)
-
 	IntVarWithViper(cmd, &o.Concurrency, viperMultiplePrefix, "concurrency", 5, "The number of scans that can happen at any one time")
 	StringVarWithViper(cmd, &o.ImageSearch, viperMultiplePrefix, "image-search", "", "The prefix of all the images to scan")
 }

@@ -71,7 +71,7 @@ func (c *ComputeClient) RemoveKeypair(keyName string) error {
 }
 
 // CreateServer creates a compute instance in Openstack.
-func (c *ComputeClient) CreateServer(keypairName string, flavor, networkID string, attachConfigDrive *bool, userData []byte, imageID string) (*servers.Server, error) {
+func (c *ComputeClient) CreateServer(keypairName string, flavor, networkID string, attachConfigDrive *bool, userData []byte, imageID string, securityGroups []string) (*servers.Server, error) {
 	log.Println("creating server")
 	serverFlavorID, err := c.GetFlavorIDByName(flavor)
 	if err != nil {
@@ -82,7 +82,7 @@ func (c *ComputeClient) CreateServer(keypairName string, flavor, networkID strin
 		Name:             imageID + "-scanner",
 		FlavorRef:        serverFlavorID,
 		ImageRef:         imageID,
-		SecurityGroups:   []string{"default"},
+		SecurityGroups:   securityGroups,
 		UserData:         userData,
 		AvailabilityZone: "",
 		Networks: []servers.Network{

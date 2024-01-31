@@ -32,6 +32,11 @@ func StringSliceVarWithViper(cmd *cobra.Command, p *[]string, viperPrefix, name 
 	bindViper(cmd, viperPrefix, name, false)
 }
 
+func StringMapVarWithViper(cmd *cobra.Command, p *map[string]string, viperPrefix, name string, value map[string]string, usage string) {
+	cmd.Flags().StringToStringVar(p, name, value, usage)
+	bindViper(cmd, viperPrefix, name, false)
+}
+
 func BoolVarWithViper(cmd *cobra.Command, p *bool, viperPrefix, name string, value bool, usage string) {
 	cmd.Flags().BoolVar(p, name, value, usage)
 	bindViper(cmd, viperPrefix, name, false)

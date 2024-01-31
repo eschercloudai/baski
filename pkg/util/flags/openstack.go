@@ -61,7 +61,7 @@ func (o *OpenStackInstanceFlags) SetOptionsFromViper() {
 func (o *OpenStackInstanceFlags) AddFlags(cmd *cobra.Command, viperPrefix string) {
 	StringVarWithViper(cmd, &o.NetworkID, viperPrefix, "network-id", "", "Network ID to deploy the server onto for scanning")
 	StringVarWithViper(cmd, &o.FlavorName, viperPrefix, "flavor-name", "", "The Name of the instance flavor to use for the build")
-	BoolVarWithViper(cmd, &o.AttachConfigDrive, viperPrefix, "attach-config-drive", false, "Used to enable a config drive on Openstack. This may be required if directly attaching an external network to the instance")
+	BoolVarWithViper(cmd, &o.AttachConfigDrive, viperPrefix, "attach-config-drive", false, "Whether or not nova should use ConfigDrive for cloud-init metadata.")
 }
 
 // OpenStackFlags are explicitly for OpenStack based clouds and defines settings that pertain only to that cloud type.
@@ -70,42 +70,54 @@ type OpenStackFlags struct {
 	OpenStackInstanceFlags
 
 	SourceImageID         string
+	SSHPrivateKeyFile     string
+	SSHKeypairName        string
 	UseFloatingIP         bool
 	FloatingIPNetworkName string
+	SecurityGroup         string
 	ImageVisibility       string
 	ImageDiskFormat       string
+	UseBlockStorageVolume string
 	VolumeType            string
 	VolumeSize            int
 	RootfsUUID            string
 }
 
 // SetOptionsFromViper configures additional options passed in via viper for the struct.
-func (o *OpenStackFlags) SetOptionsFromViper() {
-	o.OpenStackCoreFlags.SetOptionsFromViper()
-	o.OpenStackInstanceFlags.SetOptionsFromViper()
+func (q *OpenStackFlags) SetOptionsFromViper() {
+	q.SourceImageID = viper.GetString(fmt.Sprintf("%s.source-image", viperOpenStackPrefix))
+	q.SSHPrivateKeyFile = viper.GetString(fmt.Sprintf("%s.ssh-privatekey-file", viperOpenStackPrefix))
+	q.SSHKeypairName = viper.GetString(fmt.Sprintf("%s.ssh-keypair-name", viperOpenStackPrefix))
+	q.UseFloatingIP = viper.GetBool(fmt.Sprintf("%s.use-floating-ip", viperOpenStackPrefix))
+	q.FloatingIPNetworkName = viper.GetString(fmt.Sprintf("%s.floating-ip-network-name", viperOpenStackPrefix))
+	q.SecurityGroup = viper.GetString(fmt.Sprintf("%s.security-group", viperOpenStackPrefix))
+	q.ImageVisibility = viper.GetString(fmt.Sprintf("%s.image-visibility", viperOpenStackPrefix))
+	q.ImageDiskFormat = viper.GetString(fmt.Sprintf("%s.image-disk-format", viperOpenStackPrefix))
+	q.UseBlockStorageVolume = viper.GetString(fmt.Sprintf("%s.use-blockstorage-volume", viperOpenStackPrefix))
+	q.VolumeType = viper.GetString(fmt.Sprintf("%s.volume-type", viperOpenStackPrefix))
+	q.VolumeSize = viper.GetInt(fmt.Sprintf("%s.volume-size", viperOpenStackPrefix))
+	q.RootfsUUID = viper.GetString(fmt.Sprintf("%s.rootfs-uuid", viperOpenStackPrefix))
 
-	o.SourceImageID = viper.GetString(fmt.Sprintf("%s.source-image", viperOpenStackPrefix))
-	o.UseFloatingIP = viper.GetBool(fmt.Sprintf("%s.use-floating-ip", viperOpenStackPrefix))
-	o.FloatingIPNetworkName = viper.GetString(fmt.Sprintf("%s.floating-ip-network-name", viperOpenStackPrefix))
-	o.ImageVisibility = viper.GetString(fmt.Sprintf("%s.image-visibility", viperOpenStackPrefix))
-	o.ImageDiskFormat = viper.GetString(fmt.Sprintf("%s.image-disk-format", viperOpenStackPrefix))
-	o.VolumeType = viper.GetString(fmt.Sprintf("%s.volume-type", viperOpenStackPrefix))
-	o.VolumeSize = viper.GetInt(fmt.Sprintf("%s.volume-size", viperOpenStackPrefix))
-	o.RootfsUUID = viper.GetString(fmt.Sprintf("%s.rootfs-uuid", viperOpenStackPrefix))
+	q.OpenStackCoreFlags.SetOptionsFromViper()
+	q.OpenStackInstanceFlags.SetOptionsFromViper()
 }
 
-func (o *OpenStackFlags) AddFlags(cmd *cobra.Command, viperPrefix string) {
-	o.OpenStackCoreFlags.AddFlags(cmd, viperPrefix)
-	o.OpenStackInstanceFlags.AddFlags(cmd, viperPrefix)
+func (q *OpenStackFlags) AddFlags(cmd *cobra.Command, viperPrefix string) {
+	StringVarWithViper(cmd, &q.SourceImageID, viperPrefix, "source-image-id", "ubuntu-2204", "The ID of the image that will be used as a base for the newly built image")
+	StringVarWithViper(cmd, &q.SSHPrivateKeyFile, viperPrefix, "ssh-privatekey-file", "", "The Private Key to use when using ssh-keypair-name")
+	StringVarWithViper(cmd, &q.SSHKeypairName, viperPrefix, "ssh-keypair-name", "", "Define an SSH Keypair to use instead of generating automatically")
+	BoolVarWithViper(cmd, &q.UseFloatingIP, viperPrefix, "use-floating-ip", true, "Whether to use a floating IP for the instance")
+	StringVarWithViper(cmd, &q.FloatingIPNetworkName, viperPrefix, "floating-ip-network-name", "public1", "The Name of the network in which to create the floating ip")
+	StringVarWithViper(cmd, &q.SecurityGroup, viperPrefix, "security-group", "", "Specify the security groups to attach")
+	StringVarWithViper(cmd, &q.ImageVisibility, viperPrefix, "image-visibility", "private", "Change the image visibility in Openstack - you need to ensure the use you're authenticating with has permissions to do so or this will fail")
+	StringVarWithViper(cmd, &q.ImageDiskFormat, viperPrefix, "image-disk-format", "", "The image disk format in Openstack")
+	StringVarWithViper(cmd, &q.UseBlockStorageVolume, viperPrefix, "use-blockstorage-volume", "", "Use Block Storage service volume for the instance root volume instead of Compute service local volume")
+	StringVarWithViper(cmd, &q.VolumeType, viperPrefix, "volume-type", "", "Type of the Block Storage service volume. If this isn't specified, the default enforced by your OpenStack cluster will be used")
+	IntVarWithViper(cmd, &q.VolumeSize, viperPrefix, "volume-size", 0, "Size of the Block Storage service volume in GB. If this isn't specified, it is set to source image min disk value (if set) or calculated from the source image bytes size. Note that in some cases this needs to be specified, if use_blockstorage_volume is true")
+	StringVarWithViper(cmd, &q.RootfsUUID, viperPrefix, "rootfs-uuid", "", "The UUID of the root filesystem. This can be acquired from the source image that the resulting image will be built from - (this will be automated soon™)")
 
-	StringVarWithViper(cmd, &o.SourceImageID, viperPrefix, "source-image-id", "ubuntu-2204", "The ID of the image that will be used as a base for the newly built image")
-	BoolVarWithViper(cmd, &o.UseFloatingIP, viperPrefix, "use-floating-ip", true, "Whether to use a floating IP for the instance")
-	StringVarWithViper(cmd, &o.FloatingIPNetworkName, viperPrefix, "floating-ip-network-name", "Internet", "The Name of the network in which to create the floating ip")
-	StringVarWithViper(cmd, &o.ImageVisibility, viperPrefix, "image-visibility", "private", "Change the image visibility in Openstack - you need to ensure the use you're authenticating with has permissions to do so or this will fail")
-	StringVarWithViper(cmd, &o.ImageDiskFormat, viperPrefix, "image-disk-format", "raw", "The image disk format in Openstack")
-	StringVarWithViper(cmd, &o.VolumeType, viperPrefix, "volume-type", "", "The volume type in Openstack")
-	IntVarWithViper(cmd, &o.VolumeSize, viperPrefix, "volume-size", 10, "Size of the Block Storage service volume in GB")
-	StringVarWithViper(cmd, &o.RootfsUUID, viperPrefix, "rootfs-uuid", "", "The UUID of the root filesystem. This can be acquired from the source image that the resulting image will be built from - (this will be automated soon™)")
+	q.OpenStackCoreFlags.AddFlags(cmd, viperPrefix)
+	q.OpenStackInstanceFlags.AddFlags(cmd, viperPrefix)
 
 	cmd.MarkFlagsRequiredTogether("use-floating-ip", "floating-ip-network-name")
 }

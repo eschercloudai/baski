@@ -19,12 +19,10 @@ package build
 import (
 	"fmt"
 	"github.com/drewbernetes/baski/pkg/constants"
-	ostack "github.com/drewbernetes/baski/pkg/providers/openstack"
 	"github.com/drewbernetes/baski/pkg/providers/packer"
-	"github.com/drewbernetes/baski/pkg/util/data"
+	"github.com/drewbernetes/baski/pkg/provisoner"
 	"github.com/drewbernetes/baski/pkg/util/flags"
 	"github.com/spf13/cobra"
-	"os"
 	"path/filepath"
 )
 
@@ -42,12 +40,7 @@ func NewBuildCommand() *cobra.Command {
 		Long: `Build image.
 
 Building images requires a set of commands to be run on the terminal however this is tedious and time consuming.
-By using this, the time is reduced and automation can be enabled.
-
-Overtime this will become more dynamic to allow for build customised
-images such as ones with GPU/HPC drivers/tools.
-
-To use baski to build an image, an Openstack cluster is required.`,
+By using this, the time is reduced and automation can be enabled.`,
 		TraverseChildren: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			o.SetOptionsFromViper()
@@ -56,38 +49,48 @@ To use baski to build an image, an Openstack cluster is required.`,
 				return fmt.Errorf("an unsupported OS has been entered. Please select a valid OS: %s\n", constants.SupportedOS)
 			}
 
-			err := os.Setenv("OS_CLOUD", o.CloudName)
+			builder := provisoner.NewBuilder(o)
+
+			// Init the provisioner
+			err := builder.Init()
 			if err != nil {
 				return err
 			}
 
-			packerBuildConfig := packer.InitConfig(o)
-			metadata := ostack.GenerateBuilderMetadata(o)
-
+			// Fetch image-builder from git repo
 			buildGitDir := createRepoDirectory()
-			fetchBuildRepo(buildGitDir, o)
-
-			err = packer.UpdatePackerBuildersJson(buildGitDir, metadata)
+			err = fetchBuildRepo(buildGitDir, o)
 			if err != nil {
 				return err
 			}
 
+			// Generate a packer config
+			packerBuildConfig := builder.GeneratePackerConfig()
+
+			// If the builder requires it, modify it directly here.
+			modifierFunc := packer.BuildersModifier{
+				Function: builder.UpdatePackerBuilders,
+				Metadata: packerBuildConfig.Metadata,
+			}
+			err = packer.UpdatePackerBuildersJson(buildGitDir, o.BaseOptions.InfraType, modifierFunc)
+			if err != nil {
+				return err
+			}
+
+			// Generate a tmp.json file to be consumed by the image-builder for variables.
 			capiPath := filepath.Join(buildGitDir, "images", "capi")
 			packerBuildConfig.GenerateVariablesFile(capiPath)
 
-			installDependencies(capiPath, o.Verbose)
+			// Install any dependencies
+			installDependencies(capiPath, o.InfraType, o.Verbose)
 
-			err = buildImage(capiPath, o.BuildOS, o.Verbose)
+			// Build the image
+			err = buildImage(capiPath, o.InfraType, o.BuildOS, o.Verbose)
 			if err != nil {
 				return err
 			}
 
-			imgID, err := data.RetrieveNewImageID()
-			if err != nil {
-				return err
-			}
-
-			err = saveImageIDToFile(imgID)
+			err = builder.PostBuildAction()
 			if err != nil {
 				return err
 			}

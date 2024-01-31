@@ -1,5 +1,11 @@
 # Changelog
 
+## [ 2024/01/29 - v1.1.0 ]
+
+### Changed/Added
+* **BREAKING CHANGE**: changed `cloud` prefix to `infra` in flags and config.
+* Added KubeVirt as a build option.
+
 ## [ 2024/01/29 - v1.0.0 ]
 
 ### Changed/Added

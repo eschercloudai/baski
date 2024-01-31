@@ -17,12 +17,18 @@ limitations under the License.
 package scan
 
 import (
+	"errors"
+	"github.com/drewbernetes/baski/pkg/provisoner"
+	"github.com/drewbernetes/baski/pkg/trivy"
+	"github.com/drewbernetes/baski/pkg/util/flags"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 // NewScanCommand creates a command that allows the scanning of an image.
 func NewScanCommand() *cobra.Command {
 
+	o := &flags.ScanOptions{}
 	cmd := &cobra.Command{
 		Use:   "scan",
 		Short: "Scan image",
@@ -41,13 +47,29 @@ It does the following:
 
 If the checks for CVE flags/config values are set then it will bail out and generate a report with the CVEs that caused it to do so.
 `,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			o.SetOptionsFromViper()
+			if !trivy.ValidSeverity(trivy.Severity(strings.ToUpper(o.MaxSeverityType))) {
+				return errors.New("severity value passed is invalid. Allowed values are: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL")
+			}
+
+			scan := provisoner.NewScanner(o)
+
+			err := scan.Prepare()
+			if err != nil {
+				return err
+			}
+
+			err = scan.ScanImages()
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
 	}
 
-	commands := []*cobra.Command{
-		NewScanSingleCommand(),
-		NewScanExistingCommand(),
-	}
-	cmd.AddCommand(commands...)
+	o.AddFlags(cmd)
 
 	return cmd
 }

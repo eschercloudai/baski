@@ -18,13 +18,12 @@ package ostack
 
 import (
 	"fmt"
-	"github.com/drewbernetes/baski/pkg/util/flags"
+	"github.com/drewbernetes/baski/pkg/util/data"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"log"
 	"strings"
-	"time"
 )
 
 type ImageClient struct {
@@ -46,19 +45,19 @@ func NewImageClient(provider Provider) (*ImageClient, error) {
 }
 
 // GenerateBuilderMetadata generates some glance metadata for the image.
-func GenerateBuilderMetadata(o *flags.BuildOptions) map[string]string {
-	gpu := "no_gpu"
-	if o.AddNvidiaSupport {
-		gpu = o.NvidiaVersion
-	}
-	return map[string]string{
-		"os":          o.BuildOS,
-		"k8s":         o.KubeVersion,
-		"gpu":         gpu,
-		"date":        time.Now().Format(time.RFC3339),
-		"rootfs_uuid": o.RootfsUUID,
-	}
-}
+//func GenerateBuilderMetadata(o *flags.BuildOptions) map[string]string {
+//	gpu := "no_gpu"
+//	if o.AddNvidiaSupport {
+//		gpu = o.NvidiaVersion
+//	}
+//	return map[string]string{
+//		"os":          o.BuildOS,
+//		"k8s":         o.KubeVersion,
+//		"gpu":         gpu,
+//		"date":        time.Now().Format(time.RFC3339),
+//		"rootfs_uuid": o.RootfsUUID,
+//	}
+//}
 
 // ModifyImageMetadata allows image metadata to be added, updated or removed.
 func (c *ImageClient) ModifyImageMetadata(imgID string, key, value string, operation images.UpdateOp) (*images.Image, error) {
@@ -138,4 +137,20 @@ func (c *ImageClient) FetchImage(imgID string) (*images.Image, error) {
 	}
 
 	return nil, nil
+}
+
+// TagImage Tags the image with the passed or failed property.
+func (s *ImageClient) TagImage(properties map[string]interface{}, imgID, value, tagName string) error {
+	// Default to replace unless the field isn't found below
+	operation := images.ReplaceOp
+
+	field, err := data.GetNestedField(properties, tagName)
+	if err != nil || field == nil {
+		operation = images.AddOp
+	}
+	_, err = s.ModifyImageMetadata(imgID, tagName, value, operation)
+	if err != nil {
+		return err
+	}
+	return nil
 }

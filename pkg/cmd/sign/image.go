@@ -17,20 +17,16 @@ limitations under the License.
 package sign
 
 import (
-	ostack "github.com/drewbernetes/baski/pkg/providers/openstack"
-	"github.com/drewbernetes/baski/pkg/util/data"
+	"github.com/drewbernetes/baski/pkg/provisoner"
 	"github.com/drewbernetes/baski/pkg/util/flags"
 	"github.com/drewbernetes/baski/pkg/util/sign"
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 )
 
 // NewSignImageCommand creates a command that allows the signing of an image.
 func NewSignImageCommand() *cobra.Command {
-
-	o := &flags.SignImageOptions{}
+	o := &flags.SignOptions{}
 	cmd := &cobra.Command{
 		Use:   "image",
 		Short: "Sign image",
@@ -50,8 +46,6 @@ If using vault, the key should be stored as follows:
 			var key []byte
 			var err error
 
-			imgID := getImageID(o.ImageID)
-
 			vaultClient := sign.VaultClient{
 				Endpoint: o.VaultURL,
 				Token:    o.VaultToken,
@@ -69,34 +63,17 @@ If using vault, the key should be stored as follows:
 				}
 			}
 
-			digest, err := sign.Sign(imgID, key)
+			digest, err := sign.Sign(o.ImageID, key)
 			if err != nil {
 				return err
 			}
 
-			cloudProvider := ostack.NewCloudsProvider(o.CloudName)
-
-			i, err := ostack.NewImageClient(cloudProvider)
+			signer := provisoner.NewSigner(o)
 			if err != nil {
 				return err
 			}
 
-			img, err := i.FetchImage(imgID)
-			if err != nil {
-				return err
-			}
-
-			// Default to replace unless the field isn't found below
-			operation := images.ReplaceOp
-
-			_, err = data.GetNestedField(img.Properties, "image", "metadata", "digest")
-			if err != nil {
-				operation = images.AddOp
-			}
-
-			log.Println("attaching digest to image metadata")
-			_, err = i.ModifyImageMetadata(imgID, "digest", digest, operation)
-
+			err = signer.SignImage(digest)
 			if err != nil {
 				return err
 			}
@@ -107,20 +84,4 @@ If using vault, the key should be stored as follows:
 	o.AddFlags(cmd)
 
 	return cmd
-}
-
-func getImageID(imageID string) string {
-	var imgID string
-	var err error
-
-	if len(imageID) == 0 {
-		imgID, err = data.RetrieveNewImageID()
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else {
-		imgID = imageID
-	}
-
-	return imgID
 }
